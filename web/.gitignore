@@ -1,0 +1,18 @@
+node_modules
+dist/
+.env
+.env.*
+!.env.example
+
+# Temp folders
+temp_repo/
+temp_repo2/
+sync_temp*.ts
+
+# Unused/Test files
+test-*.js
+setPassword.ts
+appwrite_schema_dump.json
+scripts/dumpSchema.ts
+scripts/checkAttributes.ts
+scripts/test*.ts

@@ -1,0 +1,6 @@
+{
+  "name": "PHP to React Migration",
+  "description": "A project to convert native PHP code to React.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
