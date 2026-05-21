@@ -94,7 +94,7 @@ export function NeedsWorkPage() {
                       <Button variant="outline" size="sm" className="text-emerald-700 border-emerald-200 hover:bg-emerald-50" onClick={() => navigate(`/dashboard/pengusul/usulan/${item.$id}`)}>
                         <Eye className="size-4 mr-1" /> Lihat
                       </Button>
-                      <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white" onClick={() => navigate(`/dashboard/pengusul/usulan/${item.$id}`)}>
+                      <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white" onClick={() => navigate(`/dashboard/pengusul/revisi/${item.$id}`)}>
                         <Edit className="size-4 mr-1" /> Revisi
                       </Button>
                     </div>

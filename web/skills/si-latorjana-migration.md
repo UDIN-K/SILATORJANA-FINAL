@@ -417,11 +417,11 @@ Di LoginPage ada dropdown "Login Cepat" dengan akun test:
 
 ## 12. Prioritas Migrasi Selanjutnya
 
-1. **🔴 Export PDF / Print** — Fitur paling sering diminta user
-2. **🔴 Detail Revisi Form (editable)** — Pengusul butuh bisa edit proposal yang di-revisi
-3. **🟡 RAB Multi-Kategori** — Kalkulasi qty1×qty2×qty3 + grouping per kategori
-4. **🟡 Panduan & Template** — Halaman bantuan untuk pengusul
-5. **🟡 Archive Pages** — Arsip proposal untuk verifikator/PPK/wadir
+1. **✅ Export PDF / Print** — Fitur paling sering diminta user (PrintProposalPage.tsx)
+2. **✅ Detail Revisi Form (editable)** — Pengusul bisa edit proposal yang di-revisi (EditRevisiPage.tsx)
+3. **✅ RAB Multi-Kategori** — Kalkulasi qty1×qty2×qty3 + grouping per kategori (CreateUsulanPage upgraded)
+4. **✅ Panduan & Template** — Halaman bantuan + template download untuk pengusul (PanduanPage.tsx, TemplatePage.tsx)
+5. **✅ Archive Pages** — Arsip proposal untuk verifikator/PPK/wadir (shared/ArchivePage.tsx)
 6. **🟡 Chart.js Dashboard** — Visualisasi data di dashboard admin/rektorat
 7. **🟢 PPK/Wadir Detail Views** — Per-tab detail yang lebih lengkap
 8. **🟢 Notifikasi** — Real-time notification system

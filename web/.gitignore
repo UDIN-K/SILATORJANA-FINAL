@@ -16,3 +16,6 @@ appwrite_schema_dump.json
 scripts/dumpSchema.ts
 scripts/checkAttributes.ts
 scripts/test*.ts
+.vite/
+siltor_baru.zip
+

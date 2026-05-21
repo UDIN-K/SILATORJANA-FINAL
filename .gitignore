@@ -1,0 +1,29 @@
+# Node & Vite
+web/node_modules/
+web/dist/
+web/.vite/
+web/.env
+web/.env.*
+!web/.env.example
+
+# Flutter & Dart
+flutter/.dart_tool/
+flutter/.flutter-plugins
+flutter/.flutter-plugins-dependencies
+flutter/.packages
+flutter/build/
+
+# Temporary / Legacy / Backup Folders
+web(lama)/
+web/siltor_baru.zip
+web/sync_temp*.ts
+web/test-*.js
+
+# Local environment & tools
+web/setPassword.ts
+web/appwrite_schema_dump.json
+
+# System files
+.DS_Store
+Thumbs.db
+*.log

@@ -16,20 +16,25 @@ const ROLE_MENUS: Record<string, { icon: any; label: string; path: string }[]> =
     { icon: AlertTriangle, label: 'Perlu Revisi', path: '/needs-work' },
     { icon: Archive, label: 'Riwayat', path: '/history' },
     { icon: Activity, label: 'Monitoring', path: '/monitoring' },
+    { icon: Settings, label: 'Panduan', path: '/panduan' },
+    { icon: FileText, label: 'Template', path: '/template' },
   ],
   verifikator: [
     { icon: Home, label: 'Dashboard', path: '' },
     { icon: ClipboardList, label: 'Semua Proposal', path: '/proposals' },
+    { icon: Archive, label: 'Arsip', path: '/archive' },
     { icon: Activity, label: 'Monitoring', path: '/monitoring' },
   ],
   ppk: [
     { icon: Home, label: 'Dashboard', path: '' },
     { icon: ClipboardList, label: 'Semua Proposal', path: '/proposals' },
+    { icon: Archive, label: 'Arsip', path: '/archive' },
     { icon: Activity, label: 'Monitoring', path: '/monitoring' },
   ],
   wadir2: [
     { icon: Home, label: 'Dashboard', path: '' },
     { icon: ClipboardList, label: 'Semua Proposal', path: '/proposals' },
+    { icon: Archive, label: 'Arsip', path: '/archive' },
     { icon: Activity, label: 'Monitoring', path: '/monitoring' },
   ],
   bendahara: [

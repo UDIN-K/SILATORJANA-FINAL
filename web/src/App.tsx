@@ -19,11 +19,16 @@ import { PengusulMonitoringPage } from './pages/pengusul/PengusulMonitoringPage'
 import { HistoryPage } from './pages/pengusul/HistoryPage';
 import { HistoryDetailPage } from './pages/pengusul/HistoryDetailPage';
 import { NeedsWorkPage } from './pages/pengusul/NeedsWorkPage';
+import { PrintProposalPage } from './pages/pengusul/PrintProposalPage';
+import { EditRevisiPage } from './pages/pengusul/EditRevisiPage';
+import { PanduanPage } from './pages/pengusul/PanduanPage';
+import { TemplatePage } from './pages/pengusul/TemplatePage';
 import { VerifikatorDashboard } from './pages/verifikator/VerifikatorDashboard';
 import { VerifikasiDetailPage } from './pages/verifikator/VerifikasiDetailPage';
 import { VerifikatorProposalList } from './pages/verifikator/VerifikatorProposalList';
 import { VerifikatorMonitoringPage } from './pages/verifikator/VerifikatorMonitoringPage';
 import { RevisiFormPage } from './pages/verifikator/RevisiFormPage';
+import { VerifikatorArchivePage, PpkArchivePage, WadirArchivePage } from './pages/shared/ArchivePage';
 import { PpkDashboard } from './pages/ppk/PpkDashboard';
 import { PpkProposalList } from './pages/ppk/PpkProposalList';
 import { PpkMonitoringPage } from './pages/ppk/PpkMonitoringPage';
@@ -76,9 +81,13 @@ export default function App() {
             <Route path="usulan/:id" element={<DetailUsulanPage />} />
             <Route path="lpj/:id" element={<LpjPage />} />
             <Route path="needs-work" element={<NeedsWorkPage />} />
+            <Route path="revisi/:id" element={<EditRevisiPage />} />
+            <Route path="print/:id" element={<PrintProposalPage />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="history/:id" element={<HistoryDetailPage />} />
             <Route path="monitoring" element={<PengusulMonitoringPage />} />
+            <Route path="panduan" element={<PanduanPage />} />
+            <Route path="template" element={<TemplatePage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 
@@ -89,6 +98,7 @@ export default function App() {
             <Route path="usulan/:id" element={<VerifikasiDetailPage />} />
             <Route path="revisi/:id" element={<RevisiFormPage />} />
             <Route path="monitoring" element={<VerifikatorMonitoringPage />} />
+            <Route path="archive" element={<VerifikatorArchivePage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 
@@ -98,6 +108,7 @@ export default function App() {
             <Route path="proposals" element={<PpkProposalList />} />
             <Route path="review/:id" element={<ReviewApprovalPage role="ppk" approveStatus="approved_ppk" backPath="/dashboard/ppk" />} />
             <Route path="monitoring" element={<PpkMonitoringPage />} />
+            <Route path="archive" element={<PpkArchivePage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 
@@ -107,6 +118,7 @@ export default function App() {
             <Route path="proposals" element={<WadirProposalList />} />
             <Route path="review/:id" element={<ReviewApprovalPage role="wadir2" approveStatus="approved_wadir" backPath="/dashboard/wadir2" />} />
             <Route path="monitoring" element={<WadirMonitoringPage />} />
+            <Route path="archive" element={<WadirArchivePage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 

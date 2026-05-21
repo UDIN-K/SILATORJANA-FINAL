@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ProgressTracker } from '@/components/ProgressTracker';
 import { formatDate, formatCurrency, getUserId, fetchKegiatan } from '@/lib/helpers';
-import { ArrowLeft, FileText, Clock, MapPin, User, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, Clock, MapPin, User, Loader2, Printer } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { databases, APPWRITE_DB_ID } from '@/lib/appwrite';
@@ -73,6 +73,9 @@ export function DetailUsulanPage() {
             <span className="text-sm text-slate-500">{formatDate(kegiatan.$createdAt)}</span>
           </div>
         </div>
+        <Button variant="outline" className="text-emerald-700 border-emerald-200 hover:bg-emerald-50" onClick={() => navigate(`/dashboard/pengusul/print/${id}`)}>
+          <Printer className="size-4 mr-2" /> Cetak PDF
+        </Button>
       </div>
 
       {/* Progress */}

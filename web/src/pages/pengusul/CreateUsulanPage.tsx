@@ -49,8 +49,8 @@ export function CreateUsulanPage() {
     indikator_kinerja: '',
     kurun_waktu_mulai: '',
     kurun_waktu_selesai: '',
-    // RAB items (match: kategori, kategori_label, uraian, qty1, satuan1, qty2, satuan2, harga_satuan)
-    item_rab: [] as { kategori: string; uraian: string; qty1: number; satuan1: string; harga_satuan: number }[],
+    // RAB items (match: kategori, kategori_label, uraian, qty1, satuan1, qty2, satuan2, qty3, harga_satuan)
+    item_rab: [] as { kategori: string; uraian: string; qty1: number; satuan1: string; qty2: number; qty3: number; harga_satuan: number }[],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,14 +92,18 @@ export function CreateUsulanPage() {
 
       // 3. Create RAB items
       for (const item of formData.item_rab) {
-        const total = item.qty1 * item.harga_satuan;
+        const q1 = item.qty1 || 0, q2 = item.qty2 || 1, q3 = item.qty3 || 0, h = item.harga_satuan || 0;
+        const total = q3 > 0 ? q1 * q2 * q3 * h : q1 * q2 * h;
         await databases.createDocument(APPWRITE_DB_ID, 'rab', ID.unique(), {
           kegiatan_id: kegiatanId,
           kategori: item.kategori || 'barang',
           uraian: item.uraian,
           qty1: item.qty1,
           satuan1: item.satuan1 || '',
+          qty2: item.qty2 || 1,
+          qty3: item.qty3 || 0,
           harga_satuan: item.harga_satuan,
+          total: total,
         });
       }
 
@@ -115,7 +119,7 @@ export function CreateUsulanPage() {
   const handleAddRab = () => {
     setFormData(prev => ({
       ...prev,
-      item_rab: [...prev.item_rab, { kategori: 'barang', uraian: '', qty1: 1, satuan1: '', harga_satuan: 0 }]
+      item_rab: [...prev.item_rab, { kategori: 'barang', uraian: '', qty1: 1, satuan1: '', qty2: 1, qty3: 0, harga_satuan: 0 }]
     }));
   };
 
@@ -131,7 +135,11 @@ export function CreateUsulanPage() {
     });
   };
 
-  const calculateTotalRab = () => formData.item_rab.reduce((sum, item) => sum + (item.qty1 * item.harga_satuan), 0);
+  const calcItemTotal = (item: typeof formData.item_rab[0]) => {
+    const q1 = item.qty1 || 0, q2 = item.qty2 || 1, q3 = item.qty3 || 0, h = item.harga_satuan || 0;
+    return q3 > 0 ? q1 * q2 * q3 * h : q1 * q2 * h;
+  };
+  const calculateTotalRab = () => formData.item_rab.reduce((sum, item) => sum + calcItemTotal(item), 0);
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
@@ -284,19 +292,21 @@ export function CreateUsulanPage() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
                   <tr>
-                    <th className="px-3 py-3 font-medium w-28">Kategori</th>
-                    <th className="px-3 py-3 font-medium">Uraian / Item</th>
-                    <th className="px-3 py-3 font-medium w-20 text-center">Qty</th>
-                    <th className="px-3 py-3 font-medium w-24">Satuan</th>
-                    <th className="px-3 py-3 font-medium w-36 text-right">Harga Satuan</th>
-                    <th className="px-3 py-3 font-medium text-right w-36">Total</th>
-                    <th className="px-3 py-3 font-medium w-12 text-center">Aksi</th>
+                    <th className="px-2 py-3 font-medium w-24">Kategori</th>
+                    <th className="px-2 py-3 font-medium">Uraian / Item</th>
+                    <th className="px-2 py-3 font-medium w-16 text-center">Qty1</th>
+                    <th className="px-2 py-3 font-medium w-20">Satuan</th>
+                    <th className="px-2 py-3 font-medium w-16 text-center">Qty2</th>
+                    <th className="px-2 py-3 font-medium w-16 text-center">Qty3</th>
+                    <th className="px-2 py-3 font-medium w-32 text-right">Harga Satuan</th>
+                    <th className="px-2 py-3 font-medium text-right w-32">Total</th>
+                    <th className="px-2 py-3 font-medium w-10 text-center"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {formData.item_rab.map((item, idx) => (
                     <tr key={idx} className="border-b border-slate-100 bg-white">
-                      <td className="p-2">
+                      <td className="p-1.5">
                         <Select value={item.kategori} onValueChange={v => updateRab(idx, 'kategori', v)}>
                           <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -305,16 +315,19 @@ export function CreateUsulanPage() {
                             <SelectItem value="honor">Honor</SelectItem>
                             <SelectItem value="transport">Transport</SelectItem>
                             <SelectItem value="konsumsi">Konsumsi</SelectItem>
+                            <SelectItem value="perjalanan">Perjalanan</SelectItem>
                             <SelectItem value="lainnya">Lainnya</SelectItem>
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="p-2"><Input placeholder="Nama item" value={item.uraian} onChange={e => updateRab(idx, 'uraian', e.target.value)} className="h-8" /></td>
-                      <td className="p-2"><Input type="number" min="1" className="text-center h-8" value={item.qty1} onChange={e => updateRab(idx, 'qty1', parseInt(e.target.value) || 0)} /></td>
-                      <td className="p-2"><Input placeholder="pcs" value={item.satuan1} onChange={e => updateRab(idx, 'satuan1', e.target.value)} className="h-8" /></td>
-                      <td className="p-2"><Input type="number" min="0" className="text-right h-8" value={item.harga_satuan} onChange={e => updateRab(idx, 'harga_satuan', parseInt(e.target.value) || 0)} /></td>
-                      <td className="px-3 py-3 text-right font-medium text-slate-900 bg-slate-50">{formatCurrency(item.qty1 * item.harga_satuan)}</td>
-                      <td className="p-2 text-center">
+                      <td className="p-1.5"><Input placeholder="Nama item" value={item.uraian} onChange={e => updateRab(idx, 'uraian', e.target.value)} className="h-8" /></td>
+                      <td className="p-1.5"><Input type="number" min="0" className="text-center h-8" value={item.qty1} onChange={e => updateRab(idx, 'qty1', parseInt(e.target.value) || 0)} /></td>
+                      <td className="p-1.5"><Input placeholder="pcs" value={item.satuan1} onChange={e => updateRab(idx, 'satuan1', e.target.value)} className="h-8" /></td>
+                      <td className="p-1.5"><Input type="number" min="0" className="text-center h-8" value={item.qty2} onChange={e => updateRab(idx, 'qty2', parseInt(e.target.value) || 0)} placeholder="1" /></td>
+                      <td className="p-1.5"><Input type="number" min="0" className="text-center h-8" value={item.qty3} onChange={e => updateRab(idx, 'qty3', parseInt(e.target.value) || 0)} placeholder="0" /></td>
+                      <td className="p-1.5"><Input type="number" min="0" className="text-right h-8" value={item.harga_satuan} onChange={e => updateRab(idx, 'harga_satuan', parseInt(e.target.value) || 0)} /></td>
+                      <td className="px-2 py-2 text-right font-medium text-slate-900 bg-slate-50">{formatCurrency(calcItemTotal(item))}</td>
+                      <td className="p-1.5 text-center">
                         <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8" onClick={() => handleRemoveRab(idx)}>
                           <Trash2 className="size-4" />
                         </Button>
@@ -322,11 +335,11 @@ export function CreateUsulanPage() {
                     </tr>
                   ))}
                   {formData.item_rab.length === 0 && (
-                    <tr><td colSpan={7} className="py-8 text-center text-slate-500">Belum ada item RAB. Klik "Tambah Item".</td></tr>
+                    <tr><td colSpan={9} className="py-8 text-center text-slate-500">Belum ada item RAB. Klik "Tambah Item".</td></tr>
                   )}
                   <tr className="bg-slate-50">
-                    <td colSpan={5} className="px-4 py-4 font-semibold text-right">Total Anggaran Keseluruhan</td>
-                    <td className="px-4 py-4 font-bold text-right text-blue-700 text-lg">{formatCurrency(calculateTotalRab())}</td>
+                    <td colSpan={7} className="px-4 py-4 font-semibold text-right">Total Anggaran Keseluruhan</td>
+                    <td className="px-4 py-4 font-bold text-right text-emerald-700 text-lg">{formatCurrency(calculateTotalRab())}</td>
                     <td></td>
                   </tr>
                 </tbody>
