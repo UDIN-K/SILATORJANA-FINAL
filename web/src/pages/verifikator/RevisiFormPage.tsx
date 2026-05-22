@@ -111,14 +111,13 @@ export function RevisiFormPage() {
         <Card className="shadow-sm"><CardContent className="p-5 space-y-4">
           <h3 className="font-semibold text-slate-900">Informasi Kegiatan</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div><span className="text-slate-500 block mb-1">Nama Kegiatan</span><p className="font-medium">{kegiatan.nama_kegiatan}</p></div>
-            <div><span className="text-slate-500 block mb-1">Jenis</span><p className="font-medium">{kegiatan.jenis_kegiatan || '-'}</p></div>
-            <div><span className="text-slate-500 block mb-1">Jurusan</span><p className="font-medium">{kegiatan.nama_jurusan || '-'}</p></div>
-            <div><span className="text-slate-500 block mb-1">Pengusul</span><p className="font-medium">{kegiatan.pengusul_nama || '-'}</p></div>
-            <div><span className="text-slate-500 block mb-1">Tanggal Dibuat</span><p className="font-medium">{formatDate(kegiatan.$createdAt)}</p></div>
-            <div><span className="text-slate-500 block mb-1">Status</span><StatusBadge status={kegiatan.status} /></div>
+            <div><span className="text-slate-500 block mb-1">Nama Kegiatan</span><p className="font-medium">{kegiatan.nama_kegiatan}</p><CommentBox field="Info - Nama Kegiatan" /></div>
+            <div><span className="text-slate-500 block mb-1">Jenis</span><p className="font-medium">{kegiatan.jenis_kegiatan || '-'}</p><CommentBox field="Info - Jenis Kegiatan" /></div>
+            <div><span className="text-slate-500 block mb-1">Jurusan</span><p className="font-medium">{kegiatan.nama_jurusan || '-'}</p><CommentBox field="Info - Jurusan" /></div>
+            <div><span className="text-slate-500 block mb-1">Pengusul</span><p className="font-medium">{kegiatan.pengusul_nama || '-'}</p><CommentBox field="Info - Pengusul" /></div>
+            <div><span className="text-slate-500 block mb-1">Tanggal Dibuat</span><p className="font-medium">{formatDate(kegiatan.$createdAt)}</p><CommentBox field="Info - Tanggal Dibuat" /></div>
+            <div><span className="text-slate-500 block mb-1">Status</span><div><StatusBadge status={kegiatan.status} /></div></div>
           </div>
-          <CommentBox field="Info Kegiatan" />
         </CardContent></Card>
       )}
 
@@ -181,15 +180,18 @@ export function RevisiFormPage() {
                   </tr></thead>
                   <tbody>{rabList.map((r: any, i: number) => (
                     <tr key={r.$id || i} className="border-b border-slate-50">
-                      <td className="py-2 px-3">{i+1}</td><td className="py-2 px-3">{r.uraian}</td>
-                      <td className="py-2 px-3 capitalize">{r.kategori || '-'}</td>
-                      <td className="py-2 px-3 text-right">{formatCurrency(r.harga_satuan)}</td>
-                      <td className="py-2 px-3 text-right font-semibold">{formatCurrency(r.total)}</td>
+                      <td className="py-2 px-3 align-top">{i+1}</td>
+                      <td className="py-2 px-3 align-top">
+                        {r.uraian}
+                        <div className="mt-2 w-full"><CommentBox field={`RAB Item #${i+1} (${r.uraian})`} /></div>
+                      </td>
+                      <td className="py-2 px-3 capitalize align-top">{r.kategori || '-'}</td>
+                      <td className="py-2 px-3 text-right align-top">{formatCurrency(r.harga_satuan)}</td>
+                      <td className="py-2 px-3 text-right font-semibold align-top">{formatCurrency(r.total)}</td>
                     </tr>
                   ))}</tbody>
                 </table>
               </div>
-              <CommentBox field="RAB" />
             </>
           ) : <p className="text-slate-500">Belum ada data RAB.</p>}
         </CardContent></Card>

@@ -7,6 +7,7 @@ import { Search, Filter, Eye, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface MonitoringItem {
   $id: string;
@@ -26,6 +27,7 @@ interface MonitoringPageProps {
   isLoading: boolean;
   title?: string;
   showJurusan?: boolean;
+  onIntervene?: (id: string, newStatus: string) => Promise<void>;
 }
 
 const STATUS_FILTERS = [
@@ -36,10 +38,12 @@ const STATUS_FILTERS = [
   { key: 'lpj', label: 'LPJ', statuses: ['lpj_submitted', 'lpj_revision', 'lpj_approved', 'lpj_verified', 'lpj_done'] },
 ];
 
-export function MonitoringPage({ items, isLoading, title = 'Monitoring Kegiatan', showJurusan = true }: MonitoringPageProps) {
+export function MonitoringPage({ items, isLoading, title = 'Monitoring Kegiatan', showJurusan = true, onIntervene }: MonitoringPageProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [interveneStatus, setInterveneStatus] = useState<string>('');
+  const [isIntervening, setIsIntervening] = useState(false);
 
   const filtered = items.filter(item => {
     const matchesSearch = !search || item.nama_kegiatan?.toLowerCase().includes(search.toLowerCase()) ||
@@ -108,6 +112,44 @@ export function MonitoringPage({ items, isLoading, title = 'Monitoring Kegiatan'
                         <span>Update terakhir: {timeAgo(item.$updatedAt || item.updated_at)}</span>
                         {item.jenis_kegiatan && <span>Jenis: {item.jenis_kegiatan}</span>}
                       </div>
+
+                      {onIntervene && (
+                        <div className="mt-6 p-4 border border-red-200 bg-red-50 rounded-lg">
+                          <p className="text-sm font-semibold text-red-800 mb-2">Intervensi Status (Admin Only)</p>
+                          <div className="flex gap-3 items-center">
+                            <Select value={interveneStatus} onValueChange={setInterveneStatus}>
+                              <SelectTrigger className="w-[200px] bg-white border-red-200">
+                                <SelectValue placeholder="Pilih status baru..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="submitted">Submitted (Draft)</SelectItem>
+                                <SelectItem value="revision_requested">Revision Requested</SelectItem>
+                                <SelectItem value="verified">Verified (Verifikator)</SelectItem>
+                                <SelectItem value="approved_ppk">Approved (PPK)</SelectItem>
+                                <SelectItem value="approved_wadir">Approved (Wadir)</SelectItem>
+                                <SelectItem value="funds_disbursed">Funds Disbursed (Bendahara)</SelectItem>
+                                <SelectItem value="rejected">Rejected</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button 
+                              variant="destructive" 
+                              disabled={!interveneStatus || isIntervening}
+                              onClick={async () => {
+                                setIsIntervening(true);
+                                try {
+                                  await onIntervene(item.$id, interveneStatus);
+                                } finally {
+                                  setIsIntervening(false);
+                                  setInterveneStatus('');
+                                }
+                              }}
+                            >
+                              Force Update
+                            </Button>
+                          </div>
+                          <p className="text-xs text-red-600 mt-2">Peringatan: Mengubah status secara paksa dapat mem-bypass alur persetujuan normal.</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

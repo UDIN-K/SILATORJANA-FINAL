@@ -183,11 +183,17 @@ export function EditRevisiPage() {
 
   const hasComments = Object.keys(revisiComments).length > 0;
 
-  const RevisiNote = ({ fields }: { fields: string[] }) => {
+  const getMatchedComments = (fields: string[]) => {
     const matched = fields.flatMap(f => {
-      const entries = Object.entries(revisiComments).filter(([k]) => k.toLowerCase().includes(f.toLowerCase()));
-      return entries;
+      return Object.entries(revisiComments).filter(([k]) => k.toLowerCase().includes(f.toLowerCase()));
     });
+    const unique = new Map();
+    matched.forEach(([k, v]) => unique.set(k, v));
+    return Array.from(unique.entries());
+  };
+
+  const RevisiNote = ({ fields }: { fields: string[] }) => {
+    const matched = getMatchedComments(fields);
     if (matched.length === 0) return null;
     return (
       <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
@@ -195,14 +201,15 @@ export function EditRevisiPage() {
           <MessageSquare className="size-4 text-amber-600 mt-0.5 shrink-0" />
           <div>
             <p className="font-semibold text-amber-800 mb-1">Catatan Revisi Verifikator:</p>
-            {matched.map(([k, v]) => <p key={k} className="text-amber-700">{v}</p>)}
+            {matched.map(([k, v]) => <p key={k} className="text-amber-700 font-medium">{v}</p>)}
           </div>
         </div>
       </div>
     );
   };
 
-  const ta = "flex min-h-[80px] w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-700";
+  const inputClass = (fields: string[]) => getMatchedComments(fields).length > 0 ? 'border-amber-400 bg-amber-50/50 focus-visible:ring-amber-500' : '';
+  const taClass = (fields: string[]) => "flex min-h-[80px] w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-700 " + inputClass(fields);
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
@@ -235,34 +242,40 @@ export function EditRevisiPage() {
           <CardContent className="space-y-5 pt-6">
             <div className="space-y-2">
               <Label>Nama Kegiatan *</Label>
-              <Input value={form.nama_kegiatan} onChange={e => updateForm('nama_kegiatan', e.target.value)} required />
-              <RevisiNote fields={['nama', 'info kegiatan']} />
+              <Input className={inputClass(['nama', 'info - nama'])} value={form.nama_kegiatan} onChange={e => updateForm('nama_kegiatan', e.target.value)} required />
+              <RevisiNote fields={['nama', 'info - nama']} />
             </div>
             <div className="space-y-2">
               <Label>Deskripsi</Label>
-              <textarea className={ta} value={form.deskripsi} onChange={e => updateForm('deskripsi', e.target.value)} />
+              <textarea className={taClass(['deskripsi'])} value={form.deskripsi} onChange={e => updateForm('deskripsi', e.target.value)} />
+              <RevisiNote fields={['deskripsi']} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="space-y-2">
                 <Label>Jenis Kegiatan</Label>
-                <Select value={form.jenis_kegiatan} onValueChange={v => updateForm('jenis_kegiatan', v)}>
-                  <SelectTrigger><SelectValue placeholder="Pilih" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pengadaan">Pengadaan</SelectItem>
-                    <SelectItem value="acara">Acara / Event</SelectItem>
-                    <SelectItem value="riset">Penelitian</SelectItem>
-                    <SelectItem value="pelatihan">Pelatihan</SelectItem>
-                    <SelectItem value="lainnya">Lainnya</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className={inputClass(['jenis'])}>
+                  <Select value={form.jenis_kegiatan} onValueChange={v => updateForm('jenis_kegiatan', v)}>
+                    <SelectTrigger className={inputClass(['jenis'])}><SelectValue placeholder="Pilih" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pengadaan">Pengadaan</SelectItem>
+                      <SelectItem value="acara">Acara / Event</SelectItem>
+                      <SelectItem value="riset">Penelitian</SelectItem>
+                      <SelectItem value="pelatihan">Pelatihan</SelectItem>
+                      <SelectItem value="lainnya">Lainnya</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <RevisiNote fields={['jenis']} />
               </div>
               <div className="space-y-2">
                 <Label>Tanggal</Label>
-                <Input type="date" value={form.tanggal_kegiatan} onChange={e => updateForm('tanggal_kegiatan', e.target.value)} />
+                <Input type="date" className={inputClass(['tanggal'])} value={form.tanggal_kegiatan} onChange={e => updateForm('tanggal_kegiatan', e.target.value)} />
+                <RevisiNote fields={['tanggal']} />
               </div>
               <div className="space-y-2">
                 <Label>Tempat</Label>
-                <Input value={form.tempat} onChange={e => updateForm('tempat', e.target.value)} />
+                <Input className={inputClass(['tempat'])} value={form.tempat} onChange={e => updateForm('tempat', e.target.value)} />
+                <RevisiNote fields={['tempat']} />
               </div>
             </div>
           </CardContent>
@@ -275,18 +288,18 @@ export function EditRevisiPage() {
             {(['gambaran_umum','penerima_manfaat','strategi_pencapaian','metode_pelaksanaan','tahapan_pelaksanaan','indikator_kinerja'] as const).map(key => (
               <div key={key} className="space-y-2">
                 <Label className="capitalize">{key.replace(/_/g, ' ')}</Label>
-                <textarea className={ta} value={(form as any)[key]} onChange={e => updateForm(key, e.target.value)} />
+                <textarea className={taClass([`kak - ${key.replace(/_/g, ' ')}`, key.replace(/_/g, ' ')])} value={(form as any)[key]} onChange={e => updateForm(key, e.target.value)} />
                 <RevisiNote fields={[`kak - ${key.replace(/_/g, ' ')}`, key.replace(/_/g, ' ')]} />
               </div>
             ))}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-slate-100">
               <div className="space-y-2">
                 <Label>Kurun Waktu Mulai</Label>
-                <Input type="date" value={form.kurun_waktu_mulai} onChange={e => updateForm('kurun_waktu_mulai', e.target.value)} />
+                <Input type="date" className={inputClass(['waktu', 'kurun'])} value={form.kurun_waktu_mulai} onChange={e => updateForm('kurun_waktu_mulai', e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Kurun Waktu Selesai</Label>
-                <Input type="date" value={form.kurun_waktu_selesai} onChange={e => updateForm('kurun_waktu_selesai', e.target.value)} />
+                <Input type="date" className={inputClass(['waktu', 'kurun'])} value={form.kurun_waktu_selesai} onChange={e => updateForm('kurun_waktu_selesai', e.target.value)} />
               </div>
             </div>
           </CardContent>
@@ -315,31 +328,41 @@ export function EditRevisiPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rabItems.map((item, idx) => (
-                    <tr key={idx} className="border-b border-slate-100">
-                      <td className="p-1.5">
-                        <Select value={item.kategori} onValueChange={v => updateRab(idx, 'kategori', v)}>
-                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {['barang','jasa','honor','transport','konsumsi','perjalanan','lainnya'].map(k => (
-                              <SelectItem key={k} value={k} className="capitalize">{k}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="p-1.5"><Input className="h-8" value={item.uraian} onChange={e => updateRab(idx, 'uraian', e.target.value)} /></td>
-                      <td className="p-1.5"><Input type="number" min="0" className="h-8 text-center" value={item.qty1} onChange={e => updateRab(idx, 'qty1', parseInt(e.target.value) || 0)} /></td>
-                      <td className="p-1.5"><Input type="number" min="0" className="h-8 text-center" value={item.qty2} onChange={e => updateRab(idx, 'qty2', parseInt(e.target.value) || 0)} /></td>
-                      <td className="p-1.5"><Input type="number" min="0" className="h-8 text-center" value={item.qty3} onChange={e => updateRab(idx, 'qty3', parseInt(e.target.value) || 0)} /></td>
-                      <td className="p-1.5"><Input type="number" min="0" className="h-8 text-right" value={item.harga_satuan} onChange={e => updateRab(idx, 'harga_satuan', parseInt(e.target.value) || 0)} /></td>
-                      <td className="px-2 py-2 text-right font-medium bg-slate-50">{formatCurrency(calcTotal(item))}</td>
-                      <td className="p-1.5 text-center">
-                        <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8" onClick={() => removeRab(idx)}>
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                  {rabItems.map((item, idx) => {
+                    const rowFields = [`rab item #${idx + 1}`, `rab #${idx + 1}`];
+                    if (item.uraian) rowFields.push(`rab item #${idx + 1} (${item.uraian})`);
+                    const hasRowNote = getMatchedComments(rowFields).length > 0;
+                    return (
+                      <React.Fragment key={idx}>
+                        <tr className={`border-b border-slate-100 ${hasRowNote ? 'bg-amber-50/30' : ''}`}>
+                          <td className="p-1.5 align-top">
+                            <Select value={item.kategori} onValueChange={v => updateRab(idx, 'kategori', v)}>
+                              <SelectTrigger className={`h-8 text-xs ${inputClass(rowFields)}`}><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {['barang','jasa','honor','transport','konsumsi','perjalanan','lainnya'].map(k => (
+                                  <SelectItem key={k} value={k} className="capitalize">{k}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="p-1.5 align-top">
+                            <Input className={`h-8 ${inputClass(rowFields)}`} value={item.uraian} onChange={e => updateRab(idx, 'uraian', e.target.value)} />
+                            <div className="mt-1"><RevisiNote fields={rowFields} /></div>
+                          </td>
+                          <td className="p-1.5 align-top"><Input type="number" min="0" className={`h-8 text-center ${inputClass(rowFields)}`} value={item.qty1} onChange={e => updateRab(idx, 'qty1', parseInt(e.target.value) || 0)} /></td>
+                          <td className="p-1.5 align-top"><Input type="number" min="0" className={`h-8 text-center ${inputClass(rowFields)}`} value={item.qty2} onChange={e => updateRab(idx, 'qty2', parseInt(e.target.value) || 0)} /></td>
+                          <td className="p-1.5 align-top"><Input type="number" min="0" className={`h-8 text-center ${inputClass(rowFields)}`} value={item.qty3} onChange={e => updateRab(idx, 'qty3', parseInt(e.target.value) || 0)} /></td>
+                          <td className="p-1.5 align-top"><Input type="number" min="0" className={`h-8 text-right ${inputClass(rowFields)}`} value={item.harga_satuan} onChange={e => updateRab(idx, 'harga_satuan', parseInt(e.target.value) || 0)} /></td>
+                          <td className={`px-2 py-2 text-right font-medium align-top ${hasRowNote ? '' : 'bg-slate-50'}`}>{formatCurrency(calcTotal(item))}</td>
+                          <td className="p-1.5 text-center align-top">
+                            <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8" onClick={() => removeRab(idx)}>
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })}
                   {rabItems.length === 0 && (
                     <tr><td colSpan={8} className="py-8 text-center text-slate-500">Belum ada item RAB.</td></tr>
                   )}

@@ -132,7 +132,7 @@ export function BendaharaDashboard() {
                        </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                       <Button size="sm" onClick={() => navigate(`/dashboard/bendahara/${activeTab}/${item.$id}`)} className={activeTab === 'pencairan' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-emerald-600 hover:bg-emerald-700'}>
+                       <Button size="sm" onClick={() => navigate(`/dashboard/bendahara/detail/${item.$id}`)} className={activeTab === 'pencairan' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-emerald-600 hover:bg-emerald-700'}>
                           <CheckCircle2 className="size-4 mr-2" />
                           {activeTab === 'pencairan' ? 'Proses Pencairan' : 'Periksa LPJ'}
                        </Button>

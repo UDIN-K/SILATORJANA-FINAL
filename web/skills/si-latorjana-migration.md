@@ -8,14 +8,16 @@
 
 **Si-LATORJANA** (Sistem Layanan Terpadu Administrasi Pengajuan) adalah sistem manajemen kegiatan kampus Politeknik Negeri Jakarta. Aplikasi ini mengelola alur pengajuan proposal kegiatan dari pengusul (mahasiswa/dosen) melalui multi-level approval (verifikator → PPK → wadir) sampai pencairan dana dan pertanggungjawaban (LPJ).
 
+**Figma Design Link**: [Si-LATORJANA UI](https://www.figma.com/design/tAdvyUYCEQWNkPEwXiH6tQ/PBL-Silatorjana?node-id=303-4400&p=f)
+
 ### Dua Codebase
 | Aspek | Legacy (PHP) | Target (React/TSX) |
 |---|---|---|
-| **Lokasi** | `/etc/httpd/Si-LATORJANA/` | `/home/udin/Documents/SiLATORJANA/` |
+| **Lokasi** | `/home/udin/codeberg/silatorjana/web(lama)/` | `/home/udin/SILATORJANA/web/` |
 | **Backend** | PHP MVC kustom + MySQL | Express + Appwrite SDK (node-appwrite) |
 | **Frontend** | PHP views + vanilla JS + Chart.js | React 19 + TypeScript + Tailwind v4 + shadcn |
 | **Database** | MySQL langsung | Appwrite Cloud (endpoint: `sgp.cloud.appwrite.io`) |
-| **Auth** | Session-based PHP | localStorage JSON (⚠️ belum proper auth) |
+| **Auth** | Session-based PHP | localStorage + SHA-256 hash password (client-side via Web Crypto API) |
 | **Server** | Apache/httpd | Vite dev + Express proxy (`server.ts`) |
 | **Font** | Plus Jakarta Sans | Plus Jakarta Sans (sudah dimigrasi) |
 | **Warna** | Green (#1A4D2E, #36C06C, #52DE97) | Green (emerald-700, sudah dimigrasi) |
@@ -37,7 +39,7 @@ Database ID: 69fd691800237a6aaa72
 | `kak` | Kerangka Acuan Kerja (1:1 ke kegiatan) | `kegiatan_id`, `gambaran_umum`, `penerima_manfaat`, `strategi_pencapaian`, `metode_pelaksanaan`, `tahapan_pelaksanaan`, `kurun_waktu_mulai`, `kurun_waktu_selesai` |
 | `iku` | Indikator Kinerja Utama (1:N) | `kegiatan_id`, `nama_iku`/`indikator`, `target_persen` |
 | `rab` | Rincian Anggaran Biaya (1:N) | `kegiatan_id`, `uraian`, `kategori` (barang/jasa/perjalanan), `harga_satuan`, `volume`, `qty1`, `qty2`, `qty3`, `total` |
-| `users` | Tabel pengguna | `nama`, `email`, `password` (⚠️ plaintext!), `role`, `jurusan`, `nip` |
+| `users` | Tabel pengguna | `nama`, `email`, `password` (SHA-256 hashed via `hashPassword()`), `role`, `jurusan`, `nip` |
 | `iku_master` | Master IKU (konfigurasi admin) | `nama_indikator`, `is_visible` |
 | `status_history` | Riwayat perubahan status (opsional, mungkin belum ada) | `kegiatan_id`, `new_status`, `actor_name`, `actor_role`, `note` |
 
@@ -82,10 +84,13 @@ Ada **7 role** dalam sistem:
 
 ### Struktur Folder
 ```
-/home/udin/Documents/SiLATORJANA/
+/home/udin/SILATORJANA/web/
 ├── server.ts                    # Express server (proxy Appwrite + Vite dev middleware)
 ├── index.html                   # Entry point (Plus Jakarta Sans, Material Icons)
 ├── package.json
+├── vite.config.ts               # Vite config (alias @/ → src/)
+├── tsconfig.json
+├── skills/                      # Skill documents (this file)
 ├── src/
 │   ├── App.tsx                  # Router utama, semua routes
 │   ├── main.tsx
@@ -94,9 +99,10 @@ Ada **7 role** dalam sistem:
 │   │   └── RoleLayout.tsx       # Sidebar + topbar layout (per-role navigation)
 │   ├── lib/
 │   │   ├── appwrite.ts          # Appwrite client init, DB_ID export
-│   │   └── helpers.ts           # Status mapping, formatters, fetch helpers
+│   │   └── helpers.ts           # Status mapping, formatters, hashPassword(), fetch helpers
 │   ├── components/
 │   │   ├── MonitoringPage.tsx    # Shared monitoring component (7 role-specific wrappers)
+│   │   ├── NotificationDropdown.tsx  # Realtime notification bell dropdown
 │   │   ├── ProgressTracker.tsx   # Visual workflow step tracker
 │   │   ├── StatusBadge.tsx       # Status badge with color coding
 │   │   └── ui/                  # shadcn components (button, card, input, table, etc.)
@@ -104,14 +110,14 @@ Ada **7 role** dalam sistem:
 │       ├── auth/                # LoginPage, ForgotPasswordPage
 │       ├── LandingPage.tsx      # Public landing page
 │       ├── dashboard/           # DashboardIndex, GenericDashboard
-│       ├── admin/               # AdminDashboard, UserManagementPage, UserFormPage, IkuConfigPage, AdminMonitoringPage
-│       ├── pengusul/            # PengusulDashboard, UsulanPage, CreateUsulanPage, DetailUsulanPage, LpjPage, NeedsWorkPage, HistoryPage, HistoryDetailPage, PengusulMonitoringPage
+│       ├── admin/               # AdminDashboard, UserManagementPage, UserFormPage, UserDetailPage, IkuConfigPage, AdminMonitoringPage
+│       ├── pengusul/            # PengusulDashboard, UsulanPage, CreateUsulanPage, DetailUsulanPage, EditRevisiPage, LpjPage, NeedsWorkPage, HistoryPage, HistoryDetailPage, PrintProposalPage, PanduanPage, TemplatePage, PengusulMonitoringPage
 │       ├── verifikator/         # VerifikatorDashboard, VerifikatorProposalList, VerifikasiDetailPage, RevisiFormPage, VerifikatorMonitoringPage
 │       ├── ppk/                 # PpkDashboard, PpkProposalList, PpkMonitoringPage
 │       ├── wadir/               # WadirDashboard, WadirProposalList, WadirMonitoringPage
 │       ├── bendahara/           # BendaharaDashboard, BendaharaProposalList, BendaharaDetailPage, PencairanPage, LpjVerificationPage, BendaharaMonitoringPage
-│       ├── rektorat/            # RektoratDashboard, RektoratLaporanPage, RekapJurusanPage, RektoratDetailPage, RektoratTimelinePage, RektoratMonitoringPage
-│       ├── shared/              # ProfilePage, ReviewApprovalPage
+│       ├── rektorat/            # RektoratDashboard (with SVG charts), RektoratLaporanPage, RekapJurusanPage, RektoratDetailPage, RektoratTimelinePage, RektoratMonitoringPage
+│       ├── shared/              # ProfilePage, ReviewApprovalPage, ArchivePage
 │       └── approval/            # ApprovalDashboard, ApprovalDetailPage (⚠️ orphan, belum di-route)
 ```
 
@@ -136,11 +142,11 @@ Ada **7 role** dalam sistem:
 | 2 | Forgot Password | `ForgotPasswordPage.tsx` | `auth/forgot_password.php` |
 | 3 | Landing Page | `LandingPage.tsx` | `landing/index.php` |
 | 4 | Admin Dashboard (stats, tabel) | `AdminDashboard.tsx` | `admin/Dashboard/dashboard.php` |
-| 5 | User Management (CRUD) | `UserManagementPage.tsx`, `UserFormPage.tsx` | `admin/management_user/*.php` |
+| 5 | User Management (CRUD) | `UserManagementPage.tsx`, `UserFormPage.tsx`, `UserDetailPage.tsx` | `admin/management_user/*.php` |
 | 6 | Master IKU Config | `IkuConfigPage.tsx` | `admin/data_configuration/IKU.php` |
 | 7 | Pengusul Dashboard | `PengusulDashboard.tsx` | `pengusul/dashboard/dashboard.php` |
 | 8 | Daftar Usulan | `UsulanPage.tsx` | `pengusul/submission/infokegiatan.php` |
-| 9 | Buat Usulan Baru (KAK+IKU+RAB) | `CreateUsulanPage.tsx` | `pengusul/submission_unified.php` |
+| 9 | Buat Usulan Baru (KAK+IKU+RAB) | `CreateUsulanPage.tsx` (multi-kategori) | `pengusul/submission_unified.php` |
 | 10 | Detail Usulan | `DetailUsulanPage.tsx` | Multi-tab view PHP |
 | 11 | Needs Work / Perlu Revisi | `NeedsWorkPage.tsx` | `pengusul/needs_work/needs_work.php` |
 | 12 | Riwayat Kegiatan | `HistoryPage.tsx`, `HistoryDetailPage.tsx` | `pengusul/history/*.php` |
@@ -152,112 +158,42 @@ Ada **7 role** dalam sistem:
 | 18 | PPK Dashboard + Review | `PpkDashboard.tsx`, `PpkProposalList.tsx` | `PPK/dashboard/*.php`, `PPK/activity_proposals/*.php` |
 | 19 | Wadir Dashboard + Review | `WadirDashboard.tsx`, `WadirProposalList.tsx` | `wadir/dashboard/*.php`, `wadir/activity_proposals/*.php` |
 | 20 | Bendahara Dashboard + Pencairan + LPJ | `BendaharaDashboard.tsx`, `PencairanPage.tsx`, `LpjVerificationPage.tsx` | `Bendahara/dashboard/*.php`, `Bendahara/laporan/*.php` |
-| 21 | Rektorat Dashboard + Laporan + Rekap | `RektoratDashboard.tsx`, `RektoratLaporanPage.tsx`, `RekapJurusanPage.tsx` | `rektorat/dashboard/*.php`, `rektorat/laporan.php`, `rektorat/rekap_jurusan/*.php` |
+| 21 | Rektorat Dashboard + Laporan + Rekap | `RektoratDashboard.tsx` (with Charts), `RektoratLaporanPage.tsx`, `RekapJurusanPage.tsx` | `rektorat/dashboard/*.php`, `rektorat/laporan.php`, `rektorat/rekap_jurusan/*.php` |
 | 22 | Timeline Status | `RektoratTimelinePage.tsx` | `rektorat/timeline.php` |
 | 23 | Profile Page | `ProfilePage.tsx` | - |
-| 24 | Shared Review/Approval | `ReviewApprovalPage.tsx` | PPK/Wadir approve flow |
+| 24 | Shared Review/Approval | `ReviewApprovalPage.tsx` (fully tabbed) | PPK/Wadir approve flow |
+| 25 | Export / Print PDF | `PrintProposalPage.tsx` | `pengusul/needs_work/print.php` |
+| 26 | Panduan Pengusul & Template | `PanduanPage.tsx`, `TemplatePage.tsx` | `pengusul/dashboard/panduan.php`, `template.php` |
+| 27 | Detail Revisi Pengusul (Editable) | `EditRevisiPage.tsx` (dengan highlight komentar) | `pengusul/detail_revisi.php` |
+| 28 | Archive / Arsip | `ArchivePage.tsx` | `*/activity_proposals/archive.php` |
+| 29 | Notifikasi Realtime | `NotificationDropdown.tsx` | `NotifController.php` |
+| 30 | Verifikator Info Pengusul (tab) | `VerifikasiDetailPage.tsx` (Pengusul tab) | `verifikator/activity_proposal/View/pengusul.php` |
+| 31 | Admin Intervensi Status | `AdminMonitoringPage.tsx` | `admin/Monitoring/intervensi_process.php` |
+| 32 | Bendahara Detail Views | `BendaharaDetailPage.tsx` | `Bendahara/activity_proposal/View/*.php` |
 
 ---
 
 ## 6. Fitur yang BELUM Dimigrasi ❌ (PENTING!)
 
-### 6.1 Export / Print PDF
-**PHP**: `pengusul/needs_work/print.php` — halaman print-friendly untuk proposal dengan CSS `@media print`, bisa "Save as PDF" via browser.
-**React**: ❌ Belum ada. Perlu dibuat komponen print yang:
-- Render proposal (Info Kegiatan, KAK, IKU, RAB) dalam layout print-friendly
-- Support `window.print()` atau library seperti `react-to-print`
-- Custom filename berdasarkan nama kegiatan
-- RAB grouped by kategori (barang/jasa/perjalanan/custom) dengan subtotal
-
-### 6.2 Panduan Pengusul
-**PHP**: `pengusul/dashboard/panduan.php` — halaman panduan/tutorial interaktif dengan:
-- Collapsible FAQ sections
-- Step-by-step guide pengajuan
-- Searchable content
-**React**: ❌ Belum ada halaman panduan
-
-### 6.3 Template Download
-**PHP**: `pengusul/dashboard/template.php` — halaman untuk download template dokumen
-**React**: ❌ Belum ada
-
-### 6.4 Detail Revisi Pengusul (Editable)
-**PHP**: `pengusul/detail_revisi.php` — form **editable** untuk revisi proposal yang dikembalikan verifikator. Berisi:
-- Pre-populated form KAK, IKU, RAB (bisa diedit)
-- RAB grouped by kategori (barang/jasa/perjalanan + custom kategori)
-- RAB calculation: `qty1 * qty2 * qty3 * harga_satuan`
-- Verifikator comments ditampilkan per-field
-- Submit revisi kembali ke verifikator
-**React**: ❌ `NeedsWorkPage.tsx` hanya listing, belum ada form edit. `DetailUsulanPage.tsx` hanya read-only.
-
-### 6.5 Archive / Arsip (Verifikator, PPK, Wadir)
-**PHP**: 
-- `verifikator/activity_proposal/Allproposal/archive.php`
-- `PPK/activity_proposals/archive.php`
-- `wadir/activity_proposals/archive.php`
-
-Halaman arsip proposal yang sudah lewat (approved/rejected/completed) — terpisah dari daftar proposal aktif.
-**React**: ❌ Belum ada halaman archive terpisah
-
-### 6.6 PPK/Wadir Detail Views (KAK, IKU, RAB, Info)
-**PHP**:
-- `PPK/activity_proposals/view_kak.php`, `view_iku.php`, `view_rab.php`, `view_infokegiatan.php`
-- `wadir/activity_proposals/view_kak.php`, `view_iku.php`, `view_rab.php`, `view_Infokegiatan.php`, `detail.php`
-
-Detail per-tab untuk PPK dan Wadir (KAK/IKU/RAB/Info) — saat ini React hanya punya `ReviewApprovalPage` yang simplified.
-**React**: ⚠️ Partial — `ReviewApprovalPage.tsx` ada tapi kurang detail dibanding PHP
-
-### 6.7 Bendahara Detail Views
-**PHP**: 
-- `Bendahara/activity_proposal/View/KAK.php`, `IKU.php`, `RAB.php`, `Info_Kegiatan.php`, `Pencairan_Dana.php`
-- `Bendahara/detail/view.php`
-- `Bendahara/laporan/all_lpj.php`, `review_lpj.php`
-
-Per-tab detail views dan LPJ listing/review khusus bendahara.
-**React**: ⚠️ Partial
-
-### 6.8 Verifikator View Pengusul Info
-**PHP**: `verifikator/activity_proposal/View/pengusul.php` — melihat info lengkap pengusul (NIP, jurusan, dll)
-**React**: ❌ Belum ada
-
-### 6.9 Admin Monitoring (Intervensi Process)
-**PHP**: `admin/Monitoring/intervensi_process.php` — monitoring dengan kemampuan intervensi (force-change status, dll)
-**React**: ⚠️ `AdminMonitoringPage` hanya pakai generic `MonitoringPage`, belum ada fitur intervensi
-
-### 6.10 Notifikasi
-**PHP**: `NotifController.php` — sistem notifikasi
-**React**: ❌ Bell icon ada tapi belum fungsional
-
-### 6.11 Email Verification
+### 6.1 Email Verification
 **PHP**: `auth/verify_email.php`
-**React**: ❌ Belum ada
-
-### 6.12 Admin Info User Detail
-**PHP**: `admin/management_user/infouser.php` — halaman detail info user (view-only)
-**React**: ❌ Belum ada (hanya ada edit form)
-
-### 6.13 RAB Multi-Kategori
-**PHP**: RAB dikelompokkan berdasarkan kategori (barang/jasa/perjalanan + custom) dengan subtotal per kategori.
-**React**: ⚠️ `CreateUsulanPage` belum support multi-kategori RAB dengan kalkulasi `qty1 * qty2 * qty3 * harga_satuan`
-
-### 6.14 Chart.js Dashboard Visualisasi
-**PHP**: Dashboard admin menggunakan Chart.js untuk pie chart, bar chart distribusi per jurusan
-**React**: ❌ Belum ada chart — hanya angka-angka stats
+**React**: ❌ Belum ada flow verifikasi email
 
 ---
 
 ## 7. Security Issues ⚠️
 
-| Issue | Severity | Detail |
-|---|---|---|
-| Hardcoded Appwrite credentials | **CRITICAL** | `appwrite.ts` line 6-7 expose endpoint & project ID di client bundle |
-| Plaintext passwords | **CRITICAL** | `users` collection `password` field disimpan plaintext, login compare langsung string |
-| No real auth | **HIGH** | Login hanya query `users` collection + store di localStorage, tidak ada session/JWT |
-| Client-side authorization | **HIGH** | Role check hanya dari localStorage, bisa di-manipulasi via devtools |
-| No CSRF protection | **MEDIUM** | Form submission tidak ada CSRF token |
+| Issue | Severity | Status | Detail |
+|---|---|---|---|
+| Hardcoded Appwrite credentials | **HIGH** | ⚠️ Belum fix | `appwrite.ts` expose endpoint & project ID di client bundle. Idealnya pakai `.env` |
+| Client-side password hashing | **MEDIUM** | ✅ Partial fix | Password di-hash SHA-256 via `hashPassword()` di `helpers.ts`. Login compare hashed + plaintext fallback |
+| No real auth session | **HIGH** | ⚠️ Belum fix | Login hanya query `users` collection + store di localStorage, tidak ada server-side session/JWT |
+| Client-side authorization | **HIGH** | ⚠️ Belum fix | Role check hanya dari localStorage, bisa di-manipulasi via devtools |
+| No CSRF protection | **MEDIUM** | ⚠️ Belum fix | Form submission tidak ada CSRF token |
 
 ### Recommended Fix Priority:
-1. Pindahkan auth ke server-side (server.ts sudah setup express — buat `/api/login` endpoint)
-2. Hash passwords dengan bcrypt
+1. Pindahkan auth ke server-side (server.ts sudah setup express — buat `/api/login` endpoint dengan JWT)
+2. Migrasi dari SHA-256 client-side ke bcrypt server-side
 3. Pakai session/JWT bukan localStorage
 4. Environment variables untuk credentials (`.env` file)
 
@@ -355,9 +291,9 @@ await databases.createDocument(APPWRITE_DB_ID, 'collection_id', ID.unique(), {
 
 ---
 
-## 9. RAB Calculation Logic (dari PHP)
+## 9. RAB Calculation Logic (sudah dimigrasi ✅)
 
-RAB di PHP memiliki perhitungan yang lebih kompleks daripada React saat ini:
+Kalkulasi RAB sudah diimplementasikan di `CreateUsulanPage.tsx` dan `EditRevisiPage.tsx`:
 
 ```
 total = qty1 × qty2 × qty3 × harga_satuan   (jika qty3 ada)
@@ -372,6 +308,7 @@ RAB dikelompokkan berdasarkan `kategori`:
 - Custom categories (user-defined)
 
 Setiap kategori punya subtotal, dan grand total di bawah.
+Print view (`PrintProposalPage.tsx`) juga menampilkan RAB grouped by kategori dengan subtotal.
 
 ---
 
@@ -379,13 +316,17 @@ Setiap kategori punya subtotal, dan grand total di bawah.
 
 | File | Kenapa Penting |
 |---|---|
-| `src/lib/helpers.ts` | Semua status mapping, formatters, fetch helpers |
+| `src/lib/helpers.ts` | Status mapping, formatters, `hashPassword()`, fetch helpers |
 | `src/lib/appwrite.ts` | DB credentials, client init |
 | `src/App.tsx` | Semua routes, import semua pages |
 | `src/layouts/RoleLayout.tsx` | Sidebar menus per role, topbar, logout |
 | `src/components/MonitoringPage.tsx` | Shared monitoring (filter, search, table) |
+| `src/components/NotificationDropdown.tsx` | Realtime notification bell dropdown |
 | `src/components/ProgressTracker.tsx` | Visual workflow tracker |
 | `src/components/StatusBadge.tsx` | Color-coded status badges |
+| `src/pages/pengusul/EditRevisiPage.tsx` | Form revisi editable dengan highlight catatan per-kolom |
+| `src/pages/verifikator/RevisiFormPage.tsx` | Form verifikator beri catatan per-kolom + per-item RAB |
+| `src/pages/shared/ArchivePage.tsx` | Shared archive page (verifikator/PPK/wadir) |
 | `server.ts` | Express server, Appwrite proxy, CORS |
 | `index.html` | Google Fonts, Material Icons CDN |
 
@@ -394,7 +335,7 @@ Setiap kategori punya subtotal, dan grand total di bawah.
 ## 11. Cara Run
 
 ```bash
-cd /home/udin/Documents/SiLATORJANA
+cd /home/udin/SILATORJANA/web
 npm install          # pertama kali
 npm run dev          # development mode (tsx server.ts → Express + Vite)
 npm run build        # production build
@@ -415,16 +356,12 @@ Di LoginPage ada dropdown "Login Cepat" dengan akun test:
 
 ---
 
-## 12. Prioritas Migrasi Selanjutnya
+## 12. Sisa Prioritas Migrasi Selanjutnya (Tersisa Sedikit!)
 
-1. **✅ Export PDF / Print** — Fitur paling sering diminta user (PrintProposalPage.tsx)
-2. **✅ Detail Revisi Form (editable)** — Pengusul bisa edit proposal yang di-revisi (EditRevisiPage.tsx)
-3. **✅ RAB Multi-Kategori** — Kalkulasi qty1×qty2×qty3 + grouping per kategori (CreateUsulanPage upgraded)
-4. **✅ Panduan & Template** — Halaman bantuan + template download untuk pengusul (PanduanPage.tsx, TemplatePage.tsx)
-5. **✅ Archive Pages** — Arsip proposal untuk verifikator/PPK/wadir (shared/ArchivePage.tsx)
-6. **✅ Chart.js Dashboard** — Visualisasi data di dashboard admin/rektorat (RektoratDashboard.tsx dengan SVG chart)
-7. **✅ PPK/Wadir Detail Views** — Per-tab detail yang lebih lengkap (ReviewApprovalPage.tsx tabbed)
-8. **✅ Notifikasi** — Real-time notification system (NotificationDropdown.tsx dengan Appwrite Realtime)
-9. **✅ Security Hardening** — Auth proper, hash passwords (SHA-256 Web Crypto API di LoginPage.tsx dan UserFormPage.tsx)
-10. **✅ Admin User Info Detail** — View-only user info page (UserDetailPage.tsx)
+Semua fitur mayor (seperti Export PDF, Editable Revisi, Kalkulasi RAB, Arsip, Panduan, Template, Notifikasi) **SUDAH DISELESAIKAN** dalam iterasi terakhir. Berikut adalah hal-hal minor yang bisa menjadi fokus berikutnya:
+
+1. **Email Verification** — Integrasi verifikasi email via SMTP untuk registrasi user baru.
+2. **Admin Monitoring (Intervensi)** — Menambahkan aksi "Edit Status Paksa" di halaman AdminMonitoringPage seperti fungsi intervensi pada sistem lama.
+3. **Detail Bendahara Lanjutan** — Memperkaya halaman detail pengajuan khusus Bendahara agar setara dengan tampilan multi-tab di PHP lama.
+4. **Detail Info Pengusul untuk Verifikator** — Menambahkan popover atau modal info NIP/Jurusan saat Verifikator mengecek proposal.
 
