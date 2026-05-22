@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { AppLogo } from '@/components/AppLogo';
-import { account, databases, APPWRITE_DB_ID } from '@/lib/appwrite';
+import { databases, APPWRITE_DB_ID } from '@/lib/appwrite';
 import { Query } from 'appwrite';
+import { hashPassword } from '@/lib/helpers';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -19,31 +20,18 @@ export function LoginPage() {
     setError('');
     setIsLoading(true);
     try {
-      await account.createEmailPasswordSession(email, password);
-      const acc = await account.get();
-      
-      const res = await databases.listDocuments(APPWRITE_DB_ID, 'users', [
-        Query.equal('email', email)
-      ]);
-      
-      if (res.documents.length === 0) {
-        throw new Error('User tidak ditemukan dalam database sistem.');
+      const data = await databases.listDocuments(APPWRITE_DB_ID, 'users', [Query.equal('email', email)]);
+      if (!data.documents || data.documents.length === 0) throw new Error('Email tidak ditemukan di sistem.');
+      const userDoc = data.documents[0];
+
+      const hashedInput = await hashPassword(password);
+      if (userDoc.password !== password && userDoc.password !== hashedInput) {
+        throw new Error('Password salah.');
       }
-      
-      const userDoc = res.documents[0];
-      const role = userDoc.role;
-      
-      const userSession = {
-        $id: userDoc.$id,
-        user_id: acc.$id,
-        name: userDoc.nama || userDoc.name || acc.name,
-        email: acc.email,
-        role: role,
-        jurusan_id: userDoc.jurusan_id
-      };
-      
-      localStorage.setItem('currentUser', JSON.stringify(userSession));
-      navigate(role === 'admin' ? '/dashboard/admin' : role === 'verifikator' ? '/dashboard/verifikator' : role === 'ppk' ? '/dashboard/ppk' : role === 'bendahara' ? '/dashboard/bendahara' : role === 'wadir2' ? '/dashboard/wadir2' : role === 'rektorat' ? '/dashboard/rektorat' : '/dashboard/pengusul');
+
+      localStorage.setItem('currentUser', JSON.stringify(userDoc));
+      const r = userDoc.role;
+      navigate(r === 'admin' ? '/dashboard/admin' : r === 'verifikator' ? '/dashboard/verifikator' : r === 'ppk' ? '/dashboard/ppk' : r === 'bendahara' ? '/dashboard/bendahara' : r === 'wadir2' ? '/dashboard/wadir2' : r === 'rektorat' ? '/dashboard/rektorat' : '/dashboard/pengusul');
     } catch (err: any) {
       setError(err.message || 'Login gagal. Silakan cek kembali kredensial Anda.');
     } finally { setIsLoading(false); }
