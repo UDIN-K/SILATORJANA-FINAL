@@ -18,7 +18,7 @@ export function ForgotPasswordPage() {
     setIsLoading(true);
     setError('');
     try {
-      // Appwrite account recovery would go here
+      // Laravel password reset would go here
       // await account.createRecovery(email, window.location.origin + '/reset-password');
       setSuccess(true);
     } catch (err: any) {

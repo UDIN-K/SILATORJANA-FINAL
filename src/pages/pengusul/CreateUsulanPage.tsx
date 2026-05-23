@@ -39,7 +39,7 @@ export function CreateUsulanPage() {
   }, [navigate]);
 
   const [formData, setFormData] = useState({
-    // Kegiatan fields (match Appwrite schema: nama_kegiatan, deskripsi, jenis_kegiatan, tanggal_kegiatan, tempat, pengusul_organisasi, jurusan_id, verifikator_target)
+    // Kegiatan fields (fields: nama_kegiatan, deskripsi, jenis_kegiatan, tanggal_kegiatan, tempat, pengusul_organisasi, jurusan_id, verifikator_target)
     nama_kegiatan: '',
     deskripsi: '',
     jenis_kegiatan: '',

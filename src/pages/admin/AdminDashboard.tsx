@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiListKegiatan } from '@/lib/api';
-import { Users, FileText, CheckCircle, AlertTriangle, ArrowUpRight, Clock, Database, Loader2 } from 'lucide-react';
+import api from '@/lib/api';
+import { Users, FileText, CheckCircle, AlertTriangle, ArrowUpRight, Clock, Database, Loader2, HardDrive } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useState, useEffect } from 'react';
@@ -14,6 +15,8 @@ export function AdminDashboard() {
     ditolak: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [health, setHealth] = useState<any>(null);
+  const [jurusanDist, setJurusanDist] = useState<{name:string;count:number;pct:number}[]>([]);
 
   useEffect(() => {
     const fetchUsulan = async () => {
@@ -44,6 +47,17 @@ export function AdminDashboard() {
           disetujui: cDisetujui,
           ditolak: cDitolak
         });
+
+        // Calculate jurusan distribution
+        const jurusanMap: Record<string, number> = {};
+        allDocs.forEach((d: any) => {
+          const j = d.nama_jurusan || 'Lainnya';
+          jurusanMap[j] = (jurusanMap[j] || 0) + 1;
+        });
+        const dist = Object.entries(jurusanMap)
+          .map(([name, count]) => ({ name, count, pct: Math.round((count / cTotal) * 100) }))
+          .sort((a, b) => b.count - a.count);
+        setJurusanDist(dist);
       } catch (error) {
         console.error(error);
       } finally {
@@ -51,6 +65,9 @@ export function AdminDashboard() {
       }
     };
     fetchUsulan();
+
+    // Fetch system health
+    api.get('/api/system-health').then(res => setHealth(res.data)).catch(() => {});
   }, []);
 
   const stats = [
@@ -152,66 +169,69 @@ export function AdminDashboard() {
              <CardDescription className="text-sm font-medium mt-1">Status layanan inti aplikasi</CardDescription>
            </CardHeader>
            <CardContent className="p-6 space-y-8">
-              <div className="space-y-5">
-                 <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 border border-slate-100">
-                    <div className="flex items-center gap-4">
-                       <div className="p-2.5 rounded-xl bg-emerald-100/80 text-emerald-700 shadow-sm">
-                          <Database className="size-4.5" />
-                       </div>
-                       <div>
-                          <p className="font-semibold text-slate-800 text-[14px]">Appwrite Database</p>
-                          <p className="text-[12px] font-medium text-slate-500 mt-0.5">Koneksi Stabil</p>
-                       </div>
-                    </div>
-                    <Badge className="bg-emerald-100 text-emerald-800 shadow-sm border border-emerald-200/50 rounded-lg px-2.5">Online</Badge>
-                 </div>
-                 
-                 <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 border border-slate-100">
-                    <div className="flex items-center gap-4">
-                       <div className="p-2.5 rounded-xl bg-emerald-100/80 text-emerald-700 shadow-sm">
-                          <Users className="size-4.5" />
-                       </div>
-                       <div>
-                          <p className="font-semibold text-slate-800 text-[14px]">Authentication</p>
-                          <p className="text-[12px] font-medium text-slate-500 mt-0.5">Sessions Aktif</p>
-                       </div>
-                    </div>
-                    <Badge className="bg-emerald-100 text-emerald-800 shadow-sm border border-emerald-200/50 rounded-lg px-2.5">Online</Badge>
-                 </div>
-              </div>
-
-              <div className="pt-6 border-t border-slate-100/80">
-                  <h4 className="text-[13px] font-bold text-slate-800 mb-5 uppercase tracking-wider">Distribusi Usulan per Unit</h4>
-                  <div className="space-y-5">
-                     <div>
-                        <div className="flex justify-between text-[13px] mb-2">
-                           <span className="text-slate-600 font-semibold tracking-tight">BEM & Kemahasiswaan</span>
-                           <span className="text-emerald-700 font-extrabold">45%</span>
+               <div className="space-y-5">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                     <div className="flex items-center gap-4">
+                        <div className={`p-2.5 rounded-xl shadow-sm ${health?.database === 'connected' ? 'bg-emerald-100/80 text-emerald-700' : 'bg-red-100/80 text-red-700'}`}>
+                           <Database className="size-4.5" />
                         </div>
-                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                           <div className="h-full bg-emerald-500 rounded-full" style={{ width: '45%' }}></div>
+                        <div>
+                           <p className="font-semibold text-slate-800 text-[14px]">MySQL Database</p>
+                           <p className="text-[12px] font-medium text-slate-500 mt-0.5">{health ? `Laravel ${health.laravel_version} • PHP ${health.php_version}` : 'Memuat...'}</p>
                         </div>
                      </div>
-                     <div>
-                        <div className="flex justify-between text-[13px] mb-2">
-                           <span className="text-slate-600 font-semibold tracking-tight">Fakultas / Prodi</span>
-                           <span className="text-indigo-600 font-extrabold">35%</span>
-                        </div>
-                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                           <div className="h-full bg-indigo-500 rounded-full" style={{ width: '35%' }}></div>
-                        </div>
-                     </div>
-                     <div>
-                        <div className="flex justify-between text-[13px] mb-2">
-                           <span className="text-slate-600 font-semibold tracking-tight">Lembaga / Pusat Studi</span>
-                           <span className="text-amber-600 font-extrabold">20%</span>
-                        </div>
-                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                           <div className="h-full bg-amber-500 rounded-full" style={{ width: '20%' }}></div>
-                        </div>
-                     </div>
+                     <Badge className={`shadow-sm border rounded-lg px-2.5 ${health?.database === 'connected' ? 'bg-emerald-100 text-emerald-800 border-emerald-200/50' : 'bg-red-100 text-red-800 border-red-200/50'}`}>{health?.database === 'connected' ? 'Online' : 'Error'}</Badge>
                   </div>
-              </div>
+                  
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                     <div className="flex items-center gap-4">
+                        <div className={`p-2.5 rounded-xl shadow-sm ${health?.storage === 'writable' ? 'bg-emerald-100/80 text-emerald-700' : 'bg-red-100/80 text-red-700'}`}>
+                           <HardDrive className="size-4.5" />
+                        </div>
+                        <div>
+                           <p className="font-semibold text-slate-800 text-[14px]">Storage</p>
+                           <p className="text-[12px] font-medium text-slate-500 mt-0.5">{health ? `${health.users_count} users • ${health.kegiatan_count} kegiatan` : 'Memuat...'}</p>
+                        </div>
+                     </div>
+                     <Badge className={`shadow-sm border rounded-lg px-2.5 ${health?.storage === 'writable' ? 'bg-emerald-100 text-emerald-800 border-emerald-200/50' : 'bg-red-100 text-red-800 border-red-200/50'}`}>{health?.storage === 'writable' ? 'OK' : 'Error'}</Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                     <div className="flex items-center gap-4">
+                        <div className="p-2.5 rounded-xl bg-emerald-100/80 text-emerald-700 shadow-sm">
+                           <Users className="size-4.5" />
+                        </div>
+                        <div>
+                           <p className="font-semibold text-slate-800 text-[14px]">Authentication</p>
+                           <p className="text-[12px] font-medium text-slate-500 mt-0.5">Laravel Sanctum</p>
+                        </div>
+                     </div>
+                     <Badge className="bg-emerald-100 text-emerald-800 shadow-sm border border-emerald-200/50 rounded-lg px-2.5">Online</Badge>
+                  </div>
+               </div>
+
+               <div className="pt-6 border-t border-slate-100/80">
+                   <h4 className="text-[13px] font-bold text-slate-800 mb-5 uppercase tracking-wider">Distribusi Usulan per Jurusan</h4>
+                   <div className="space-y-5">
+                      {jurusanDist.length > 0 ? jurusanDist.map((d, i) => {
+                        const colors = ['emerald', 'indigo', 'amber', 'blue', 'purple', 'rose', 'cyan'];
+                        const c = colors[i % colors.length];
+                        return (
+                          <div key={d.name}>
+                            <div className="flex justify-between text-[13px] mb-2">
+                              <span className="text-slate-600 font-semibold tracking-tight">{d.name}</span>
+                              <span className={`text-${c}-600 font-extrabold`}>{d.pct}%</span>
+                            </div>
+                            <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                              <div className={`h-full bg-${c}-500 rounded-full`} style={{ width: `${d.pct}%` }}></div>
+                            </div>
+                          </div>
+                        );
+                      }) : (
+                        <p className="text-sm text-slate-400">Belum ada data.</p>
+                      )}
+                   </div>
+               </div>
            </CardContent>
         </Card>
       </div>

@@ -24,7 +24,7 @@ export function NotificationDropdown({ role }: NotificationDropdownProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Initial load + polling (replaces Appwrite realtime)
+  // Initial load + polling (polls for status changes)
   useEffect(() => {
     loadNotifications();
     const interval = setInterval(loadNotifications, 30000); // Poll every 30s

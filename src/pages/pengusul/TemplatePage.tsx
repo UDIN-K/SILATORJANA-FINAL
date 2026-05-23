@@ -53,9 +53,9 @@ export function TemplatePage() {
   const scrollRef = useDraggableScroll<HTMLDivElement>();
 
   const handleDownload = (template: TemplateItem) => {
-    // In a real implementation, this would download from Appwrite storage or a static URL.
+    // In a real implementation, this would download from Laravel storage.
     // For now, show an alert indicating the feature is ready for backend integration.
-    alert(`Download template "${template.name}" belum tersedia.\n\nUntuk mengaktifkan fitur ini, upload file template ke Appwrite Storage dan hubungkan URL-nya di sini.`);
+    alert(`Download template "${template.name}" belum tersedia.\n\nUntuk mengaktifkan fitur ini, upload file template ke Laravel storage.`);
   };
 
   return (

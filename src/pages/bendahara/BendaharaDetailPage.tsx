@@ -47,7 +47,7 @@ export function BendaharaDetailPage() {
             const userList = await apiListUsers();
             if (userList.documents.length > 0) setPengusulData(userList.documents[0]);
           } catch {
-            // user_id might be Appwrite $id
+            // user_id from Laravel
             try {
               const userDoc = await apiGetUser(String(kegiatan.pengusul_id));
               setPengusulData(userDoc);
