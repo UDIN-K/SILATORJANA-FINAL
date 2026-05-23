@@ -172,3 +172,44 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
     });
 });
+
+// Chatbot (Jana Assistant) - uses OpenRouter API
+Route::post('/chat', function (Request $request) {
+    $apiKey = config('services.openrouter.api_key');
+    if (!$apiKey) {
+        return response()->json(['reply' => 'Asisten Jana belum dikonfigurasi. Tambahkan OPENROUTER_API_KEY di .env backend.'], 200);
+    }
+
+    $message = $request->input('message', '');
+    if (!$message) {
+        return response()->json(['reply' => 'Pesan tidak boleh kosong.'], 422);
+    }
+
+    $systemPrompt = "Kamu adalah Jana, asisten AI untuk sistem Si-LATORJANA (Sistem Layanan Administrasi Pelaporan Kegiatan Jurusan) di Politeknik Negeri Jakarta. "
+        . "Jawab dalam Bahasa Indonesia yang sopan dan ringkas. "
+        . "Bantu pengguna terkait: cara membuat usulan kegiatan, alur persetujuan (Pengusul→Verifikator→PPK→Wadir→Bendahara→Rektorat), "
+        . "cara mengisi KAK, RAB, dan IKU, serta panduan umum penggunaan sistem.";
+
+    try {
+        $response = \Illuminate\Support\Facades\Http::withHeaders([
+            'Authorization' => "Bearer {$apiKey}",
+            'Content-Type' => 'application/json',
+            'HTTP-Referer' => config('app.url', 'http://localhost'),
+            'X-Title' => 'Si-LATORJANA',
+        ])->post('https://openrouter.ai/api/v1/chat/completions', [
+            'model' => 'google/gemini-2.0-flash-001',
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $message],
+            ],
+        ]);
+
+        $data = $response->json();
+        $reply = $data['choices'][0]['message']['content'] ?? 'Maaf, saya tidak bisa memproses permintaan Anda saat ini.';
+
+        return response()->json(['reply' => $reply]);
+    } catch (\Exception $e) {
+        return response()->json(['reply' => 'Terjadi kesalahan: ' . $e->getMessage()], 200);
+    }
+});
+
