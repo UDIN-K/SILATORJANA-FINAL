@@ -291,7 +291,7 @@ export function VerifikasiDetailPage() {
                     <div key={kat} className="border-b border-slate-100/80 last:border-0 m-6 ring-1 ring-slate-200/60 rounded-2xl overflow-hidden shadow-sm">
                       <div className="px-5 py-3.5 bg-slate-50/80 border-b border-slate-100/80 flex items-center justify-between">
                         <span className="text-xs font-bold uppercase tracking-widest text-slate-600 block">{katLabel}</span>
-                        <span className="text-xs font-bold text-slate-500 bg-white px-2 py-1 rounded shadow-sm border border-slate-200/50">{items.length} Entri</span>
+                        <span className="text-xs font-bold text-slate-500 bg-white px-2 py-1 rounded shadow-sm border border-slate-200/50">{(items as any[]).length} Entri</span>
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">

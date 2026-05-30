@@ -4,7 +4,7 @@ import { getUserName, getUserRole } from '@/lib/helpers';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { CalendarWidget } from '@/components/CalendarWidget';
 import { useState, useEffect } from 'react';
-import { Joyride, Step } from 'react-joyride';
+import { Joyride, Step, EventData } from 'react-joyride';
 import { JanaAssistant } from '@/components/JanaAssistant';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -342,7 +342,7 @@ export function RoleLayout() {
               fontWeight: 500,
             }
           } as any}
-          callback={(data) => {
+          onEvent={(data: EventData) => {
             if (data.status === 'finished' || data.status === 'skipped') {
               setRunTour(false);
               setTourFinished(true);
