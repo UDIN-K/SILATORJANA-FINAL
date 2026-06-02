@@ -3,7 +3,7 @@ import api, { apiCreateKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, Send, Plus, Loader2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Send, Plus, Loader2, Trash2, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,6 +15,7 @@ export function CreateUsulanPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [jurusanList, setJurusanList] = useState<any[]>([]);
+  const [ikuMasterList, setIkuMasterList] = useState<any[]>([]);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -25,7 +26,6 @@ export function CreateUsulanPage() {
     api.get('/api/jurusan').then(res => {
       setJurusanList(Array.isArray(res.data) ? res.data : res.data?.data || []);
     }).catch(() => {
-      // Fallback if API fails
       setJurusanList([
         { id: '1', nama_jurusan: 'Teknik Informatika & Komputer' },
         { id: '2', nama_jurusan: 'Teknik Elektro' },
@@ -36,10 +36,32 @@ export function CreateUsulanPage() {
         { id: '7', nama_jurusan: 'Administrasi Niaga' },
       ]);
     });
+
+    // Fetch IKU master list
+    api.get('/api/iku-master').then(res => {
+      const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setIkuMasterList(data.filter((item: any) => item.is_visible !== false));
+    }).catch(() => {
+      // Fallback master IKU jika API gagal - comprehensive list matching native system
+      setIkuMasterList([
+        { id: 1, nama_indikator: 'Lulusan Mendapat Pekerjaan yang Layak', is_visible: true },
+        { id: 2, nama_indikator: 'Mahasiswa Mendapat Pengalaman di Luar Kampus', is_visible: true },
+        { id: 3, nama_indikator: 'Dosen Berkegatan di Luar Kampus', is_visible: true },
+        { id: 4, nama_indikator: 'Praktisi Mengajar di Dalam Kampus', is_visible: true },
+        { id: 5, nama_indikator: 'Hasil Kerja Dosen Digunakan oleh Masyarakat', is_visible: true },
+        { id: 6, nama_indikator: 'Program Studi Bekerja sama dengan Mitra Kelas Dunia', is_visible: true },
+        { id: 7, nama_indikator: 'Kelas yang Kolaboratif dan Partisipatif', is_visible: true },
+        { id: 8, nama_indikator: 'Program Studi Bestandar Internasional', is_visible: true },
+        { id: 9, nama_indikator: 'Peserta terlayani (%)', is_visible: true },
+        { id: 10, nama_indikator: 'Kepuasan pengguna (%)', is_visible: true },
+        { id: 11, nama_indikator: 'Tingkat kelulusan (%)', is_visible: true },
+        { id: 12, nama_indikator: 'Efektivitas program (%)', is_visible: true },
+      ]);
+    });
   }, [navigate]);
 
   const [formData, setFormData] = useState({
-    // Kegiatan fields (fields: nama_kegiatan, deskripsi, jenis_kegiatan, tanggal_kegiatan, tempat, pengusul_organisasi, jurusan_id, verifikator_target)
+    // Kegiatan fields
     nama_kegiatan: '',
     deskripsi: '',
     jenis_kegiatan: '',
@@ -47,17 +69,18 @@ export function CreateUsulanPage() {
     tempat: '',
     pengusul_organisasi: '',
     jurusan_id: '',
-    verifikator_target: '',
-    // KAK fields (match: gambaran_umum, penerima_manfaat, strategi_pencapaian, metode_pelaksanaan, tahapan_pelaksanaan, indikator_kinerja, kurun_waktu_mulai, kurun_waktu_selesai)
+    // KAK fields
     gambaran_umum: '',
     penerima_manfaat: '',
     strategi_pencapaian: '',
     metode_pelaksanaan: '',
     tahapan_pelaksanaan: '',
-    indikator_kinerja: '',
+    indikator_kinerja_rows: [] as { bulan: string; indikator: string; target: number | null; persen: number | null }[],
     kurun_waktu_mulai: '',
     kurun_waktu_selesai: '',
-    // RAB items (match: kategori, kategori_label, uraian, qty1, satuan1, qty2, satuan2, qty3, harga_satuan)
+    // IKU items (Step 3) - pilihan dari master
+    ikuItems: [] as { nama_indikator: string; target_persen: number | null }[],
+    // RAB items (Step 4)
     item_rab: [] as { kategori: string; uraian: string; qty1: number; satuan1: string; qty2: number; qty3: number; harga_satuan: number }[],
   });
 
@@ -66,27 +89,39 @@ export function CreateUsulanPage() {
     if (!currentUser) return;
     setIsSubmitting(true);
     try {
-      // Laravel API accepts nested kak + rab in single request
+      // Filter IKU items (non-empty)
+      const ikuItems = formData.ikuItems.filter(item => item.nama_indikator.trim()).map(item => ({
+        nama_iku: item.nama_indikator.trim(),
+        target_persen: item.target_persen || null,
+      }));
+
       const payload: Record<string, any> = {
         nama_kegiatan: formData.nama_kegiatan,
+        deskripsi: formData.deskripsi || null,
         jenis_kegiatan: formData.jenis_kegiatan || null,
         tempat: formData.tempat || null,
         status: 'submitted',
       };
+      if (formData.jurusan_id) payload.jurusan_id = formData.jurusan_id;
       if (formData.tanggal_kegiatan) payload.tanggal_kegiatan = formData.tanggal_kegiatan;
 
-      // KAK data (nested)
+      // KAK data - indikator_kinerja converted from table to JSON string
+      const indikatorKinerjaStr = formData.indikator_kinerja_rows.length > 0 
+        ? JSON.stringify(formData.indikator_kinerja_rows)
+        : null;
+      
       payload.kak = {
         gambaran_umum: formData.gambaran_umum || null,
         penerima_manfaat: formData.penerima_manfaat || null,
         strategi_pencapaian: formData.strategi_pencapaian || null,
         metode_pelaksanaan: formData.metode_pelaksanaan || null,
         tahapan_pelaksanaan: formData.tahapan_pelaksanaan || null,
+        indikator_kinerja: indikatorKinerjaStr,
         kurun_waktu_mulai: formData.kurun_waktu_mulai || null,
         kurun_waktu_selesai: formData.kurun_waktu_selesai || null,
       };
 
-      // RAB items (nested array)
+      // RAB items
       payload.rab = formData.item_rab.map(item => ({
         kategori: item.kategori || 'barang',
         uraian: item.uraian,
@@ -96,6 +131,8 @@ export function CreateUsulanPage() {
         qty2: item.qty2 || 1,
         qty3: item.qty3 || 0,
       }));
+
+      if (ikuItems.length > 0) payload.iku = ikuItems;
 
       await apiCreateKegiatan(payload);
       navigate('/dashboard/pengusul/usulan');
@@ -140,7 +177,7 @@ export function CreateUsulanPage() {
         </Button>
         <div className="flex-1">
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">Buat Usulan Baru</h2>
-          <p className="text-slate-500 font-medium tracking-tight mt-1">Isi formulir terpadu untuk Informasi Kegiatan, KAK, dan RAB.</p>
+          <p className="text-slate-500 font-medium tracking-tight mt-1">Isi formulir terpadu untuk Informasi Kegiatan, KAK, IKU, dan RAB.</p>
         </div>
       </div>
 
@@ -148,7 +185,8 @@ export function CreateUsulanPage() {
         {[
           { id: 1, name: 'Info Kegiatan' },
           { id: 2, name: 'Kerangka Acuan (KAK)' },
-          { id: 3, name: 'Anggaran (RAB)' }
+          { id: 3, name: 'Indikator Kinerja (IKU)' },
+          { id: 4, name: 'Anggaran (RAB)' }
         ].map((step, idx) => (
            <React.Fragment key={step.id}>
              <div className="flex items-center gap-2 sm:gap-3">
@@ -157,7 +195,7 @@ export function CreateUsulanPage() {
                </div>
                <span className={`font-semibold text-xs sm:text-sm ${currentStep === step.id ? 'text-slate-900' : currentStep > step.id ? 'text-[#047857]' : 'text-slate-400'}`}>{step.name}</span>
              </div>
-             {idx < 2 && <div className={`flex-1 h-1 rounded-full ${currentStep > step.id ? 'bg-emerald-500' : 'bg-slate-100'}`} />}
+             {idx < 3 && <div className={`flex-1 h-1 rounded-full ${currentStep > step.id ? 'bg-emerald-500' : 'bg-slate-100'}`} />}
            </React.Fragment>
         ))}
       </div>
@@ -283,11 +321,92 @@ export function CreateUsulanPage() {
                   value={formData.tahapan_pelaksanaan} onChange={e => setFormData({...formData, tahapan_pelaksanaan: e.target.value})} />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-slate-700 font-semibold">Indikator Kinerja & Target Keberhasilan</Label>
-              <textarea className="flex min-h-[80px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none"
-                placeholder="Ukuran kuantitatif atau kualitatif keberhasilan."
-                value={formData.indikator_kinerja} onChange={e => setFormData({...formData, indikator_kinerja: e.target.value})} />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-4">
+                <Label className="text-slate-700 font-semibold">Indikator Kinerja (Rancangan & Progress)</Label>
+                <Button type="button" variant="secondary" size="sm" className="h-10 rounded-xl"
+                  onClick={() => setFormData(prev => ({
+                    ...prev,
+                    indikator_kinerja_rows: [...prev.indikator_kinerja_rows, { bulan: '', indikator: '', target: null, persen: null }],
+                  }))}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Tambah Baris
+                </Button>
+              </div>
+              
+              {formData.indikator_kinerja_rows.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-slate-500">
+                  <p className="mb-2">Belum ada indikator yang ditambahkan.</p>
+                  <p className="text-sm">Klik "Tambah Baris" untuk menambahkan rancangan dan progress target.</p>
+                </div>
+              ) : (
+                <div className="border border-slate-200/80 rounded-2xl overflow-x-auto shadow-sm">
+                  <table className="w-full text-sm text-left min-w-[700px]">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-bold">
+                      <tr>
+                        <th className="px-4 py-3 w-28">Bulan</th>
+                        <th className="px-4 py-3 min-w-[200px]">Indikator Keberhasislan</th>
+                        <th className="px-4 py-3 w-24">Target</th>
+                        <th className="px-4 py-3 w-16 text-center">%</th>
+                        <th className="px-4 py-3 w-12 text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100/60">
+                      {formData.indikator_kinerja_rows.map((row, idx) => (
+                        <tr key={idx} className="bg-white hover:bg-slate-50/50 transition-colors">
+                          <td className="p-2.5">
+                            <Input type="month" placeholder="Bulan" value={row.bulan} 
+                              onChange={e => setFormData(prev => {
+                                const next = [...prev.indikator_kinerja_rows];
+                                next[idx] = {...next[idx], bulan: e.target.value};
+                                return {...prev, indikator_kinerja_rows: next};
+                              })}
+                              className="h-10 rounded-lg text-xs" />
+                          </td>
+                          <td className="p-2.5">
+                            <Input placeholder="Contoh: Tersusunnya dokumen RPKL" value={row.indikator}
+                              onChange={e => setFormData(prev => {
+                                const next = [...prev.indikator_kinerja_rows];
+                                next[idx] = {...next[idx], indikator: e.target.value};
+                                return {...prev, indikator_kinerja_rows: next};
+                              })}
+                              className="h-10 rounded-lg text-xs" />
+                          </td>
+                          <td className="p-2.5">
+                            <Input placeholder="Target" type="text" value={row.target ?? ''} 
+                              onChange={e => setFormData(prev => {
+                                const next = [...prev.indikator_kinerja_rows];
+                                next[idx] = {...next[idx], target: e.target.value ? Number(e.target.value) : null};
+                                return {...prev, indikator_kinerja_rows: next};
+                              })}
+                              className="h-10 rounded-lg text-xs text-center" />
+                          </td>
+                          <td className="p-2.5">
+                            <Input placeholder="%" type="number" min="0" max="100" value={row.persen ?? ''}
+                              onChange={e => setFormData(prev => {
+                                const next = [...prev.indikator_kinerja_rows];
+                                next[idx] = {...next[idx], persen: e.target.value ? Number(e.target.value) : null};
+                                return {...prev, indikator_kinerja_rows: next};
+                              })}
+                              className="h-10 rounded-lg text-xs text-center" />
+                          </td>
+                          <td className="p-2.5 text-center">
+                            <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg h-8 w-8"
+                              onClick={() => setFormData(prev => ({
+                                ...prev,
+                                indikator_kinerja_rows: prev.indikator_kinerja_rows.filter((_, i) => i !== idx),
+                              }))}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <p className="text-xs text-slate-500">Isi indikator kinerja per-bulan beserta target temu/jilanya</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
               <div className="space-y-2">
@@ -305,14 +424,118 @@ export function CreateUsulanPage() {
         </Card>
         </div>
 
-        {/* SECTION 3: RAB */}
+        {/* SECTION 3: IKU */}
         <div className={currentStep !== 3 ? 'hidden' : 'space-y-6'}>
+        <Card className="shadow-sm border-slate-200/60 bg-white overflow-hidden relative">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-purple-500"></div>
+          <CardHeader className="bg-slate-50/30 border-b border-slate-100/60 py-5 pl-6 sm:pl-8 pr-4 sm:pr-6">
+            <CardTitle className="text-lg text-purple-900 flex items-center gap-2">
+               <div className="flex items-center justify-center size-6 rounded-md bg-purple-100 text-purple-700 text-sm font-bold">3</div>
+               Indikator Kinerja Utama (IKU)
+            </CardTitle>
+            <CardDescription className="text-slate-500 ml-8 font-medium">Pilih indikator keberhasilan dan tentukan target yang ingin dicapai.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-6 pl-6 sm:pl-8 pr-4 sm:pr-6">
+            <div className="bg-blue-50 border border-blue-200/50 rounded-2xl p-5 flex items-start gap-4">
+              <div className="bg-blue-100/80 p-2 rounded-lg shrink-0">
+                <Target className="size-5 text-blue-600" />
+              </div>
+              <div>
+                <h4 className="text-[15px] font-bold text-blue-900 mb-1">Indikator Kinerja Utama</h4>
+                <p className="text-[14px] text-blue-800/80 leading-relaxed">Pilih indikator dari daftar master yang telah dikonfigurasi oleh admin. Untuk setiap indikator, tentukan target persentase (%lacak) yang ingin dicapai.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <Label className="text-slate-700 font-semibold">Daftar IKU yang Dipilih</Label>
+                  <p className="text-slate-500 text-sm">Klik "+ Tambah IKU" untuk menambahkan indikator baru.</p>
+                </div>
+                <Button type="button" variant="secondary" size="sm" className="h-10 rounded-xl"
+                  onClick={() => setFormData(prev => ({
+                    ...prev,
+                    ikuItems: [...prev.ikuItems, { nama_indikator: '', target_persen: null }],
+                  }))}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Tambah IKU
+                </Button>
+              </div>
+
+              {formData.ikuItems.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-slate-500 text-center">
+                  <Target className="size-8 opacity-30 mx-auto mb-2" />
+                  <p>Belum ada indikator yang dipilih.</p>
+                  <p className="text-sm">Klik "Tambah IKU" untuk memilih indikator dari master.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {formData.ikuItems.map((iku, index) => (
+                    <div key={index} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_128px_40px]">
+                        <div>
+                          <Label className="text-slate-700 font-semibold">Pilih Indikator</Label>
+                          <Select value={iku.nama_indikator} onValueChange={v => setFormData(prev => {
+                            const next = [...prev.ikuItems];
+                            next[index] = { ...next[index], nama_indikator: v };
+                            return { ...prev, ikuItems: next };
+                          })}>
+                            <SelectTrigger className="h-12 rounded-xl bg-white focus:ring-purple-500/20">
+                              <SelectValue placeholder="Pilih dari master IKU..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ikuMasterList.length > 0 ? ikuMasterList.map(item => (
+                                <SelectItem key={item.id} value={item.nama_indikator || item.nama_iku || String(item.id)}>
+                                  {item.nama_indikator || item.nama_iku}
+                                </SelectItem>
+                              )) : (
+                                <SelectItem value="_empty" disabled>Tidak ada IKU master</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-slate-700 font-semibold">Target (%)</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={iku.target_persen ?? ''}
+                            onChange={e => setFormData(prev => {
+                              const next = [...prev.ikuItems];
+                              next[index] = { ...next[index], target_persen: e.target.value ? Number(e.target.value) : null };
+                              return { ...prev, ikuItems: next };
+                            })}
+                            placeholder="0 - 100"
+                            className="h-12 rounded-xl focus-visible:ring-purple-500/20"
+                          />
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" className="h-10 w-10 text-rose-500"
+                          onClick={() => setFormData(prev => ({
+                            ...prev,
+                            ikuItems: prev.ikuItems.filter((_, idx) => idx !== index),
+                          }))}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        </div>
+
+        {/* SECTION 4: RAB */}
+        <div className={currentStep !== 4 ? 'hidden' : 'space-y-6'}>
         <Card className="shadow-sm border-slate-200/60 bg-white overflow-hidden relative">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
           <CardHeader className="bg-slate-50/30 border-b border-slate-100/60 py-5 pl-6 sm:pl-8 pr-4 sm:pr-6 flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-lg text-emerald-900 flex items-center gap-2">
-                <div className="flex items-center justify-center size-6 rounded-md bg-emerald-100 text-emerald-700 text-sm font-bold">3</div>
+                <div className="flex items-center justify-center size-6 rounded-md bg-emerald-100 text-emerald-700 text-sm font-bold">4</div>
                 Rincian Anggaran (RAB)
               </CardTitle>
               <CardDescription className="text-slate-500 ml-8 font-medium">Input baris anggaran untuk pengajuan pendanaan.</CardDescription>
@@ -327,12 +550,12 @@ export function CreateUsulanPage() {
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-bold">
                   <tr>
                     <th className="px-4 py-4 w-32">Kategori</th>
-                    <th className="px-4 py-4 min-w-[150px]">Keterangan Item</th>
-                    <th className="px-4 py-4 w-20 text-center">Vol 1</th>
-                    <th className="px-4 py-4 w-24">Satuan</th>
-                    <th className="px-4 py-4 w-20 text-center">Vol 2</th>
-                    <th className="px-4 py-4 w-20 text-center">Vol 3</th>
-                    <th className="px-4 py-4 w-36 text-right">Biaya Satuan</th>
+                  <th className="px-4 py-4 min-w-[150px]">Uraian</th>
+                  <th className="px-4 py-4 w-20 text-center">Vol 1</th>
+                  <th className="px-4 py-4 w-24">Satuan</th>
+                  <th className="px-4 py-4 w-20 text-center">Vol 2</th>
+                  <th className="px-4 py-4 w-20 text-center">Vol 3</th>
+                  <th className="px-4 py-4 w-36 text-right">Harga Satuan</th>
                     <th className="px-4 py-4 text-right w-40">Subtotal</th>
                     <th className="px-4 py-4 w-12 text-center"></th>
                   </tr>
@@ -390,7 +613,7 @@ export function CreateUsulanPage() {
              <Button type="button" variant="outline" className="h-14 px-8 rounded-2xl font-bold text-slate-600 hover:bg-slate-100 border-slate-300 w-full sm:w-auto transition-all" onClick={() => navigate('/dashboard/pengusul/usulan')}>Batalkan</Button>
           )}
 
-          {currentStep < 3 ? (
+          {currentStep < 4 ? (
              <Button type="button" className="h-14 px-8 rounded-2xl font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 w-full sm:w-auto transition-all active:scale-95 text-[15px]" onClick={() => setCurrentStep(prev => prev + 1)}>Selanjutnya</Button>
           ) : (
              <Button type="submit" disabled={isSubmitting} className="h-14 px-8 rounded-2xl font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 w-full sm:w-auto transition-all active:scale-95 text-[15px]">

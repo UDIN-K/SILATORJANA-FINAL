@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Jurusan;
 use App\Models\Kegiatan;
 use Illuminate\Http\Request;
 
@@ -61,6 +62,7 @@ class KegiatanController extends Controller
             'tempat' => 'nullable|string',
             'status' => 'nullable|string',
             'deskripsi' => 'nullable|string',
+            'jurusan_id' => 'nullable|integer',
             // KAK
             'kak' => 'nullable|array',
             'kak.gambaran_umum' => 'nullable|string',
@@ -88,6 +90,10 @@ class KegiatanController extends Controller
         ]);
 
         $user = $request->user();
+        $jurusan = null;
+        if (!empty($validated['jurusan_id'])) {
+            $jurusan = Jurusan::find($validated['jurusan_id']);
+        }
 
         $kegiatan = Kegiatan::create([
             'nama_kegiatan' => $validated['nama_kegiatan'],
@@ -96,7 +102,7 @@ class KegiatanController extends Controller
             'status' => $validated['status'] ?? 'draft',
             'pengusul_id' => $user->id,
             'pengusul_nama' => $user->nama,
-            'nama_jurusan' => $user->jurusan,
+            'nama_jurusan' => $jurusan?->nama_jurusan ?? $user->jurusan,
             'tanggal_kegiatan' => $validated['tanggal_kegiatan'] ?? null,
             'tempat' => $validated['tempat'] ?? null,
             'total_anggaran' => 0,
@@ -148,6 +154,7 @@ class KegiatanController extends Controller
             'tempat' => 'nullable|string',
             'catatan_revisi' => 'nullable|string',
             'total_anggaran' => 'nullable|numeric',
+            'jurusan_id' => 'nullable|integer',
             // KAK
             'kak' => 'nullable|array',
             // IKU
@@ -155,6 +162,14 @@ class KegiatanController extends Controller
             // RAB
             'rab' => 'nullable|array',
         ]);
+
+        if (!empty($validated['jurusan_id'])) {
+            $jurusan = Jurusan::find($validated['jurusan_id']);
+            if ($jurusan) {
+                $validated['nama_jurusan'] = $jurusan->nama_jurusan;
+            }
+            unset($validated['jurusan_id']);
+        }
 
         // Update kegiatan fields
         $kegiatan->update(collect($validated)->except(['kak', 'iku', 'rab'])->toArray());
