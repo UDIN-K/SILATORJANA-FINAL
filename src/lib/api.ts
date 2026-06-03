@@ -4,7 +4,7 @@
  * All requests go through Vite proxy → Laravel (localhost:8000).
  */
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 // ============================================================
 // Token Management
@@ -32,6 +32,7 @@ async function apiFetch<T = any>(
 
   const headers: Record<string, string> = {
     'Accept': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
     ...((options.headers as Record<string, string>) || {}),
   };
 
