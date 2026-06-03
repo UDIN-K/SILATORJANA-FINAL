@@ -9,8 +9,6 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
-import { hashPassword } from '@/lib/helpers';
-
 export function UserFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -35,7 +33,7 @@ export function UserFormPage() {
     try {
       const data: any = { nama: form.nama, email: form.email, role: form.role };
       if (form.password) {
-        data.password = await hashPassword(form.password);
+        data.password = form.password;
       }
       if (form.role === 'pengusul' && form.jurusan_id) data.jurusan_id = form.jurusan_id;
       if (form.role === 'verifikator' && form.verifikator_unit) data.verifikator_unit = form.verifikator_unit;
@@ -43,7 +41,7 @@ export function UserFormPage() {
       if (isEdit) {
         await apiUpdateUser(id!, data);
       } else {
-        if (!data.password) data.password = await hashPassword('password123');
+        if (!data.password) data.password = 'password123';
         await apiCreateUser(data);
       }
       navigate('/dashboard/admin/users');

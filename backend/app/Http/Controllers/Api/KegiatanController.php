@@ -21,8 +21,10 @@ class KegiatanController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Filter by pengusul
-        if ($request->has('pengusul_id')) {
+        $user = $request->user();
+        if ($user && $user->role === 'pengusul') {
+            $query->where('pengusul_id', $user->id);
+        } elseif ($request->has('pengusul_id')) {
             $query->where('pengusul_id', $request->pengusul_id);
         }
 

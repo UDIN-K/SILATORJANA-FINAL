@@ -311,6 +311,10 @@ export function CreateUsulanPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [ikuMasterList, setIkuMasterList] = useState<any[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // BUG-003: Tanggal minimum = hari ini
+  const todayStr = new Date().toISOString().split('T')[0];
   const [showVerifikatorModal, setShowVerifikatorModal] = useState(false);
 
   useEffect(() => {
@@ -457,6 +461,59 @@ export function CreateUsulanPage() {
   const updateIku = (i: number, field: keyof IkuItem, val: any) =>
     setIkuItems(prev => { const n = [...prev]; (n[i] as any)[field] = val; return n; });
 
+  // ── BUG-001: Validasi Step 1 ──
+  const validateStep1 = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!step1.nama_kegiatan.trim()) errs.nama_kegiatan = 'Nama kegiatan wajib diisi';
+    if (!step1.jenis_kegiatan.trim()) errs.jenis_kegiatan = 'Jenis kegiatan wajib diisi';
+    if (!step1.tanggal_kegiatan) errs.tanggal_kegiatan = 'Tanggal kegiatan wajib diisi';
+    if (!step1.tempat.trim()) errs.tempat = 'Tempat / lokasi wajib diisi';
+    if (!step1.pengusul_organisasi.trim()) errs.pengusul_organisasi = 'Pengusul / organisasi wajib diisi';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  // ── BUG-002: Validasi Step 2 ──
+  const validateStep2 = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!step2.gambaran_umum.trim()) errs.gambaran_umum = 'Gambaran umum wajib diisi';
+    if (!step2.penerima_manfaat.trim()) errs.penerima_manfaat = 'Penerima manfaat wajib diisi';
+    if (!step2.strategi_pencapaian.trim()) errs.strategi_pencapaian = 'Strategi pencapaian wajib diisi';
+    if (!step2.metode_pelaksanaan.trim()) errs.metode_pelaksanaan = 'Metode pelaksanaan wajib diisi';
+    if (!step2.tahapan_pelaksanaan.trim()) errs.tahapan_pelaksanaan = 'Tahapan pelaksanaan wajib diisi';
+    if (!step2.kurun_waktu_dari) errs.kurun_waktu_dari = 'Kurun waktu mulai wajib diisi';
+    if (!step2.kurun_waktu_sampai) errs.kurun_waktu_sampai = 'Kurun waktu selesai wajib diisi';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  // ── BUG-004: Validasi Step 3 ──
+  const validateStep3 = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (ikuItems.length === 0) {
+      errs.iku_global = 'Minimal 1 indikator IKU harus ditambahkan';
+    } else {
+      ikuItems.forEach((item, idx) => {
+        if (!item.nama_indikator.trim()) errs[`iku_nama_${idx}`] = 'Indikator wajib dipilih';
+        if (item.target_persen === null || item.target_persen === undefined) errs[`iku_target_${idx}`] = 'Target wajib diisi';
+      });
+    }
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleNextStep = () => {
+    let valid = false;
+    if (currentStep === 1) valid = validateStep1();
+    else if (currentStep === 2) valid = validateStep2();
+    else if (currentStep === 3) valid = validateStep3();
+    else valid = true;
+    if (valid) {
+      setErrors({});
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
   const steps = [
     { id: 1, name: 'Info Kegiatan' },
     { id: 2, name: 'Kerangka Acuan (KAK)' },
@@ -521,22 +578,24 @@ export function CreateUsulanPage() {
                     <Input
                       id="nama_kegiatan"
                       value={step1.nama_kegiatan}
-                      onChange={e => setStep1({ ...step1, nama_kegiatan: e.target.value })}
+                      onChange={e => { setStep1({ ...step1, nama_kegiatan: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.nama_kegiatan; return n; }); }}
                       placeholder="Cth: Seminar Teknik Informatika 2025"
                       required
-                      className="h-12 rounded-xl focus-visible:ring-blue-500/20 focus-visible:border-blue-500 shadow-sm"
+                      className={`h-12 rounded-xl focus-visible:ring-blue-500/20 focus-visible:border-blue-500 shadow-sm ${errors.nama_kegiatan ? 'border-red-400 bg-red-50/30' : ''}`}
                     />
+                    {errors.nama_kegiatan && <p className="text-xs text-red-500 font-medium">{errors.nama_kegiatan}</p>}
                     <p className="text-xs text-slate-500">Gunakan nama yang deskriptif dan mudah dipahami</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="jenis_kegiatan" className="text-slate-700 font-semibold">Jenis Kegiatan</Label>
+                    <Label htmlFor="jenis_kegiatan" className="text-slate-700 font-semibold">Jenis Kegiatan <span className="text-red-500">*</span></Label>
                     <Input
                       id="jenis_kegiatan"
                       value={step1.jenis_kegiatan}
-                      onChange={e => setStep1({ ...step1, jenis_kegiatan: e.target.value })}
+                      onChange={e => { setStep1({ ...step1, jenis_kegiatan: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.jenis_kegiatan; return n; }); }}
                       placeholder="Cth: Seminar / Workshop / Pelatihan"
-                      className="h-12 rounded-xl focus-visible:ring-blue-500/20 focus-visible:border-blue-500 shadow-sm"
+                      className={`h-12 rounded-xl focus-visible:ring-blue-500/20 focus-visible:border-blue-500 shadow-sm ${errors.jenis_kegiatan ? 'border-red-400 bg-red-50/30' : ''}`}
                     />
+                    {errors.jenis_kegiatan && <p className="text-xs text-red-500 font-medium">{errors.jenis_kegiatan}</p>}
                     <p className="text-xs text-slate-500">Contoh: Seminar, Workshop, Pelatihan, dll</p>
                   </div>
                 </div>
@@ -558,14 +617,15 @@ export function CreateUsulanPage() {
                       <p className="text-xs text-slate-500">Jurusan/Departemen otomatis sesuai akun Anda</p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="pengusul_organisasi" className="text-slate-700 font-semibold">Pengusul / Organisasi</Label>
+                      <Label htmlFor="pengusul_organisasi" className="text-slate-700 font-semibold">Pengusul / Organisasi <span className="text-red-500">*</span></Label>
                       <Input
                         id="pengusul_organisasi"
                         value={step1.pengusul_organisasi}
-                        onChange={e => setStep1({ ...step1, pengusul_organisasi: e.target.value })}
+                        onChange={e => { setStep1({ ...step1, pengusul_organisasi: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.pengusul_organisasi; return n; }); }}
                         placeholder="Cth: Himpunan Mahasiswa Teknik Informatika"
-                        className="h-12 rounded-xl focus-visible:ring-blue-500/20 shadow-sm"
+                        className={`h-12 rounded-xl focus-visible:ring-blue-500/20 shadow-sm ${errors.pengusul_organisasi ? 'border-red-400 bg-red-50/30' : ''}`}
                       />
+                      {errors.pengusul_organisasi && <p className="text-xs text-red-500 font-medium">{errors.pengusul_organisasi}</p>}
                       <p className="text-xs text-slate-500">Organisasi atau individu yang mengajukan kegiatan</p>
                     </div>
                   </div>
@@ -578,24 +638,27 @@ export function CreateUsulanPage() {
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="tanggal_kegiatan" className="text-slate-700 font-semibold">Tanggal Kegiatan</Label>
+                      <Label htmlFor="tanggal_kegiatan" className="text-slate-700 font-semibold">Tanggal Kegiatan <span className="text-red-500">*</span></Label>
                       <Input
                         type="date" id="tanggal_kegiatan"
                         value={step1.tanggal_kegiatan}
-                        onChange={e => setStep1({ ...step1, tanggal_kegiatan: e.target.value })}
-                        className="h-12 rounded-xl focus-visible:ring-amber-500/20"
+                        min={todayStr}
+                        onChange={e => { setStep1({ ...step1, tanggal_kegiatan: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.tanggal_kegiatan; return n; }); }}
+                        className={`h-12 rounded-xl focus-visible:ring-amber-500/20 ${errors.tanggal_kegiatan ? 'border-red-400 bg-red-50/30' : ''}`}
                       />
+                      {errors.tanggal_kegiatan && <p className="text-xs text-red-500 font-medium">{errors.tanggal_kegiatan}</p>}
                       <p className="text-xs text-slate-500">Kapan kegiatan akan dilaksanakan?</p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="tempat" className="text-slate-700 font-semibold">Tempat / Lokasi</Label>
+                      <Label htmlFor="tempat" className="text-slate-700 font-semibold">Tempat / Lokasi <span className="text-red-500">*</span></Label>
                       <Input
                         id="tempat"
                         value={step1.tempat}
-                        onChange={e => setStep1({ ...step1, tempat: e.target.value })}
+                        onChange={e => { setStep1({ ...step1, tempat: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.tempat; return n; }); }}
                         placeholder="Cth: Ruang Aula Gedung Utama, Lt. 3"
-                        className="h-12 rounded-xl focus-visible:ring-amber-500/20"
+                        className={`h-12 rounded-xl focus-visible:ring-amber-500/20 ${errors.tempat ? 'border-red-400 bg-red-50/30' : ''}`}
                       />
+                      {errors.tempat && <p className="text-xs text-red-500 font-medium">{errors.tempat}</p>}
                       <p className="text-xs text-slate-500">Lokasi yang spesifik dan jelas</p>
                     </div>
                   </div>
@@ -622,12 +685,13 @@ export function CreateUsulanPage() {
                   <div className="space-y-2">
                     <Label className="text-slate-700 font-semibold">Gambaran Umum Acara <span className="text-red-500">*</span></Label>
                     <textarea
-                      className="flex min-h-[120px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none"
+                      className={`flex min-h-[120px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none ${errors.gambaran_umum ? 'border-red-400 bg-red-50/30' : ''}`}
                       placeholder="Jelaskan secara singkat tentang acara/kegiatan yang akan dilaksanakan, tujuan, dan latar belakang"
                       value={step2.gambaran_umum}
-                      onChange={e => setStep2({ ...step2, gambaran_umum: e.target.value })}
+                      onChange={e => { setStep2({ ...step2, gambaran_umum: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.gambaran_umum; return n; }); }}
                       required
                     />
+                    {errors.gambaran_umum && <p className="text-xs text-red-500 font-medium">{errors.gambaran_umum}</p>}
                     <p className="text-xs text-slate-500">Jelaskan latar belakang, tujuan, dan deskripsi kegiatan</p>
                   </div>
                 </div>
@@ -638,12 +702,13 @@ export function CreateUsulanPage() {
                   <div className="space-y-2">
                     <Label className="text-slate-700 font-semibold">Penerima Manfaat <span className="text-red-500">*</span></Label>
                     <textarea
-                      className="flex min-h-[100px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none"
+                      className={`flex min-h-[100px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none ${errors.penerima_manfaat ? 'border-red-400 bg-red-50/30' : ''}`}
                       placeholder="Sebutkan siapa saja yang akan menerima manfaat dari kegiatan ini"
                       value={step2.penerima_manfaat}
-                      onChange={e => setStep2({ ...step2, penerima_manfaat: e.target.value })}
+                      onChange={e => { setStep2({ ...step2, penerima_manfaat: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.penerima_manfaat; return n; }); }}
                       required
                     />
+                    {errors.penerima_manfaat && <p className="text-xs text-red-500 font-medium">{errors.penerima_manfaat}</p>}
                   </div>
                 </div>
 
@@ -652,22 +717,24 @@ export function CreateUsulanPage() {
                   <h4 className="text-sm font-bold text-indigo-800 flex items-center gap-2">💡 Strategi Pelaksanaan</h4>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-700 font-semibold">Metode Pelaksanaan</Label>
+                      <Label className="text-slate-700 font-semibold">Metode Pelaksanaan <span className="text-red-500">*</span></Label>
                       <textarea
-                        className="flex min-h-[80px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none"
+                        className={`flex min-h-[80px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none ${errors.metode_pelaksanaan ? 'border-red-400 bg-red-50/30' : ''}`}
                         placeholder="Contoh: Seminar interaktif, diskusi kelompok, workshop praktik, dll"
                         value={step2.metode_pelaksanaan}
-                        onChange={e => setStep2({ ...step2, metode_pelaksanaan: e.target.value })}
+                        onChange={e => { setStep2({ ...step2, metode_pelaksanaan: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.metode_pelaksanaan; return n; }); }}
                       />
+                      {errors.metode_pelaksanaan && <p className="text-xs text-red-500 font-medium">{errors.metode_pelaksanaan}</p>}
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-700 font-semibold">Tahapan Pelaksanaan</Label>
+                      <Label className="text-slate-700 font-semibold">Tahapan Pelaksanaan <span className="text-red-500">*</span></Label>
                       <textarea
-                        className="flex min-h-[100px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none"
+                        className={`flex min-h-[100px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none ${errors.tahapan_pelaksanaan ? 'border-red-400 bg-red-50/30' : ''}`}
                         placeholder="Contoh: 1) Persiapan, 2) Pelaksanaan, 3) Evaluasi"
                         value={step2.tahapan_pelaksanaan}
-                        onChange={e => setStep2({ ...step2, tahapan_pelaksanaan: e.target.value })}
+                        onChange={e => { setStep2({ ...step2, tahapan_pelaksanaan: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.tahapan_pelaksanaan; return n; }); }}
                       />
+                      {errors.tahapan_pelaksanaan && <p className="text-xs text-red-500 font-medium">{errors.tahapan_pelaksanaan}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label className="text-slate-700 font-semibold">Strategi Pencapaian Keluaran <span className="text-red-500">*</span></Label>
@@ -764,23 +831,28 @@ export function CreateUsulanPage() {
                   <h4 className="text-sm font-bold text-indigo-800 flex items-center gap-2">📅 Waktu Pelaksanaan</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-slate-700 font-semibold">Kurun Waktu Pelaksanaan (Dari)</Label>
+                      <Label htmlFor="kurun_waktu_dari" className="text-slate-700 font-semibold">Kurun Waktu Pelaksanaan (Dari) <span className="text-red-500">*</span></Label>
                       <Input
                         type="date"
+                        id="kurun_waktu_dari"
                         value={step2.kurun_waktu_dari}
-                        onChange={e => setStep2({ ...step2, kurun_waktu_dari: e.target.value })}
-                        className="h-12 rounded-xl focus-visible:ring-indigo-500/20"
+                        min={todayStr}
+                        onChange={e => { setStep2({ ...step2, kurun_waktu_dari: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.kurun_waktu_dari; return n; }); }}
+                        className={`h-12 rounded-xl focus-visible:ring-indigo-500/20 ${errors.kurun_waktu_dari ? 'border-red-400 bg-red-50/30' : ''}`}
                       />
+                      {errors.kurun_waktu_dari && <p className="text-xs text-red-500 font-medium">{errors.kurun_waktu_dari}</p>}
                       <p className="text-xs text-slate-500">Tanggal mulai kegiatan</p>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-700 font-semibold">Kurun Waktu Pelaksanaan (Sampai)</Label>
+                      <Label className="text-slate-700 font-semibold">Kurun Waktu Pelaksanaan (Sampai) <span className="text-red-500">*</span></Label>
                       <Input
                         type="date"
                         value={step2.kurun_waktu_sampai}
-                        onChange={e => setStep2({ ...step2, kurun_waktu_sampai: e.target.value })}
-                        className="h-12 rounded-xl focus-visible:ring-indigo-500/20"
+                        min={step2.kurun_waktu_dari || todayStr}
+                        onChange={e => { setStep2({ ...step2, kurun_waktu_sampai: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.kurun_waktu_sampai; return n; }); }}
+                        className={`h-12 rounded-xl focus-visible:ring-indigo-500/20 ${errors.kurun_waktu_sampai ? 'border-red-400 bg-red-50/30' : ''}`}
                       />
+                      {errors.kurun_waktu_sampai && <p className="text-xs text-red-500 font-medium">{errors.kurun_waktu_sampai}</p>}
                       <p className="text-xs text-slate-500">Tanggal selesai kegiatan</p>
                     </div>
                   </div>
@@ -825,8 +897,9 @@ export function CreateUsulanPage() {
                     </Button>
                   </div>
 
+                  {errors.iku_global && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 font-medium">{errors.iku_global}</div>}
                   {ikuItems.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-slate-500 text-center">
+                    <div className={`rounded-2xl border border-dashed p-6 text-slate-500 text-center ${errors.iku_global ? 'border-red-300 bg-red-50/30' : 'border-slate-200 bg-slate-50'}`}>
                       <Target className="size-8 opacity-30 mx-auto mb-2" />
                       <p>Belum ada indikator yang dipilih.</p>
                       <p className="text-sm">Klik "Tambah IKU" untuk memilih indikator dari master.</p>
@@ -837,11 +910,11 @@ export function CreateUsulanPage() {
                         <div key={index} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_128px_40px]">
                             <div>
-                              <Label className="text-slate-700 font-semibold">Pilih Indikator</Label>
+                              <Label className="text-slate-700 font-semibold">Pilih Indikator <span className="text-red-500">*</span></Label>
                               <select
                                 value={iku.nama_indikator}
-                                onChange={e => updateIku(index, 'nama_indikator', e.target.value)}
-                                className="mt-1 w-full h-12 rounded-xl border border-slate-200 px-3 bg-white text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                                onChange={e => { updateIku(index, 'nama_indikator', e.target.value); setErrors(prev => { const n = {...prev}; delete n[`iku_nama_${index}`]; return n; }); }}
+                                className={`mt-1 w-full h-12 rounded-xl border border-slate-200 px-3 bg-white text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 ${errors[`iku_nama_${index}`] ? 'border-red-400 bg-red-50/30' : ''}`}
                               >
                                 <option value="">-- Memuat Indikator... --</option>
                                 {ikuMasterList.map(item => (
@@ -850,16 +923,18 @@ export function CreateUsulanPage() {
                                   </option>
                                 ))}
                               </select>
+                              {errors[`iku_nama_${index}`] && <p className="text-xs text-red-500 font-medium mt-1">{errors[`iku_nama_${index}`]}</p>}
                             </div>
                             <div>
-                              <Label className="text-slate-700 font-semibold">Target (%)</Label>
+                              <Label className="text-slate-700 font-semibold">Target (%) <span className="text-red-500">*</span></Label>
                               <Input
                                 type="number" min={0} max={100}
                                 value={iku.target_persen ?? ''}
-                                onChange={e => updateIku(index, 'target_persen', e.target.value ? Number(e.target.value) : null)}
+                                onChange={e => { updateIku(index, 'target_persen', e.target.value ? Number(e.target.value) : null); setErrors(prev => { const n = {...prev}; delete n[`iku_target_${index}`]; return n; }); }}
                                 placeholder="0"
-                                className="mt-1 h-12 rounded-xl focus-visible:ring-purple-500/20"
+                                className={`mt-1 h-12 rounded-xl focus-visible:ring-purple-500/20 ${errors[`iku_target_${index}`] ? 'border-red-400 bg-red-50/30' : ''}`}
                               />
+                              {errors[`iku_target_${index}`] && <p className="text-xs text-red-500 font-medium mt-1">{errors[`iku_target_${index}`]}</p>}
                             </div>
                             <Button type="button" variant="ghost" size="icon" className="h-10 w-10 text-rose-500 mt-6" onClick={() => removeIku(index)}>
                               <Trash2 className="h-4 w-4" />
@@ -947,7 +1022,7 @@ export function CreateUsulanPage() {
             )}
 
             {currentStep < 4 ? (
-              <Button type="button" className="h-14 px-8 rounded-2xl font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 w-full sm:w-auto transition-all active:scale-95 text-[15px]" onClick={() => setCurrentStep(prev => prev + 1)}>Selanjutnya</Button>
+              <Button type="button" className="h-14 px-8 rounded-2xl font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 w-full sm:w-auto transition-all active:scale-95 text-[15px]" onClick={handleNextStep}>Selanjutnya</Button>
             ) : (
               <Button type="button" disabled={isSubmitting} onClick={() => setShowVerifikatorModal(true)} className="h-14 px-8 rounded-2xl font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 w-full sm:w-auto transition-all active:scale-95 text-[15px]">
                 {isSubmitting ? <Loader2 className="size-5 mr-3 animate-spin" /> : <Send className="size-5 mr-3" />}

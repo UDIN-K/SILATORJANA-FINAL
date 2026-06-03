@@ -57,9 +57,10 @@ class UserController extends Controller
             'nip' => 'nullable|string',
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
-
         $user = User::create($validated);
+
+        // Clear any orphaned tokens/sessions/history if the ID was somehow reused or left over
+        $user->tokens()->delete();
 
         return response()->json($user, 201);
     }
@@ -80,10 +81,6 @@ class UserController extends Controller
             'nip' => 'nullable|string',
         ]);
 
-        if (isset($validated['password'])) {
-            $validated['password'] = Hash::make($validated['password']);
-        }
-
         $user->update($validated);
 
         return response()->json($user);
@@ -95,6 +92,7 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         $user = User::findOrFail($id);
+        $user->tokens()->delete();
         $user->delete();
 
         return response()->json(['message' => 'User berhasil dihapus.']);

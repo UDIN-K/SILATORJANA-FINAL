@@ -8,6 +8,41 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getUserId, formatDate, timeAgo } from '@/lib/helpers';
 
+function renderCatatanRevisi(catatan: string) {
+  if (!catatan) return null;
+  const lines = catatan.split('\n');
+  const items: { field: string; text: string }[] = [];
+
+  for (const line of lines) {
+    const match = line.match(/^\[(.+?)\]:\s*(.+)$/);
+    if (match) {
+      items.push({ field: match[1], text: match[2] });
+    } else if (line.trim()) {
+      items.push({ field: 'Umum / Lainnya', text: line.trim() });
+    }
+  }
+
+  if (items.length === 0) return <p className="mt-2 text-sm text-amber-800 bg-amber-50 p-3 rounded-lg border border-amber-100">{catatan}</p>;
+
+  return (
+    <div className="space-y-1.5 mt-3 bg-amber-50/40 border border-amber-100/50 rounded-xl p-3">
+      <p className="font-bold text-amber-800 text-[11px] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+        <span>📋</span> Rincian Catatan Revisi:
+      </p>
+      <div className="grid gap-2 text-xs text-slate-700">
+        {items.map((it, idx) => (
+          <div key={idx} className="flex items-start gap-2 bg-white/80 border border-slate-100/80 rounded-lg p-2.5 shadow-sm">
+            <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase shrink-0 mt-0.5">
+              {it.field.replace(/_/g, ' ')}
+            </span>
+            <span className="leading-relaxed font-semibold text-slate-800">{it.text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function NeedsWorkPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState<any[]>([]);
@@ -18,9 +53,9 @@ export function NeedsWorkPage() {
     (async () => {
       try {
         const userId = getUserId();
-        const res = await apiListKegiatan();
+        const res = await apiListKegiatan({ pengusul_id: userId });
         const needsWork = (res.data || res).filter((d: any) =>
-          ['revision_requested', 'revisi', 'revisi_done', 'lpj_revision'].includes(d.status?.toLowerCase())
+          ['revision_requested', 'revisi', 'lpj_revision'].includes(d.status?.toLowerCase())
         );
         setItems(needsWork);
       } catch (e) { console.error(e); } finally { setIsLoading(false); }
@@ -80,11 +115,7 @@ export function NeedsWorkPage() {
                         <span>Diperbarui {timeAgo(item.updated_at)}</span>
                         <span>Dibuat {formatDate(item.created_at)}</span>
                       </div>
-                      {item.catatan_revisi && (
-                        <div className="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-md text-sm text-amber-800">
-                          <span className="font-semibold">Catatan Revisi:</span> {item.catatan_revisi}
-                        </div>
-                      )}
+                      {renderCatatanRevisi(item.catatan_revisi)}
                     </div>
                     <div className="flex w-full sm:w-auto justify-end gap-2 shrink-0">
                       <Button variant="outline" size="sm" className="text-emerald-700 border-emerald-200 hover:bg-emerald-50" onClick={() => navigate(`/dashboard/pengusul/usulan/${item.id}`)}>

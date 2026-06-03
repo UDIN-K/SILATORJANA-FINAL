@@ -11,7 +11,7 @@ export function PengusulMonitoringPage() {
     const load = async () => {
       try {
         const userId = getUserId();
-        const res = await apiListKegiatan();
+        const res = await apiListKegiatan({ pengusul_id: userId });
         setItems((res.data || res));
       } catch (e) { console.error(e); } finally { setIsLoading(false); }
     };

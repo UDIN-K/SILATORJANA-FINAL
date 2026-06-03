@@ -61,7 +61,7 @@ export function HistoryPage() {
     (async () => {
       try {
         const userId = getUserId();
-        const res = await apiListKegiatan();
+        const res = await apiListKegiatan({ pengusul_id: userId });
         // Only show completed/finished items
         const completed = (res.data || res).filter((d: any) =>
           ['completed', 'selesai', 'lpj_done', 'lpj_approved', 'lpj_verified', 'rejected', 'ditolak'].includes(d.status?.toLowerCase())

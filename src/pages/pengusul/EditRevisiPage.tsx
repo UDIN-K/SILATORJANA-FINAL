@@ -203,6 +203,7 @@ export function EditRevisiPage() {
   const [kegiatan, setKegiatan] = useState<any>(null);
   const [revisiComments, setRevisiComments] = useState<Record<string, string>>({});
   const [currentUser] = useState<any>(getCurrentUser());
+  const todayStr = new Date().toISOString().split('T')[0];
 
   const [form, setForm] = useState({
     nama_kegiatan: '',
@@ -323,7 +324,7 @@ export function EditRevisiPage() {
         tanggal_kegiatan: form.tanggal_kegiatan || null,
         tempat: form.tempat || null,
         pengusul_organisasi: form.pengusul_organisasi || null,
-        status: 'revisi_done',
+        status: 'submitted',
         catatan_revisi: null,
         total_anggaran: grandTotal,
         kak: {
@@ -458,7 +459,7 @@ export function EditRevisiPage() {
               </div>
               <div className="space-y-2">
                 <Label>Tanggal</Label>
-                <Input type="date" className={inputHighlight(['tanggal'])} value={form.tanggal_kegiatan} onChange={e => updateForm('tanggal_kegiatan', e.target.value)} />
+                <Input type="date" min={todayStr} className={inputHighlight(['tanggal'])} value={form.tanggal_kegiatan} onChange={e => updateForm('tanggal_kegiatan', e.target.value)} />
                 <RevisiNote fields={['tanggal']} />
               </div>
               <div className="space-y-2">
@@ -565,11 +566,11 @@ export function EditRevisiPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-slate-100">
               <div className="space-y-2">
                 <Label>Kurun Waktu Pelaksanaan (Dari)</Label>
-                <Input type="date" className={inputHighlight(['waktu', 'kurun'])} value={form.kurun_waktu_mulai} onChange={e => updateForm('kurun_waktu_mulai', e.target.value)} />
+                <Input type="date" min={todayStr} className={inputHighlight(['waktu', 'kurun'])} value={form.kurun_waktu_mulai} onChange={e => updateForm('kurun_waktu_mulai', e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Kurun Waktu Pelaksanaan (Sampai)</Label>
-                <Input type="date" className={inputHighlight(['waktu', 'kurun'])} value={form.kurun_waktu_selesai} onChange={e => updateForm('kurun_waktu_selesai', e.target.value)} />
+                <Input type="date" min={form.kurun_waktu_mulai || todayStr} className={inputHighlight(['waktu', 'kurun'])} value={form.kurun_waktu_selesai} onChange={e => updateForm('kurun_waktu_selesai', e.target.value)} />
               </div>
             </div>
           </CardContent>

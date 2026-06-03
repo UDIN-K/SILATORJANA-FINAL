@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 export function UsulanPage() {
   const navigate = useNavigate();
   const [usulanList, setUsulanList] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const { setPageTourSteps } = useOutletContext<any>();
 
@@ -82,7 +83,7 @@ export function UsulanPage() {
         } catch(e) {
            console.log('Error reading auth session from localStorage', e);
         }
-        const res = await apiListKegiatan();
+        const res = await apiListKegiatan({ pengusul_id: userId });
         setUsulanList((res?.data || res) || []);
       } catch (error) {
         console.error(error);
@@ -92,6 +93,14 @@ export function UsulanPage() {
     };
     fetchUsulan();
   }, []);
+
+  const filteredList = usulanList.filter(item => {
+    const s = search.toLowerCase();
+    return (
+      item.nama_kegiatan?.toLowerCase().includes(s) ||
+      String(item.id).includes(s)
+    );
+  });
 
   /* StatusBadge used instead of getStatusBadge */
 
@@ -110,10 +119,15 @@ export function UsulanPage() {
       <Card className="tour-usulan-table shadow-sm border-slate-200/60 overflow-hidden bg-white">
         <CardHeader className="p-5 border-b border-slate-100/60 bg-slate-50/30">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-             <div className="tour-usulan-search relative w-full sm:w-80 group">
-               <Search className="absolute left-4 top-3.5 size-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-               <Input placeholder="Cari ID atau nama kegiatan..." className="pl-11 py-5 rounded-xl bg-white border-slate-200/80 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500 shadow-sm transition-all text-sm" />
-             </div>
+              <div className="tour-usulan-search relative w-full sm:w-80 group">
+                <Search className="absolute left-4 top-3.5 size-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                <Input
+                  placeholder="Cari ID atau nama kegiatan..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="pl-11 py-5 rounded-xl bg-white border-slate-200/80 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500 shadow-sm transition-all text-sm"
+                />
+              </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -136,17 +150,21 @@ export function UsulanPage() {
                        <p className="text-slate-500 mt-2 text-sm">Memuat data usulan...</p>
                     </TableCell>
                   </TableRow>
-                ) : usulanList.length === 0 ? (
+                ) : filteredList.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="py-12 text-center text-slate-500">
                        <div className="inline-flex justify-center items-center size-12 rounded-full bg-slate-50 mb-3 border border-slate-100">
                          <Search className="size-6 text-slate-300" />
                        </div>
-                       <p className="text-slate-500 text-sm font-medium">Belum ada usulan yang diajukan.</p>
-                       <p className="text-slate-400 text-xs mt-1">Silakan klik tombol "Buat Usulan Baru" untuk memulai.</p>
+                       <p className="text-slate-500 text-sm font-medium">
+                         {usulanList.length === 0 ? 'Belum ada usulan yang diajukan.' : 'Tidak ditemukan usulan yang cocok.'}
+                       </p>
+                       <p className="text-slate-400 text-xs mt-1">
+                         {usulanList.length === 0 ? 'Silakan klik tombol "Buat Usulan Baru" untuk memulai.' : 'Coba gunakan kata kunci pencarian yang lain.'}
+                       </p>
                     </TableCell>
                   </TableRow>
-                ) : usulanList.map((item) => (
+                ) : filteredList.map((item) => (
                   <TableRow key={item.id} className="hover:bg-slate-50/80 transition-colors border-b-slate-100/60">
                     <TableCell className="px-6 py-4 font-mono text-sm font-medium text-slate-500">{String(item.id).padStart(8, '0')}</TableCell>
                     <TableCell className="px-6 py-4 font-semibold text-slate-800 min-w-[200px]">{item.nama_kegiatan}</TableCell>
