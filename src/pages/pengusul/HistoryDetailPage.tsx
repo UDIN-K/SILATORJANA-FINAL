@@ -3,7 +3,7 @@ import api, { apiGetKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ProgressTracker } from '@/components/ProgressTracker';
-import { ArrowLeft, Calendar, Building2, User, DollarSign, FileText, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Building2, User, DollarSign, FileText, Loader2, AlertTriangle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { formatDate, formatCurrency, fetchKAK, fetchIKU, fetchRAB } from '@/lib/helpers';
@@ -126,7 +126,7 @@ export function HistoryDetailPage() {
 
       {kegiatan.catatan_revisi && (
         <Card className="shadow-sm border-amber-200 bg-amber-50/20"><CardContent className="p-5 space-y-2">
-          <h3 className="font-semibold text-amber-900 flex items-center gap-2"><span>⚠️</span> Catatan Revisi Aktif</h3>
+          <h3 className="font-semibold text-amber-900 flex items-center gap-2"><AlertTriangle className="size-4 shrink-0" /> Catatan Revisi Aktif</h3>
           {renderCatatanRevisi(kegiatan.catatan_revisi)}
         </CardContent></Card>
       )}

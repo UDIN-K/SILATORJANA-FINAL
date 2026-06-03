@@ -1,0 +1,37 @@
+<svg width="600" height="500" viewBox="0 0 600 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="600" height="500" rx="32" fill="none"/>
+  
+  <rect x="180" y="80" width="360" height="340" rx="24" fill="#FFFFFF" opacity="0.05" />
+  <rect x="120" y="120" width="360" height="340" rx="24" fill="#FFFFFF" opacity="0.05" />
+  
+  <rect x="150" y="100" width="360" height="300" rx="24" fill="#FFFFFF" opacity="0.1" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="2" filter="url(#shadow)" />
+  
+  <!-- Content inside login card abstract -->
+  <rect x="190" y="140" width="80" height="24" rx="12" fill="#10B981" />
+  <rect x="190" y="190" width="280" height="40" rx="12" fill="#FFFFFF" opacity="0.8" />
+  <rect x="190" y="250" width="280" height="40" rx="12" fill="#FFFFFF" opacity="0.8" />
+  <rect x="190" y="310" width="280" height="48" rx="24" fill="#047857" />
+
+  <circle cx="430" cy="210" r="8" fill="#94A3B8" />
+  <circle cx="430" cy="270" r="8" fill="#94A3B8" />
+
+  <!-- Floating UI elements -->
+  <g transform="translate(60, 220)">
+    <rect width="80" height="80" rx="24" fill="#FFFFFF" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="2" filter="url(#shadow)" />
+    <circle cx="40" cy="40" r="20" fill="#10B981" opacity="0.2" />
+    <path d="M30 40 L38 48 L52 32" stroke="#10B981" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <g transform="translate(450, 140)">
+    <rect width="100" height="100" rx="24" fill="#FFFFFF" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="2" filter="url(#shadow)" />
+    <circle cx="50" cy="40" r="16" fill="#F59E0B" opacity="0.2" />
+    <rect x="30" y="70" width="40" height="8" rx="4" fill="#E2E8F0" />
+    <path d="M44 40 L56 40 M50 34 L50 46" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <defs>
+    <filter id="shadow" x="-30" y="-30" width="160%" height="160%">
+      <feDropShadow dx="0" dy="20" stdDeviation="30" flood-color="#000000" flood-opacity="0.15" />
+    </filter>
+  </defs>
+</svg>

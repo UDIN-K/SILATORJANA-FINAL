@@ -421,128 +421,7 @@
             margin: 3px 0;
         }
         
-        /* BUTTONS (Screen Only) */
-        .print-actions {
-            position: fixed; top: 24px; right: 24px; z-index: 9999;
-            display: flex; flex-direction: column; gap: 12px;
-            width: 320px;
-            padding: 20px 22px 18px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.92);
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
-            backdrop-filter: blur(18px);
-            border: 1px solid rgba(13, 110, 253, 0.1);
-        }
-
-        .print-actions::after {
-            content: '';
-            position: absolute;
-            inset: 6px;
-            border-radius: 14px;
-            border: 1px dashed rgba(13, 110, 253, 0.15);
-            pointer-events: none;
-        }
-
-        .panel-header {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .panel-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #0d6efd, #36c6ff);
-            color: #fff;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.25);
-        }
-
-        .icon {
-            width: 18px;
-            height: 18px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .icon svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .panel-copy h4 {
-            font-size: 15px;
-            margin-bottom: 2px;
-            color: #0b192f;
-        }
-
-        .panel-copy p {
-            font-size: 12px;
-            color: #60708c;
-        }
-
-        .panel-divider {
-            height: 1px;
-            background: rgba(15,23,42,0.08);
-            margin: 4px 0 8px;
-        }
-        
-        .filename-wrapper {
-            display: flex; flex-direction: column; gap: 5px;
-        }
-        
-        .filename-wrapper label {
-            font-size: 12px; font-weight: 700; color: #0b192f;
-        }
-        
-        .filename-wrapper input {
-            padding: 10px 14px;
-            border: 1px solid rgba(15,23,42,0.12);
-            border-radius: 10px;
-            font-size: 13px;
-            width: 100%;
-            outline: none;
-            background: #f8fafc;
-        }
-        
-        .filename-wrapper input:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 3px rgba(13,110,253,0.15);
-        }
-        
-        .btn-row {
-            display: flex; gap: 10px;
-        }
-        
-        .btn {
-            flex: 1;
-            justify-content: center;
-            padding: 11px 18px;
-            border: none; border-radius: 10px;
-            color: white; cursor: pointer; font-weight: 600;
-            font-size: 13px;
-            display: flex; align-items: center; gap: 6px;
-            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.18);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(15,23,42,0.18); }
-        .btn-print { background: linear-gradient(135deg, #0d6efd, #36c6ff); }
-        .btn-back { background: #eef2ff; color: #1d2a49; box-shadow: none; border: 1px solid rgba(99, 102, 241, 0.4); }
-        .btn-back:hover { box-shadow: 0 8px 16px rgba(99, 102, 241, 0.35); }
-
-        .preview-hint {
-            font-size: 12px;
-            color: #4b5563;
-            line-height: 1.5;
-            background: #f5f7fb;
-            border-radius: 10px;
-            padding: 10px 12px;
-            border: 1px dashed rgba(15,23,42,0.12);
-        }
+        /* (Removed old UI styles) */
 
         /* PAGE BREAK */
         .page-break {
@@ -555,6 +434,11 @@
 }
 
 @media print {
+            header, nav, aside { display: none !important; }
+            .tour-main-content {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
             body { background: white; margin: 0; padding: 0; }
             .print-container {
                 width: 100%; 
@@ -578,7 +462,6 @@
                 border-radius: 0;
                 box-shadow: none;
             }
-            .print-actions { display: none; }
             
             /* Page Break Controls */
             h1, h2, h3, h4, .section-title { page-break-after: avoid; }

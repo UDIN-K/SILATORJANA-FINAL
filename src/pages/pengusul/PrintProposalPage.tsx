@@ -49,6 +49,7 @@ function parseIndikatorKinerja(rawValue: string | undefined | null): any[] {
 export function PrintProposalPage() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const isModal = new URLSearchParams(window.location.search).get('modal') === '1';
     
     const [kegiatan, setKegiatan] = useState<any>(null);
     const [kak, setKak] = useState<any>(null);
@@ -68,10 +69,9 @@ export function PrintProposalPage() {
                 setFilename(initialName);
                 document.title = initialName;
 
-                const [k, i, r] = await Promise.all([fetchKAK(id), fetchIKU(id), fetchRAB(id)]);
-                setKak(k); 
-                setIkuList(i); 
-                setRabList(r);
+                setKak(doc.kak || null); 
+                setIkuList(doc.iku || []); 
+                setRabList(doc.rab || []);
             } catch (e) { 
                 console.error(e); 
             } finally { 
@@ -111,13 +111,13 @@ export function PrintProposalPage() {
     }
 
     return (
-        <div className="print-page-wrapper">
+        <div className="min-h-screen bg-slate-100 py-10 print:py-0 print:bg-white text-slate-900 font-[Inter,sans-serif]">
             {/* BUTTONS (Screen Only) */}
-            <div className="print-actions">
-                <div className="panel-header">
-                    <div className="panel-icon">
+            <div className={`fixed ${isModal ? 'top-6' : 'top-[88px] md:top-6'} right-6 z-50 flex flex-col w-[300px] md:w-[340px] p-5 md:p-6 rounded-2xl bg-white shadow-xl border border-slate-200 print:hidden font-[Inter,sans-serif]`}>
+                <div className="flex gap-4 items-start">
+                    <div className="size-10 md:size-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
                         <span className="icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5 md:size-6">
                                 <polyline points="6 9 6 2 18 2 18 9" />
                                 <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                                 <rect x="6" y="14" width="12" height="8" />
@@ -125,48 +125,48 @@ export function PrintProposalPage() {
                             </svg>
                         </span>
                     </div>
-                    <div className="panel-copy">
-                        <h4>Panel Pratinjau</h4>
-                        <p>Atur nama file, lalu tekan cetak untuk simpan PDF.</p>
+                    <div className="panel-copy pt-0.5">
+                        <h4 className="font-bold text-slate-800 text-sm md:text-base leading-tight">Panel Pratinjau</h4>
+                        <p className="text-slate-500 text-[11px] md:text-xs mt-1">Simpan dokumen sebagai PDF</p>
                     </div>
                 </div>
-                <div className="panel-divider"></div>
+                <div className="border-t border-slate-100 my-4"></div>
                 <div className="filename-wrapper">
-                    <label htmlFor="doc-filename">Nama Dokumen:</label>
+                    <label htmlFor="doc-filename" className="text-slate-700 font-semibold mb-1.5 text-xs">Nama File Dokumen:</label>
                     <input 
                         type="text" 
                         id="doc-filename" 
                         value={filename}
                         onChange={(e) => setFilename(e.target.value)}
                         placeholder="Masukkan nama dokumen..." 
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors font-medium text-slate-800"
                     />
                 </div>
-                <div className="preview-hint">
-                    Perubahan nama otomatis menjadi judul file saat Anda memilih <strong>Simpan sebagai PDF</strong>. Panel ini tidak akan ikut tercetak.
+                <div className="preview-hint mt-3 bg-slate-50 border border-slate-100 text-slate-500 text-xs p-3 rounded-lg leading-relaxed">
+                    Perubahan nama otomatis menjadi judul file saat Anda memilih <strong>Save as PDF</strong>. Panel ini tidak akan ikut tercetak.
                 </div>
-                <div className="btn-row">
-                    <button className="btn btn-back" onClick={() => navigate(-1)}>
-                        <span className="icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div className="btn-row flex gap-2 mt-4 pt-4 border-t border-slate-100">
+                    {!isModal && (
+                        <button className="flex-1 flex justify-center items-center gap-1.5 border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold bg-white rounded-lg py-2.5 text-xs transition-colors" onClick={() => navigate(-1)}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
                                 <polyline points="15 18 9 12 15 6" />
                             </svg>
-                        </span>
-                        Kembali
-                    </button>
-                    <button className="btn btn-print" onClick={handlePrint}>
-                        <span className="icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="7 10 12 15 17 10" />
-                                <line x1="12" y1="15" x2="12" y2="3" />
-                            </svg>
-                        </span>
-                        Cetak / Simpan PDF
+                            Kembali
+                        </button>
+                    )}
+                    <button className="flex-1 flex justify-center items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg py-2.5 text-xs shadow-md shadow-emerald-500/20 transition-colors" onClick={handlePrint}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Cetak PDF
                     </button>
                 </div>
             </div>
 
-            <div className="print-container">
+            <div className="print-page-wrapper">
+                <div className="print-container">
                 {/* Cover page */}
                 <div className="cover-page-wrapper page-break">
                     <div className="cover-page">
@@ -510,6 +510,7 @@ export function PrintProposalPage() {
                     </div>
 
                 </div> {/* end content-wrapper */}
+            </div>
             </div>
         </div>
     );

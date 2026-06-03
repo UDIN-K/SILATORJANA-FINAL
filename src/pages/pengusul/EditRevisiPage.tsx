@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiGetKegiatan, apiUpdateKegiatan } from '@/lib/api';
+import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Send, Plus, Loader2, Trash2, MessageSquare, AlertTriangle, ShoppingCart, Wrench, Plane } from 'lucide-react';
+import { ArrowLeft, Send, Plus, Loader2, Trash2, MessageSquare, AlertTriangle, ShoppingCart, Wrench, Plane, Target } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import { fetchKAK, fetchRAB, formatCurrency, getCurrentUser } from '@/lib/helpers';
+import { fetchKAK, fetchIKU, fetchRAB, formatCurrency, getCurrentUser } from '@/lib/helpers';
 
 const BULAN_INDONESIA = [
   'Januari','Februari','Maret','April','Mei','Juni',
@@ -33,6 +34,12 @@ interface IndikatorRow {
   bulan: string;
   indikator: string;
   target: number | null;
+}
+
+interface IkuItem {
+  id?: number;
+  nama_indikator: string;
+  target_persen: number | null;
 }
 
 function calcTotal(r: RabItem): number {
@@ -138,7 +145,7 @@ function EditRabTable({
                     <Input value={item.uraian} onChange={e => onUpdate(idx, 'uraian', e.target.value)} className="h-8 rounded-lg text-xs" />
                   </td>
                   <td className="p-1.5">
-                    <Input type="number" min={1} value={item.qty1} onChange={e => onUpdate(idx, 'qty1', parseInt(e.target.value) || 1)} className="h-8 rounded-lg text-xs text-center px-1" />
+                    <Input type="number" min={1} value={item.qty1} onChange={e => onUpdate(idx, 'qty1', Math.max(1, parseInt(e.target.value) || 1))} className="h-8 rounded-lg text-xs text-center px-1" />
                   </td>
                   <td className="p-1.5">
                     <select value={item.satuan1} onChange={e => onUpdate(idx, 'satuan1', e.target.value)}
@@ -147,7 +154,7 @@ function EditRabTable({
                     </select>
                   </td>
                   <td className="p-1.5">
-                    <Input type="number" min={1} value={item.qty2} onChange={e => onUpdate(idx, 'qty2', parseInt(e.target.value) || 1)} className="h-8 rounded-lg text-xs text-center px-1" />
+                    <Input type="number" min={1} value={item.qty2} onChange={e => onUpdate(idx, 'qty2', Math.max(1, parseInt(e.target.value) || 1))} className="h-8 rounded-lg text-xs text-center px-1" />
                   </td>
                   <td className="p-1.5">
                     <select value={item.satuan2} onChange={e => onUpdate(idx, 'satuan2', e.target.value)}
@@ -156,7 +163,7 @@ function EditRabTable({
                     </select>
                   </td>
                   <td className="p-1.5">
-                    <Input type="number" min={0} value={item.qty3 ?? ''} placeholder="Opsional" onChange={e => onUpdate(idx, 'qty3', e.target.value ? parseInt(e.target.value) : null)} className="h-8 rounded-lg text-xs text-center px-1" />
+                    <Input type="number" min={0} value={item.qty3 ?? ''} placeholder="Opsional" onChange={e => onUpdate(idx, 'qty3', e.target.value ? Math.max(0, parseInt(e.target.value) || 0) : null)} className="h-8 rounded-lg text-xs text-center px-1" />
                   </td>
                   <td className="p-1.5">
                     <select value={item.satuan3} onChange={e => onUpdate(idx, 'satuan3', e.target.value)}
@@ -165,7 +172,7 @@ function EditRabTable({
                     </select>
                   </td>
                   <td className="p-1.5">
-                    <Input type="number" min={0} value={item.harga_satuan || ''} placeholder="0" onChange={e => onUpdate(idx, 'harga_satuan', parseInt(e.target.value) || 0)} className="h-8 rounded-lg text-xs text-right px-2" />
+                    <Input type="number" min={0} value={item.harga_satuan || ''} placeholder="0" onChange={e => onUpdate(idx, 'harga_satuan', Math.max(0, parseInt(e.target.value) || 0))} className="h-8 rounded-lg text-xs text-right px-2" />
                   </td>
                   <td className="px-3 py-2 text-right font-semibold text-slate-800 bg-slate-50/50 whitespace-nowrap">
                     {formatCurrency(calcTotal(item))}
@@ -221,6 +228,8 @@ export function EditRevisiPage() {
   });
 
   const [indikatorRows, setIndikatorRows] = useState<IndikatorRow[]>([]);
+  const [ikuItems, setIkuItems] = useState<IkuItem[]>([]);
+  const [ikuMasterList, setIkuMasterList] = useState<any[]>([]);
   const [rabBarang, setRabBarang] = useState<RabItem[]>([]);
   const [rabJasa, setRabJasa] = useState<RabItem[]>([]);
   const [rabPerjalanan, setRabPerjalanan] = useState<RabItem[]>([]);
@@ -260,6 +269,33 @@ export function EditRevisiPage() {
           setIndikatorRows(parseIndikatorKinerja(kak.indikator_kinerja));
         }
 
+        const ikusDocs = await fetchIKU(id);
+        if (ikusDocs) {
+          setIkuItems(ikusDocs.map((i: any) => ({
+            id: i.id,
+            nama_indikator: i.nama_iku || i.nama_indikator || '',
+            target_persen: i.target_persen !== undefined ? Number(i.target_persen) : null,
+          })));
+        }
+
+        const fallbackIku = [
+          { id: 1, nama_indikator: 'Lulusan Mendapat Pekerjaan yang Layak', is_visible: true },
+          { id: 2, nama_indikator: 'Mahasiswa Mendapat Pengalaman di Luar Kampus', is_visible: true },
+          { id: 3, nama_indikator: 'Dosen Berkegatan di Luar Kampus', is_visible: true },
+          { id: 4, nama_indikator: 'Praktisi Mengajar di Dalam Kampus', is_visible: true },
+          { id: 5, nama_indikator: 'Hasil Kerja Dosen Digunakan oleh Masyarakat', is_visible: true },
+        ];
+        
+        try {
+          const res = await api.get('/api/iku-master');
+          let data = Array.isArray((res as any).data) ? (res as any).data : (res as any).data?.data || [];
+          data = data.filter((item: any) => item.is_visible !== false);
+          if (data.length === 0) data = fallbackIku;
+          setIkuMasterList(data);
+        } catch {
+          setIkuMasterList(fallbackIku);
+        }
+
         const rabDocs = await fetchRAB(id);
         const mapped: RabItem[] = rabDocs.map((r: any) => ({
           id: r.id,
@@ -295,6 +331,12 @@ export function EditRevisiPage() {
     setIndikatorRows(prev => prev.filter((_, idx) => idx !== i));
   const updateIndikator = (i: number, field: keyof IndikatorRow, val: any) =>
     setIndikatorRows(prev => { const n = [...prev]; (n[i] as any)[field] = val; return n; });
+
+  // IKU helpers
+  const addIku = () => setIkuItems(prev => [...prev, { nama_indikator: '', target_persen: null }]);
+  const removeIku = (i: number) => setIkuItems(prev => prev.filter((_, idx) => idx !== i));
+  const updateIku = (i: number, field: keyof IkuItem, val: any) =>
+    setIkuItems(prev => { const n = [...prev]; (n[i] as any)[field] = val; return n; });
 
   // RAB helpers per kategori
   const makeRabUpdater = (setter: React.Dispatch<React.SetStateAction<RabItem[]>>) =>
@@ -337,6 +379,10 @@ export function EditRevisiPage() {
           kurun_waktu_selesai: form.kurun_waktu_selesai || null,
           indikator_kinerja: indikatorRows.length > 0 ? JSON.stringify(indikatorRows) : null,
         },
+        iku: ikuItems.filter(it => it.nama_indikator).map(it => ({
+          nama_iku: it.nama_indikator,
+          target_persen: it.target_persen
+        })),
         rab: [
           ...toRabPayload(rabBarang, 'barang'),
           ...toRabPayload(rabJasa, 'jasa'),
@@ -344,11 +390,11 @@ export function EditRevisiPage() {
         ],
       });
 
-      alert('Revisi berhasil dikirim!');
       navigate('/dashboard/pengusul/needs-work');
     } catch (error: any) {
       console.error(error);
-      alert('Gagal menyimpan revisi: ' + (error?.response?.data?.message || error.message));
+      const errMsg = error?.response?.data?.message || error.message;
+      setForm(prev => ({...prev, submitError: 'Gagal menyimpan revisi: ' + errMsg}));
     } finally {
       setIsSubmitting(false);
     }
@@ -392,11 +438,14 @@ export function EditRevisiPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="size-5" /></Button>
+      {/* Header */}
+      <div className="flex items-center gap-4 py-4 border-b border-slate-100 mb-6">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="h-10 w-10 sm:h-11 sm:w-11 border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 shadow-sm transition-all rounded-xl shrink-0">
+          <ArrowLeft className="size-5" />
+        </Button>
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-slate-900">Revisi Usulan</h2>
-          <p className="text-slate-500">Perbaiki data sesuai catatan verifikator, lalu kirim ulang.</p>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Revisi Usulan</h2>
+          <p className="text-slate-500 mt-1">Perbaiki data sesuai catatan verifikator, lalu kirim ulang.</p>
         </div>
       </div>
 
@@ -413,6 +462,19 @@ export function EditRevisiPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {(form as any).submitError && (
+          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 font-semibold flex items-center justify-between">
+            <div>
+              <span className="block text-sm">Gagal Mengirim Revisi</span>
+              <span className="block text-xs font-normal mt-1">{(form as any).submitError}</span>
+              <span className="block text-xs font-normal mt-1">Saran: Silakan cek apakah backend Laravel di laptopmu sudah menyala dan URL sudah tersambung (jika pakai ssh tunnel, periksa terminal ssh-nya).</span>
+            </div>
+            <Button type="button" variant="ghost" className="h-8 w-8 p-0" onClick={() => setForm(prev => { const n = {...prev}; delete (n as any).submitError; return n; })}>
+              x
+            </Button>
+          </div>
+        )}
+
         {/* ── Info Kegiatan ── */}
         <Card className="shadow-sm border-slate-200">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100">
@@ -495,14 +557,64 @@ export function EditRevisiPage() {
 
             {/* Indikator Kinerja Table */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Indikator Kinerja</Label>
-                <Button type="button" variant="secondary" size="sm" className="h-8 rounded-xl" onClick={addIndikatorRow}>
-                  <Plus className="mr-1 h-3.5 w-3.5" /> Tambah Baris
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <Label className="leading-tight block">Indikator Kinerja Keberhasilan</Label>
+                <Button type="button" variant="secondary" size="sm" className="h-9 w-full sm:w-auto rounded-xl" onClick={addIndikatorRow}>
+                  <Plus className="mr-1 h-3.5 w-3.5 shrink-0" /> Tambah Baris
                 </Button>
               </div>
-              <div className="border border-slate-200 rounded-xl overflow-x-auto">
-                <table className="w-full text-sm text-left min-w-[600px]">
+              <div className="border border-slate-200/80 rounded-xl shadow-sm overflow-hidden">
+                {/* Mobile View */}
+                <div className="lg:hidden flex flex-col gap-4 bg-slate-50/50 p-2 sm:p-4">
+                  {indikatorRows.length === 0 && (
+                    <div className="text-center py-6 text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl bg-white mx-2 mt-2">
+                       Belum ada indikator. Klik "Tambah Baris" untuk menambahkan.
+                    </div>
+                  )}
+                  {indikatorRows.map((row, idx) => (
+                    <div key={idx} className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                      <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                        <div className="font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg text-xs">Indikator {idx + 1}</div>
+                        <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-red-500 hover:text-red-700 hover:bg-red-50 focus:ring-0" onClick={() => removeIndikatorRow(idx)}>
+                          <Trash2 className="size-4" /> <span className="ml-1 text-xs">Hapus</span>
+                        </Button>
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Bulan</Label>
+                        <select
+                          value={row.bulan}
+                          onChange={e => updateIndikator(idx, 'bulan', e.target.value)}
+                          className="w-full h-11 rounded-xl border border-slate-200 text-sm px-3 bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        >
+                          <option value="">Pilih Bulan</option>
+                          {BULAN_INDONESIA.map(b => (
+                            <option key={b} value={b}>{b}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Indikator Keberhasilan</Label>
+                        <Input
+                          placeholder="Contoh: Tersusunnya dokumen RPKL"
+                          value={row.indikator}
+                          onChange={e => updateIndikator(idx, 'indikator', e.target.value)}
+                          className="h-11 rounded-xl text-sm focus:ring-indigo-500/20"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Target (%)</Label>
+                        <Input
+                          type="number" min={0} placeholder="0"
+                          value={row.target ?? ''}
+                          onChange={e => updateIndikator(idx, 'target', e.target.value ? Math.max(0, Number(e.target.value)) : null)}
+                          className="h-11 rounded-xl text-sm focus:ring-indigo-500/20"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop View */}
+                <table className="hidden lg:table w-full text-sm text-left min-w-[600px]">
                   <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase">
                     <tr>
                       <th className="px-3 py-3 w-8 text-center">No</th>
@@ -544,7 +656,7 @@ export function EditRevisiPage() {
                           <Input
                             type="number" min={0} placeholder="0"
                             value={row.target ?? ''}
-                            onChange={e => updateIndikator(idx, 'target', e.target.value ? Number(e.target.value) : null)}
+                            onChange={e => updateIndikator(idx, 'target', e.target.value ? Math.max(0, Number(e.target.value)) : null)}
                             className="h-9 rounded-lg text-sm text-center"
                           />
                         </td>
@@ -573,6 +685,71 @@ export function EditRevisiPage() {
                 <Input type="date" min={form.kurun_waktu_mulai || todayStr} className={inputHighlight(['waktu', 'kurun'])} value={form.kurun_waktu_selesai} onChange={e => updateForm('kurun_waktu_selesai', e.target.value)} />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Indikator Kinerja Utama (IKU) ── */}
+        <Card className="border-slate-200/60 shadow-sm bg-white overflow-hidden">
+          <CardHeader className="bg-purple-50/50 border-b border-purple-100/50 pb-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center size-8 rounded-xl bg-purple-100 text-purple-700 shrink-0">
+                  <Target className="size-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-bold text-slate-800 leading-tight">Indikator Kinerja Utama</CardTitle>
+                  <p className="text-sm text-slate-500 mt-0.5">Pilih IKU yang didukung beserta persentase target.</p>
+                </div>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={addIku} className="rounded-xl border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800 w-full sm:w-auto">
+                <Plus className="size-4 mr-1.5 shrink-0" />Tambah IKU
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              {ikuItems.length === 0 ? (
+                 <div className="text-center py-6 text-sm text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    Belum ada IKU yang dipilih. Klik "Tambah IKU".
+                 </div>
+              ) : (
+                ikuItems.map((iku, index) => (
+                  <div key={index} className="flex gap-4 items-start bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                    <div className="flex-1">
+                      <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Nama Indikator</Label>
+                      <select
+                        value={iku.nama_indikator}
+                        onChange={e => updateIku(index, 'nama_indikator', e.target.value)}
+                        className="mt-1 w-full h-10 rounded-xl border border-slate-200 px-3 bg-white text-sm focus:border-purple-500 focus:outline-none"
+                      >
+                        <option value="">-- Pilih Indikator --</option>
+                        {ikuMasterList.map(item => (
+                          <option key={item.id} value={item.nama_indikator || item.nama_iku || String(item.id)}>
+                            {item.nama_indikator || item.nama_iku}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="w-32">
+                      <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Target (%)</Label>
+                      <Input
+                        type="number" min={0} max={100}
+                        value={iku.target_persen ?? ''}
+                        onChange={e => updateIku(index, 'target_persen', e.target.value ? Math.max(0, Math.min(100, Number(e.target.value))) : null)}
+                        placeholder="0"
+                        className="mt-1 h-10 rounded-xl"
+                      />
+                    </div>
+                    <div className="pt-7">
+                      <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl" onClick={() => removeIku(index)}>
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <RevisiNote fields={['iku']} />
           </CardContent>
         </Card>
 

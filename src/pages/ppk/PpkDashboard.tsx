@@ -28,29 +28,32 @@ export function PpkDashboard() {
   const rejected = items.filter(i => i.status === 'rejected');
 
   const cards = [
-    { label: 'Menunggu Review', value: pendingReview.length, icon: Clock, color: 'bg-amber-100 text-amber-600' },
-    { label: 'Disetujui', value: approved.length, icon: CheckCircle, color: 'bg-emerald-100 text-emerald-600' },
-    { label: 'Ditolak', value: rejected.length, icon: XCircle, color: 'bg-red-100 text-red-600' },
-    { label: 'Total', value: items.length, icon: FileText, color: 'bg-blue-100 text-blue-600' },
+    { label: 'Menunggu Review', value: pendingReview.length, icon: Clock, color: 'bg-amber-100 text-amber-600', backColor: 'text-amber-900/5' },
+    { label: 'Disetujui', value: approved.length, icon: CheckCircle, color: 'bg-emerald-100 text-emerald-600', backColor: 'text-emerald-900/5' },
+    { label: 'Ditolak', value: rejected.length, icon: XCircle, color: 'bg-red-100 text-red-600', backColor: 'text-red-900/5' },
+    { label: 'Total', value: items.length, icon: FileText, color: 'bg-blue-100 text-blue-600', backColor: 'text-blue-900/5' },
   ];
 
   if (isLoading) return <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-blue-600 size-8" /></div>;
 
   return (
     <div className="space-y-6">
-      <div><h2 className="text-2xl font-bold text-slate-900">Dashboard PPK</h2><p className="text-slate-500">Proses penetapan dan persetujuan kegiatan.</p></div>
+      <div className="space-y-1 sm:space-y-1.5">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard PPK</h2>
+        <p className="text-slate-500 mt-1">Proses penetapan dan persetujuan kegiatan.</p>
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {cards.map((c, i) => (
-          <Card key={i} className="shadow-sm"><CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-            <div className="flex items-start sm:items-center justify-between pb-2 gap-1 sm:gap-2">
-               <p className="text-[11px] sm:text-sm font-medium text-slate-600 leading-tight">{c.label}</p>
-               <div className={`p-1 sm:p-3 rounded-xl ${c.color} shrink-0`}><c.icon className="size-3.5 sm:size-5" /></div>
-            </div>
-            <div className="flex items-baseline gap-2 mt-auto">
-               <p className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{c.value}</p>
-            </div>
-          </CardContent></Card>
+          <Card key={i} className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+            <CardContent className="p-4 flex items-center gap-4">
+               <c.icon className={`size-8 sm:size-10 ${c.color.replace('bg-', 'text-').replace('100 text-', '').replace('600', '500')} transition-transform group-hover:scale-110`} />
+               <div>
+                 <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{c.value}</h3>
+                 <p className="text-xs sm:text-sm text-slate-500 font-medium">{c.label}</p>
+               </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 

@@ -52,11 +52,11 @@ export function RekapJurusanPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-1 sm:space-y-1.5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
           <BarChart3 className="size-6 text-indigo-600" /> Rekapitulasi Per Jurusan
         </h2>
-        <p className="text-slate-500">Ringkasan kegiatan berdasarkan jurusan/unit.</p>
+        <p className="text-slate-500 mt-1">Ringkasan kegiatan berdasarkan jurusan/unit.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

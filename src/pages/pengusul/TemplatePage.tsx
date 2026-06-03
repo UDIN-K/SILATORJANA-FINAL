@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, FileSpreadsheet, File, FolderOpen } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, File, FolderOpen, Lightbulb } from 'lucide-react';
 import { useDraggableScroll } from '@/hooks/useDraggableScroll';
 
 interface TemplateItem {
@@ -68,7 +68,7 @@ export function TemplatePage() {
       </div>
 
       <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-800">
-        <p className="font-semibold">💡 Tips</p>
+        <p className="font-semibold flex items-center gap-1.5"><Lightbulb className="size-4 shrink-0" /> Tips</p>
         <p className="mt-1">Gunakan template resmi agar dokumen Anda sesuai format yang diterima oleh verifikator. Template sudah mengikuti standar Politeknik Negeri Jakarta.</p>
       </div>
 

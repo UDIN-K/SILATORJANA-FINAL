@@ -30,10 +30,13 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
+      port: 3000,
+      host: '0.0.0.0',
+      strictPort: true,
       hmr: process.env.DISABLE_HMR !== 'true',
       proxy: {
         '/api': {
-          target: 'http://localhost:8000',
+          target: 'https://luckless-flogging-stimulate.ngrok-free.dev',
           changeOrigin: true,
         },
       },

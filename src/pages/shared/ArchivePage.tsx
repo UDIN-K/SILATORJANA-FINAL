@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Eye, Archive, Loader2, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { formatDate, formatCurrency, timeAgo } from '@/lib/helpers';
+import { formatDate, formatCurrency, timeAgo, getUserRole } from '@/lib/helpers';
 
 const ARCHIVE_STATUSES = [
   'approved_wadir', 'accepted_funds', 'funds_disbursed',
@@ -64,11 +64,11 @@ export function ArchivePage({ role, detailPath }: ArchivePageProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+      <div className="space-y-1 sm:space-y-1.5">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
           <Archive className="size-6 text-slate-600" /> Arsip Proposal
         </h2>
-        <p className="text-slate-500">Proposal yang sudah selesai diproses atau ditolak — {currentRoleLabel}.</p>
+        <p className="text-slate-500 mt-1">Proposal yang sudah selesai diproses atau ditolak — {currentRoleLabel}.</p>
       </div>
 
       {/* Stats */}
@@ -112,13 +112,13 @@ export function ArchivePage({ role, detailPath }: ArchivePageProps) {
             <div className="divide-y divide-slate-100">
               {filtered.map(item => (
                 <div key={item.id} className="p-4 hover:bg-slate-50/50 transition-colors">
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1 min-w-0">
                         <p className="font-semibold text-slate-900 truncate flex-1 min-w-[200px]">{item.nama_kegiatan}</p>
                         <StatusBadge status={item.status} />
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-slate-500">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-slate-500">
                         <span className="flex items-center gap-1"><Calendar className="size-3" /> {formatDate(item.created_at)}</span>
                         <span>{item.nama_jurusan || '-'}</span>
                         {item.total_anggaran && <span className="font-medium text-slate-700">{formatCurrency(item.total_anggaran)}</span>}
@@ -141,9 +141,14 @@ export function ArchivePage({ role, detailPath }: ArchivePageProps) {
 
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className={`rounded-xl px-4 py-3 ${color}`}>
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="text-xs font-medium mt-0.5 opacity-80">{label}</p>
+    <div className={`relative overflow-hidden rounded-xl px-4 py-3 sm:px-5 sm:py-4 ${color}`}>
+      <div className="relative z-10 flex flex-col items-start">
+        <p className="text-3xl font-extrabold tracking-tight">{value}</p>
+        <p className="text-xs sm:text-sm font-semibold mt-1 opacity-80">{label}</p>
+      </div>
+      <div className="absolute -bottom-5 -right-2 text-[5rem] sm:text-[6rem] leading-none font-black opacity-[0.07] select-none z-0 pointer-events-none">
+        {value}
+      </div>
     </div>
   );
 }

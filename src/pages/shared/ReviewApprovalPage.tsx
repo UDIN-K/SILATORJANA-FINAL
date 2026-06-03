@@ -3,10 +3,11 @@ import { apiGetKegiatan, apiUpdateKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ProgressTracker } from '@/components/ProgressTracker';
-import { formatDate, formatCurrency, getUserId, formatDateLong } from '@/lib/helpers';
-import { ArrowLeft, CheckCircle, XCircle, Loader2, FileText, ClipboardList, BarChart3, Printer, Info } from 'lucide-react';
+import { formatDate, formatCurrency, getUserId, formatDateLong, getUserRole } from '@/lib/helpers';
+import { ArrowLeft, CheckCircle, XCircle, Loader2, FileText, ClipboardList, BarChart3, Printer, Info, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
 
 interface ReviewPageProps {
   role: 'ppk' | 'wadir2';
@@ -58,6 +59,7 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
   const [ikuList, setIkuList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
   const [catatan, setCatatan] = useState('');
   const [activeTab, setActiveTab] = useState<TabId>('info');
 
@@ -123,7 +125,7 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
           </div>
         </div>
         <Button variant="outline" className="text-[#047857] border-emerald-200 hover:bg-emerald-50 rounded-xl"
-          onClick={() => window.open(`/dashboard/pengusul/print/${id}`, '_blank')}>
+          onClick={() => setShowPrintModal(true)}>
           <Printer className="size-4 mr-2" /> Cetak PDF
         </Button>
       </div>
@@ -331,6 +333,26 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
           </div>
         </CardContent>
       </Card>
+
+      {/* MODAL PRINT PREVIEW */}
+      <Dialog open={showPrintModal} onOpenChange={setShowPrintModal}>
+        <DialogContent className="max-w-[95vw] md:max-w-5xl h-[90vh] md:h-[85vh] p-0 flex flex-col bg-slate-100 overflow-hidden border-slate-200">
+          <DialogTitle className="sr-only">Pratinjau PDF Dokumen</DialogTitle>
+          <div className="flex h-14 shrink-0 items-center justify-between px-6 border-b border-slate-100 shadow-sm z-10 bg-white">
+            <span className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+              <Printer className="size-4 text-emerald-600" /> Pratinjau Dokumen
+            </span>
+            <DialogClose render={<Button variant="ghost" size="icon" className="size-8 text-slate-500 rounded-full hover:bg-rose-50 hover:text-rose-600 transition-colors" />}>
+              <X className="size-4" />
+            </DialogClose>
+          </div>
+          <iframe 
+             src={`/dashboard/pengusul/print/${id}?modal=1&token=${encodeURIComponent(localStorage.getItem('auth_token') || '')}`} 
+             className="w-full flex-1 border-0 bg-slate-100 block" 
+             title="Print Preview"
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

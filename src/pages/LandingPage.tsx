@@ -1,691 +1,363 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  FileText, ShieldCheck, Printer, Receipt, Bell, FolderKanban,
+  Zap, Eye, Lock, ClipboardCheck, Cloud,
+  Menu, X, ArrowRight, LayoutDashboard, Route, CheckCircle
+} from 'lucide-react';
 
-/* ─── Style injection ─────────────────────────────────────────── */
-const LANDING_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-  @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+import { AppLogo } from '@/components/AppLogo';
 
-  .lp-body { font-family: "Plus Jakarta Sans", sans-serif; background: #FAFAFA; overflow-x: hidden; }
-
-  /* ── Nav ── */
-  .lp-nav {
-    position: fixed; top: 0; width: 100%;
-    background: rgba(255,255,255,0.98);
-    backdrop-filter: blur(20px);
-    padding: 20px 0; z-index: 1000;
-    box-shadow: 0 2px 30px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-  }
-  .lp-nav.scrolled { padding: 15px 0; box-shadow: 0 4px 40px rgba(0,0,0,0.12); }
-  .lp-nav-container {
-    max-width: 1200px; margin: 0 auto; padding: 0 40px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .lp-logo {
-    display: flex; align-items: center; gap: 12px;
-    font-size: 22px; font-weight: 800;
-    background: linear-gradient(135deg, #1A4D2E 0%, #36C06C 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text; text-decoration: none;
-  }
-  .lp-logo img { -webkit-text-fill-color: initial; }
-  .lp-nav-links {
-    display: flex; gap: 36px; align-items: center;
-  }
-  .lp-nav-links a {
-    color: #424242; text-decoration: none; font-weight: 600; font-size: 14px;
-    transition: all 0.3s ease; position: relative; display: flex; align-items: center; gap: 6px;
-  }
-  .lp-nav-links a::after {
-    content: ''; position: absolute; bottom: -5px; left: 0; width: 0; height: 3px;
-    background: linear-gradient(90deg, #1A4D2E 0%, #36C06C 100%);
-    transition: width 0.3s ease; border-radius: 2px;
-  }
-  .lp-nav-links a:hover::after { width: 100%; }
-  .lp-nav-links a:hover { color: #1A4D2E; }
-  .lp-cta-btn {
-    background: linear-gradient(135deg, #1A4D2E 0%, #228B22 100%);
-    color: #fff !important; padding: 12px 28px; border-radius: 25px;
-    text-decoration: none; font-weight: 700; font-size: 14px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(26,77,46,0.4);
-    position: relative; overflow: hidden; border: none;
-    -webkit-text-fill-color: #fff !important;
-  }
-  .lp-cta-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(26,77,46,0.5); }
-  .lp-mobile-btn {
-    display: none; background: none; border: none; color: #1A4D2E; cursor: pointer; padding: 5px;
-  }
-  .lp-mobile-btn .material-icons { font-size: 32px; }
-
-  /* ── Floating Particles ── */
-  .lp-particles { position: absolute; width: 100%; height: 100%; top: 0; left: 0; overflow: hidden; pointer-events: none; }
-  .lp-particle {
-    position: absolute; width: 10px; height: 10px;
-    background: rgba(54,192,108,0.3); border-radius: 50%;
-    animation: lpFloatUp 15s infinite ease-in-out;
-  }
-  .lp-particle:nth-child(1) { left: 10%; animation-duration: 12s; animation-delay: 0s; }
-  .lp-particle:nth-child(2) { left: 20%; animation-duration: 15s; animation-delay: 2s; width: 15px; height: 15px; }
-  .lp-particle:nth-child(3) { left: 30%; animation-duration: 18s; animation-delay: 4s; width: 8px; height: 8px; }
-  .lp-particle:nth-child(4) { left: 50%; animation-duration: 14s; animation-delay: 1s; }
-  .lp-particle:nth-child(5) { left: 70%; animation-duration: 16s; animation-delay: 3s; width: 12px; height: 12px; }
-  .lp-particle:nth-child(6) { left: 85%; animation-duration: 13s; animation-delay: 5s; }
-  @keyframes lpFloatUp {
-    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-    10% { opacity: 0.5; }
-    90% { opacity: 0.5; }
-    100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
-  }
-
-  /* ── Hero ── */
-  .lp-hero {
-    min-height: 100vh; display: flex; align-items: center;
-    padding: 140px 40px 80px; position: relative; overflow: hidden;
-    background: linear-gradient(135deg,#1A4D2E 0%,#2D6A4F 25%,#36C06C 50%,#2D6A4F 75%,#1A4D2E 100%);
-    background-size: 200% 200%;
-    animation: lpGradShift 15s ease infinite;
-  }
-  @keyframes lpGradShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  .lp-hero::before {
-    content: ''; position: absolute; top: -50%; right: -10%;
-    width: 800px; height: 800px;
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-    border-radius: 50%; animation: lpFloat 20s ease-in-out infinite;
-  }
-  .lp-hero::after {
-    content: ''; position: absolute; bottom: -30%; left: -5%;
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    border-radius: 50%; animation: lpFloat 15s ease-in-out infinite reverse;
-  }
-  @keyframes lpFloat {
-    0%,100% { transform: translate(0,0) rotate(0deg); }
-    50% { transform: translate(50px,50px) rotate(180deg); }
-  }
-  .lp-hero-container {
-    max-width: 1200px; margin: 0 auto;
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 60px; align-items: center; position: relative; z-index: 1;
-    width: 100%;
-  }
-  .lp-hero-content h1 {
-    font-size: 54px; font-weight: 800; color: white;
-    line-height: 1.2; margin-bottom: 24px;
-    animation: lpSlideLeft 1s ease-out;
-  }
-  @keyframes lpSlideLeft {
-    0% { opacity: 0; transform: translateX(-80px); }
-    100% { opacity: 1; transform: translateX(0); }
-  }
-  .lp-highlight {
-    background: linear-gradient(135deg,#FFD700 0%,#FFA500 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text; display: inline-block;
-    animation: lpGlow 2s ease-in-out infinite;
-  }
-  @keyframes lpGlow {
-    0%,100% { filter: drop-shadow(0 0 5px rgba(255,215,0,0.5)); }
-    50% { filter: drop-shadow(0 0 20px rgba(255,215,0,0.8)); }
-  }
-  .lp-hero-content p {
-    font-size: 17px; color: rgba(255,255,255,0.9);
-    line-height: 1.8; margin-bottom: 40px;
-    animation: lpSlideLeft 1s ease-out 0.2s backwards;
-  }
-  .lp-hero-btns {
-    display: flex; gap: 20px; flex-wrap: wrap;
-    animation: lpSlideLeft 1s ease-out 0.4s backwards;
-  }
-  .lp-btn-primary {
-    background: white; color: #1A4D2E !important; -webkit-text-fill-color: #1A4D2E !important;
-    padding: 16px 36px; border-radius: 30px; text-decoration: none;
-    font-weight: 700; font-size: 16px;
-    display: inline-flex; align-items: center; gap: 10px;
-    transition: all 0.3s ease; box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-  }
-  .lp-btn-primary:hover {
-    transform: translateY(-5px); box-shadow: 0 15px 45px rgba(26,77,46,0.4);
-    background: linear-gradient(135deg,#1A4D2E 0%,#36C06C 100%);
-    color: white !important; -webkit-text-fill-color: white !important;
-  }
-  .lp-btn-secondary {
-    background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
-    color: white !important; -webkit-text-fill-color: white !important;
-    padding: 16px 36px; border-radius: 30px; text-decoration: none;
-    font-weight: 700; font-size: 16px;
-    display: inline-flex; align-items: center; gap: 10px;
-    transition: all 0.3s ease; border: 2px solid rgba(255,255,255,0.3);
-  }
-  .lp-btn-secondary:hover {
-    background: rgba(255,255,255,0.3); transform: translateY(-5px);
-    box-shadow: 0 12px 35px rgba(255,255,255,0.3);
-    border-color: rgba(255,255,255,0.6);
-  }
-  .lp-hero-img-wrap {
-    display: flex; align-items: center; justify-content: flex-end; position: relative;
-  }
-  .lp-hero-img {
-    width: 100%; max-width: 640px; height: auto;
-    object-fit: contain; filter: drop-shadow(0 20px 60px rgba(0,0,0,0.3));
-    animation: lpFloatSlow 6s ease-in-out infinite;
-  }
-  @keyframes lpFloatSlow {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
-  }
-
-  /* ── Section shared ── */
-  .lp-section-header { text-align: center; max-width: 700px; margin: 0 auto 80px; }
-  .lp-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: linear-gradient(135deg,#1A4D2E 0%,#36C06C 100%);
-    color: white; padding: 8px 20px; border-radius: 20px;
-    font-size: 13px; font-weight: 700; margin-bottom: 20px;
-    box-shadow: 0 4px 15px rgba(26,77,46,0.3);
-  }
-  .lp-section-header h2 {
-    font-size: 40px; font-weight: 800;
-    background: linear-gradient(135deg,#1A4D2E 0%,#36C06C 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text; margin-bottom: 16px; line-height: 1.3;
-  }
-  .lp-section-header p { font-size: 17px; color: #666; line-height: 1.8; }
-
-  /* ── Features ── */
-  .lp-features { padding: 120px 40px; background: white; }
-  .lp-features-grid {
-    max-width: 1200px; margin: 0 auto;
-    display: grid; grid-template-columns: repeat(3,1fr); gap: 40px;
-  }
-  .lp-card {
-    background: white; padding: 40px; border-radius: 25px;
-    border: 2px solid #F0F0F0; transition: all 0.4s ease;
-    position: relative; overflow: hidden;
-  }
-  .lp-card::before {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-    background: linear-gradient(90deg,#1A4D2E 0%,#36C06C 100%);
-    transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease;
-  }
-  .lp-card:hover::before { transform: scaleX(1); }
-  .lp-card:hover {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow: 0 25px 60px rgba(26,77,46,0.2); border-color: #36C06C;
-  }
-  .lp-icon {
-    width: 70px; height: 70px; border-radius: 20px;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 24px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); transition: all 0.4s ease;
-  }
-  .lp-card:hover .lp-icon { transform: scale(1.1) rotate(5deg); }
-  .lp-icon .material-icons { color: white; font-size: 36px; }
-  .lp-card h3 { font-size: 20px; font-weight: 700; color: #1A4D2E; margin-bottom: 12px; }
-  .lp-card p { font-size: 14px; color: #666; line-height: 1.8; }
-
-  /* ── Process ── */
-  .lp-process {
-    padding: 120px 40px;
-    background: linear-gradient(135deg,#E8F5E9 0%,#F1F8F4 50%,#E8F5E9 100%);
-  }
-  .lp-process-container { max-width: 1200px; margin: 0 auto; }
-  .lp-process-img {
-    width: 100%; max-width: 1000px; height: auto; object-fit: contain;
-    display: block; margin: -120px auto;
-  }
-  .lp-steps { display: grid; gap: 30px; margin-top: 60px; }
-  .lp-step { display: grid; grid-template-columns: 80px 1fr; gap: 30px; align-items: start; }
-  .lp-step-num {
-    width: 80px; height: 80px; border-radius: 50%; display: flex;
-    align-items: center; justify-content: center;
-    color: white; font-size: 32px; font-weight: 800;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15); position: relative;
-  }
-  .lp-step-num::after {
-    content: ''; position: absolute; top: 100%; left: 50%;
-    transform: translateX(-50%); width: 3px; height: 50px;
-    background: linear-gradient(180deg,currentColor 0%,transparent 100%); opacity: 0.3;
-  }
-  .lp-step:last-child .lp-step-num::after { display: none; }
-  .lp-step-content {
-    background: white; padding: 30px; border-radius: 20px;
-    box-shadow: 0 6px 25px rgba(0,0,0,0.08); border-left: 4px solid;
-    transition: all 0.3s ease;
-  }
-  .lp-step-content:hover { transform: translateX(10px); box-shadow: 0 10px 40px rgba(26,77,46,0.15); }
-  .lp-step-content h3 { font-size: 20px; font-weight: 700; color: #1A4D2E; margin-bottom: 8px; }
-  .lp-step-content p { font-size: 14px; color: #666; line-height: 1.8; }
-
-  /* ── Stats ── */
-  .lp-stats {
-    padding: 100px 40px;
-    background: linear-gradient(135deg,#1A4D2E 0%,#2D6A4F 50%,#36C06C 100%);
-    position: relative; overflow: hidden;
-  }
-  .lp-stats::before {
-    content: ''; position: absolute; top: -50%; right: -10%;
-    width: 600px; height: 600px; background: rgba(255,255,255,0.1); border-radius: 50%;
-  }
-  .lp-stats-grid {
-    max-width: 1200px; margin: 0 auto;
-    display: grid; grid-template-columns: repeat(4,1fr); gap: 40px; position: relative; z-index: 1;
-  }
-  .lp-stat {
-    text-align: center; padding: 30px;
-    background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-    border-radius: 20px; border: 2px solid rgba(255,255,255,0.2);
-    transition: all 0.3s ease;
-  }
-  .lp-stat:hover { background: rgba(255,255,255,0.15); transform: translateY(-10px) scale(1.05); }
-  .lp-stat-num { font-size: 52px; font-weight: 800; color: white; margin-bottom: 8px; display: block; }
-  .lp-stat-label { font-size: 14px; color: rgba(255,255,255,0.95); font-weight: 600; }
-
-  /* ── Benefits ── */
-  .lp-benefits { padding: 120px 40px; background: white; }
-  .lp-benefits-img { width: 100%; max-width: 900px; height: auto; object-fit: contain; display: block; margin: 0 auto 60px; }
-
-  /* ── CTA ── */
-  .lp-cta-section { padding: 120px 40px; background: linear-gradient(135deg,#E8F5E9 0%,#F1F8F4 100%); }
-  .lp-cta-box {
-    max-width: 1100px; margin: 0 auto;
-    background: linear-gradient(135deg,#1A4D2E 0%,#2D6A4F 50%,#36C06C 100%);
-    padding: 80px 60px; border-radius: 40px;
-    display: grid; grid-template-columns: 1.5fr 1fr;
-    gap: 60px; align-items: center; position: relative; overflow: hidden;
-    box-shadow: 0 30px 80px rgba(26,77,46,0.4);
-  }
-  .lp-cta-box::before {
-    content: ''; position: absolute; top: -50%; right: -20%;
-    width: 500px; height: 500px; background: rgba(255,255,255,0.1); border-radius: 50%;
-  }
-  .lp-cta-content { position: relative; z-index: 1; }
-  .lp-cta-content h2 { font-size: 40px; font-weight: 800; color: white; margin-bottom: 20px; line-height: 1.3; }
-  .lp-cta-content p { font-size: 17px; color: rgba(255,255,255,0.9); margin-bottom: 40px; line-height: 1.7; }
-  .lp-cta-img-wrap { display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
-  .lp-cta-img { width: 100%; max-width: 380px; height: auto; object-fit: contain; animation: lpFloatSlow 6s ease-in-out infinite; }
-
-  /* ── Footer ── */
-  .lp-footer {
-    background: linear-gradient(135deg,#0F2818 0%,#1A4D2E 100%);
-    color: white; padding: 60px 40px 30px;
-  }
-  .lp-footer-grid {
-    max-width: 1200px; margin: 0 auto;
-    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 60px; margin-bottom: 40px;
-  }
-  .lp-footer-brand h3 {
-    font-size: 22px; font-weight: 800; margin-bottom: 16px;
-    background: linear-gradient(135deg,#36C06C 0%,#52DE97 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .lp-footer-brand p { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.8; }
-  .lp-footer-col h4 { font-size: 15px; font-weight: 700; margin-bottom: 20px; color: rgba(255,255,255,0.95); }
-  .lp-footer-col ul { list-style: none; padding: 0; margin: 0; }
-  .lp-footer-col li { margin-bottom: 12px; }
-  .lp-footer-col a {
-    color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px;
-    transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px;
-  }
-  .lp-footer-col a:hover { color: #36C06C; transform: translateX(5px); }
-  .lp-footer-bottom {
-    text-align: center; padding-top: 30px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.6); font-size: 14px;
-    max-width: 1200px; margin: 0 auto;
-  }
-
-  /* ── Responsive ── */
-  @media (max-width: 968px) {
-    .lp-nav-links {
-      position: fixed; top: 70px; right: -100%; width: 300px;
-      height: calc(100vh - 70px); background: white; flex-direction: column;
-      padding: 40px; box-shadow: -5px 0 30px rgba(0,0,0,0.1);
-      transition: right 0.3s ease; align-items: flex-start; z-index: 999;
-    }
-    .lp-nav-links.open { right: 0; }
-    .lp-mobile-btn { display: block; }
-    .lp-hero-container { grid-template-columns: 1fr; }
-    .lp-hero-content h1 { font-size: 36px; }
-    .lp-hero-img-wrap { display: none; }
-    .lp-features-grid { grid-template-columns: 1fr; }
-    .lp-step { grid-template-columns: 60px 1fr; }
-    .lp-step-num { width: 60px; height: 60px; font-size: 24px; }
-    .lp-stats-grid { grid-template-columns: repeat(2,1fr); }
-    .lp-cta-box { grid-template-columns: 1fr; padding: 60px 40px; }
-    .lp-footer-grid { grid-template-columns: 1fr; gap: 40px; }
-    .lp-nav-container { padding: 0 20px; }
-    .lp-hero { padding: 120px 20px 60px; }
-    .lp-features, .lp-process, .lp-benefits, .lp-cta-section { padding: 80px 20px; }
-  }
-  @media (max-width: 640px) {
-    .lp-hero-content h1 { font-size: 28px; }
-    .lp-hero-btns { flex-direction: column; }
-    .lp-btn-primary, .lp-btn-secondary { justify-content: center; }
-    .lp-section-header h2 { font-size: 28px; }
-    .lp-cta-content h2 { font-size: 28px; }
-    .lp-stats-grid { grid-template-columns: repeat(2,1fr); gap: 20px; }
-    .lp-stat-num { font-size: 38px; }
-    .lp-footer { padding: 40px 20px 20px; }
-    .lp-cta-section { padding: 60px 20px; }
-    .lp-cta-box { padding: 40px 24px; }
-  }
-`;
-
-/* ─── Features data ────────────────────────────────────────────── */
+/* ─── Data ─────────────────────────────────────────────────────── */
 const features = [
-  { icon: 'edit_document', title: 'Pengajuan Digital TOR & RAB', desc: 'Submit proposal lengkap dengan TOR, KAK, dan RAB secara online. Generate file PDF untuk dicetak sebagai hard copy.', gradient: 'linear-gradient(135deg,#1A4D2E 0%,#2D6A4F 100%)' },
-  { icon: 'verified', title: 'Tracking Verifikasi', desc: 'Pantau status verifikasi dari Verifikator, Wadir II, hingga PPK secara real-time melalui dashboard.', gradient: 'linear-gradient(135deg,#36C06C 0%,#52DE97 100%)' },
-  { icon: 'print', title: 'Generate Hard Copy', desc: 'Download dokumen yang sudah disetujui dalam format PDF siap cetak untuk diserahkan ke pihak terkait.', gradient: 'linear-gradient(135deg,#4FACFE 0%,#00F2FE 100%)' },
-  { icon: 'receipt_long', title: 'Upload LPJ Digital', desc: 'Upload bukti pengeluaran dan dokumentasi kegiatan. Sistem akan track deadline 14 hari kerja otomatis.', gradient: 'linear-gradient(135deg,#43E97B 0%,#38F9D7 100%)' },
-  { icon: 'notifications_active', title: 'Notifikasi Real-time', desc: 'Terima notifikasi instant untuk setiap perubahan status, revisi, atau persetujuan melalui sistem.', gradient: 'linear-gradient(135deg,#FFB75E 0%,#ED8F03 100%)' },
-  { icon: 'folder_shared', title: 'Manajemen Dokumen', desc: 'Semua dokumen proposal dan LPJ tersimpan aman dalam sistem untuk referensi dan audit.', gradient: 'linear-gradient(135deg,#0F766E 0%,#14B8A6 100%)' },
+  { icon: FileText, title: 'Pengajuan Digital', desc: 'Submit proposal lengkap dengan TOR, KAK, dan RAB secara online.', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  { icon: ShieldCheck, title: 'Tracking Verifikasi', desc: 'Pantau status verifikasi dari Verifikator, Wadir II, hingga PPK.', color: 'text-blue-600', bg: 'bg-blue-100' },
+  { icon: Printer, title: 'Generate Hard Copy', desc: 'Download dokumen yang sudah disetujui dalam format PDF siap cetak.', color: 'text-indigo-600', bg: 'bg-indigo-100' },
+  { icon: Receipt, title: 'Upload LPJ Digital', desc: 'Sistem otomatis track deadline 14 hari kerja untuk pertanggungjawaban.', color: 'text-amber-600', bg: 'bg-amber-100' },
+  { icon: Bell, title: 'Notifikasi Real-time', desc: 'Terima peringatan instant setiap perubahan status melalui sistem.', color: 'text-rose-600', bg: 'bg-rose-100' },
+  { icon: FolderKanban, title: 'Manajemen Aman', desc: 'Dokumen proposal dan LPJ tersimpan rapi untuk referensi & audit.', color: 'text-teal-600', bg: 'bg-teal-100' },
 ];
 
-/* ─── Steps data ───────────────────────────────────────────────── */
 const steps = [
-  { gradient: 'linear-gradient(135deg,#1A4D2E 0%,#2D6A4F 100%)', borderColor: '#1A4D2E', title: 'Pengusul → Verifikator', desc: 'Admin himpunan atau jurusan mengajukan proposal kegiatan lengkap dengan TOR, KAK, dan RAB untuk diverifikasi.' },
-  { gradient: 'linear-gradient(135deg,#2D6A4F 0%,#36C06C 100%)', borderColor: '#2D6A4F', title: 'Verifikator → PPK', desc: 'Tim verifikator memeriksa kelengkapan dokumen dan kesesuaian anggaran. Setelah disetujui, diteruskan ke PPK.' },
-  { gradient: 'linear-gradient(135deg,#36C06C 0%,#52DE97 100%)', borderColor: '#36C06C', title: 'PPK → Wadir II', desc: 'PPK memverifikasi kesesuaian anggaran dan meneruskan ke Wadir II untuk persetujuan kebijakan.' },
-  { gradient: 'linear-gradient(135deg,#43E97B 0%,#38F9D7 100%)', borderColor: '#43E97B', title: 'Wadir II → Bendahara', desc: 'Wadir II memverifikasi kesesuaian anggaran dan meneruskan ke bendahara untuk proses pencairan dana kegiatan.' },
-  { gradient: 'linear-gradient(135deg,#0F766E 0%,#14B8A6 100%)', borderColor: '#0F766E', title: 'Pencairan & Pelaksanaan', desc: 'Dana dicairkan ke pengusul. Kegiatan dilaksanakan sesuai proposal dengan dokumentasi lengkap.' },
-  { gradient: 'linear-gradient(135deg,#14B8A6 0%,#2DD4BF 100%)', borderColor: '#14B8A6', title: 'Pertanggungjawaban LPJ', desc: 'Upload LPJ keuangan maksimal 14 hari kerja pasca kegiatan. Bendahara verifikasi dan proses selesai.' },
+  { title: 'Pengajuan', desc: 'Admin jurusan/himpunan upload KAK & RAB.' },
+  { title: 'Verifikasi', desc: 'Cek kelengkapan dokumen oleh Verifikator.' },
+  { title: 'Persetujuan', desc: 'Validasi anggaran oleh PPK & Wadir II.' },
+  { title: 'Pencairan', desc: 'Proses pencairan dana oleh tim Bendahara.' },
+  { title: 'Pelaksanaan', desc: 'Pelaksanaan kegiatan sesuai proposal.' },
+  { title: 'LPJ', desc: 'Upload LPJ keuangan maksimal 14 hari kerja.' },
 ];
 
-/* ─── Benefits data (same structure as features) ─────────────── */
 const benefits = [
-  { icon: 'speed', title: 'Proses Lebih Efisien', desc: 'Pengajuan hingga approval 40% lebih cepat dengan routing otomatis dan tracking status real-time.', gradient: 'linear-gradient(135deg,#1A4D2E 0%,#2D6A4F 100%)' },
-  { icon: 'visibility', title: 'Transparansi Penuh', desc: 'Lacak posisi dokumen dari pengajuan hingga penyerahan hard copy ke bendahara dengan jelas.', gradient: 'linear-gradient(135deg,#36C06C 0%,#52DE97 100%)' },
-  { icon: 'description', title: 'Digital + Hard Copy', desc: 'Kelola dokumen digital dalam sistem, download PDF untuk cetak hard copy sesuai kebutuhan.', gradient: 'linear-gradient(135deg,#4FACFE 0%,#00F2FE 100%)' },
-  { icon: 'security', title: 'Akses Terkelola', desc: 'Hanya Admin Jurusan dan Himpunan yang dapat mengakses sistem untuk menjaga keamanan data.', gradient: 'linear-gradient(135deg,#43E97B 0%,#38F9D7 100%)' },
-  { icon: 'fact_check', title: 'Audit Trail Lengkap', desc: 'Riwayat lengkap setiap perubahan status tercatat otomatis untuk keperluan audit dan transparansi.', gradient: 'linear-gradient(135deg,#FFB75E 0%,#ED8F03 100%)' },
-  { icon: 'cloud_done', title: 'Akses Kapan Saja', desc: 'Sistem tersedia 24/7 dapat diakses dari mana saja menggunakan browser tanpa instalasi apapun.', gradient: 'linear-gradient(135deg,#0F766E 0%,#14B8A6 100%)' },
+  { icon: Zap, title: 'Proses Lebih Cepat', desc: 'Routing otomatis pangkas waktu persetujuan hingga 40%.' },
+  { icon: Eye, title: 'Transparansi Penuh', desc: 'Posisi dokumen terlacak akurat di setiap titik.' },
+  { icon: Lock, title: 'Akses Terkelola', desc: 'Keamanan data berlapis untuk pengusul resmi.' },
+  { icon: ClipboardCheck, title: 'Audit Trail', desc: 'Riwayat revisi dan status tercatat komprehensif.' },
+  { icon: Cloud, title: 'Sistem 24/7', desc: 'Akses kapanpun dan dimanapun via browser.' },
 ];
 
-/* ─── Component ────────────────────────────────────────────────── */
+const stats = [
+  { num: '500+', label: 'Kegiatan Terkelola' },
+  { num: '50+', label: 'Himpunan & Jurusan' },
+  { num: '98%', label: 'Tingkat Kepuasan' },
+  { num: '1', label: 'Platform Terpadu' },
+];
+
+/* ─── Animation Variants ───────────────────────────────────────── */
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+/* ─── Components ───────────────────────────────────────────────── */
 export function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const styleInjected = useRef(false);
 
-  /* inject CSS once */
   useEffect(() => {
-    if (styleInjected.current) return;
-    styleInjected.current = true;
-    const el = document.createElement('style');
-    el.setAttribute('data-lp', 'true');
-    el.textContent = LANDING_CSS;
-    document.head.appendChild(el);
-    return () => { el.remove(); styleInjected.current = false; };
-  }, []);
-
-  /* scroll detection */
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const smoothScroll = (id: string) => {
     setMenuOpen(false);
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    if (el) {
+      const offset = 80;
+      const elementPosition = el.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - offset;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    }
   };
 
   return (
-    <div className="lp-body">
-      {/* ── Navbar ───────────────────────────────────────────── */}
-      <nav className={`lp-nav${scrolled ? ' scrolled' : ''}`}>
-        <div className="lp-nav-container">
-          <a href="#home" className="lp-logo" onClick={e => { e.preventDefault(); smoothScroll('home'); }}>
-            <img src="/assets/images/logo-pnj.png" alt="Logo PNJ" style={{ height: '50px', width: 'auto' }} />
-            Si-Latorjana
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 selection:bg-emerald-200">
+      
+      {/* ── Navbar ── */}
+      <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+        scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'
+      }`}>
+        <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
+          <a href="#home" onClick={(e) => { e.preventDefault(); smoothScroll('home'); }} className="flex items-center gap-3 relative z-50">
+            <AppLogo className="h-10 w-10 shrink-0" />
+            <span className="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-800 to-emerald-500">
+              Si-Latorjana
+            </span>
           </a>
 
-          <div className={`lp-nav-links${menuOpen ? ' open' : ''}`}>
-            {[
-              { label: 'Home', icon: 'home', id: 'home' },
-              { label: 'Fitur', icon: 'stars', id: 'fitur' },
-              { label: 'Alur Kerja', icon: 'timeline', id: 'proses' },
-              { label: 'Manfaat', icon: 'trending_up', id: 'manfaat' },
-            ].map(item => (
-              <a key={item.id} href={`#${item.id}`} onClick={e => { e.preventDefault(); smoothScroll(item.id); }}>
-                <span className="material-icons" style={{ fontSize: 18 }}>{item.icon}</span>
-                {item.label}
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-8">
+            {['fitur', 'proses', 'manfaat'].map(id => (
+              <a 
+                key={id} href={`#${id}`} 
+                onClick={(e) => { e.preventDefault(); smoothScroll(id); }}
+                className="text-sm font-semibold text-slate-600 hover:text-emerald-700 transition-colors uppercase tracking-wider relative group"
+              >
+                {id}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
               </a>
             ))}
-            <Link to="/login" className="lp-cta-btn" onClick={() => setMenuOpen(false)}>Login</Link>
-          </div>
-
-          <button className="lp-mobile-btn" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
-            <span className="material-icons">{menuOpen ? 'close' : 'menu'}</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="lp-hero" id="home">
-        <div className="lp-particles">
-          {[...Array(6)].map((_, i) => <div key={i} className="lp-particle" />)}
-        </div>
-
-        <div className="lp-hero-container">
-          <div className="lp-hero-content">
-            <h1>
-              Sistem Pengelolaan Kegiatan{' '}
-              <span className="lp-highlight">Digital &amp; Terintegrasi</span>
-            </h1>
-            <p>
-              Platform khusus untuk Admin Jurusan dan Himpunan dalam mengajukan, memverifikasi,
-              dan mempertanggungjawabkan kegiatan kampus. Dari pengajuan proposal hingga
-              penyerahan hard copy ke bendahara, semua terkelola dalam satu sistem.
-            </p>
-            <div className="lp-hero-btns">
-              <Link to="/login" className="lp-btn-primary">
-                <span className="material-icons" style={{ fontSize: 20 }}>rocket_launch</span>
-                Mulai Pengajuan
-              </Link>
-              <a href="#proses" className="lp-btn-secondary" onClick={e => { e.preventDefault(); smoothScroll('proses'); }}>
-                <span className="material-icons" style={{ fontSize: 20 }}>menu_book</span>
-                Lihat Panduan
-              </a>
-            </div>
-          </div>
-
-          <div className="lp-hero-img-wrap">
-            <img
-              src="/assets/images/landing1.png"
-              alt="Ilustrasi Hero Si-Latorjana"
-              className="lp-hero-img"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ── Features ─────────────────────────────────────────── */}
-      <section className="lp-features" id="fitur">
-        <div className="lp-section-header">
-          <div className="lp-badge">
-            <span className="material-icons" style={{ fontSize: 16 }}>star</span>
-            Fitur Unggulan
-          </div>
-          <h2>Semua Yang Anda Butuhkan Dalam Satu Platform</h2>
-          <p>Solusi lengkap untuk mengelola seluruh siklus kegiatan kampus dengan mudah dan transparan</p>
-        </div>
-
-        <div className="lp-features-grid">
-          {features.map((f, i) => (
-            <div key={i} className="lp-card">
-              <div className="lp-icon" style={{ background: f.gradient }}>
-                <span className="material-icons">{f.icon}</span>
-              </div>
-              <h3>{f.title}</h3>
-              <p>{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Process ──────────────────────────────────────────── */}
-      <section className="lp-process" id="proses">
-        <div className="lp-process-container">
-          <div className="lp-section-header">
-            <div className="lp-badge">
-              <span className="material-icons" style={{ fontSize: 16 }}>timeline</span>
-              Alur Kerja
-            </div>
-            <h2>Proses Pengajuan Yang Sistematis</h2>
-            <p>Dari proposal hingga pertanggungjawaban, semua terstruktur dan terlacak</p>
-          </div>
-
-          <img
-            src="/assets/images/landing3.png"
-            alt="Ilustrasi Alur Workflow Si-Latorjana"
-            className="lp-process-img"
-          />
-
-          <div className="lp-steps">
-            {steps.map((s, i) => (
-              <div key={i} className="lp-step">
-                <div className="lp-step-num" style={{ background: s.gradient }}>
-                  {i + 1}
-                </div>
-                <div className="lp-step-content" style={{ borderLeftColor: s.borderColor }}>
-                  <h3>{s.title}</h3>
-                  <p>{s.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Stats ────────────────────────────────────────────── */}
-      <section className="lp-stats">
-        <div className="lp-stats-grid">
-          {[
-            { num: '500+', label: 'Kegiatan Terkelola' },
-            { num: '50+', label: 'Himpunan & Jurusan' },
-            { num: '98%', label: 'Tingkat Kepuasan' },
-            { num: '24/7', label: 'Akses Sistem' },
-          ].map((s, i) => (
-            <div key={i} className="lp-stat">
-              <span className="lp-stat-num">{s.num}</span>
-              <span className="lp-stat-label">{s.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Benefits ─────────────────────────────────────────── */}
-      <section className="lp-benefits" id="manfaat">
-        <div className="lp-section-header">
-          <div className="lp-badge">
-            <span className="material-icons" style={{ fontSize: 16 }}>trending_up</span>
-            Manfaat
-          </div>
-          <h2>Mengapa Memilih Si-Latorjana?</h2>
-          <p>Efisiensi dan transparansi dalam setiap tahapan proses</p>
-        </div>
-
-        <img
-          src="/assets/images/landing4.png"
-          alt="Ilustrasi Manfaat Si-Latorjana"
-          className="lp-benefits-img"
-        />
-
-        <div className="lp-features-grid">
-          {benefits.map((b, i) => (
-            <div key={i} className="lp-card">
-              <div className="lp-icon" style={{ background: b.gradient }}>
-                <span className="material-icons">{b.icon}</span>
-              </div>
-              <h3>{b.title}</h3>
-              <p>{b.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CTA ──────────────────────────────────────────────── */}
-      <section className="lp-cta-section">
-        <div className="lp-cta-box">
-          <div className="lp-cta-content">
-            <h2>Siap Mulai Pengelolaan Kegiatan Digital?</h2>
-            <p>
-              Login menggunakan akun institusi Anda untuk mengakses panel Si-Latorjana
-              dan mulai mengajukan kegiatan secara terstruktur dan transparan.
-            </p>
-            <Link to="/login" className="lp-btn-primary">
-              <span className="material-icons" style={{ fontSize: 20 }}>login</span>
-              Akses Dashboard
+            <Link to="/login" className="px-6 py-2.5 rounded-full bg-emerald-700 text-white font-bold text-sm hover:bg-emerald-800 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+              Login Portal
             </Link>
           </div>
 
-          <div className="lp-cta-img-wrap">
-            <img
-              src="/assets/images/landing2.png"
-              alt="Ilustrasi CTA Si-Latorjana"
-              className="lp-cta-img"
-            />
+          {/* Mobile Toggle */}
+          <button className="md:hidden relative z-50 p-2 text-slate-600" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
+
+        {/* Mobile Nav */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-0 left-0 w-full h-screen bg-white pt-24 px-8 flex flex-col gap-6 shadow-xl md:hidden"
+            >
+              {['home', 'fitur', 'proses', 'manfaat'].map(id => (
+                <a 
+                  key={id} href={`#${id}`} 
+                  onClick={(e) => { e.preventDefault(); smoothScroll(id); }}
+                  className="text-2xl font-bold text-slate-800 capitalize border-b border-slate-100 pb-4"
+                >
+                  {id}
+                </a>
+              ))}
+              <Link to="/login" className="mt-4 text-center px-6 py-4 rounded-xl bg-emerald-700 text-white font-bold text-lg" onClick={() => setMenuOpen(false)}>
+                Akses Dashboard
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
+
+      {/* ── Hero Unit ── */}
+      <section id="home" className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden items-center flex min-h-[90vh]">
+        {/* Background Gradients */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-gradient-to-b from-emerald-50 to-white">
+          <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-emerald-200/40 rounded-full blur-3xl mix-blend-multiply opacity-70 animate-pulse"></div>
+          <div className="absolute top-40 -left-20 w-[500px] h-[500px] bg-teal-200/40 rounded-full blur-3xl mix-blend-multiply opacity-70 animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 md:px-12 grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="relative z-10 w-full">
+            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-8 shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              Digitalisasi Akademik
+            </motion.div>
+            <motion.h1 variants={fadeInUp} className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-6">
+              Sistem Layanan <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 to-teal-500">Terpadu Politeknik Negeri Jakarta</span>
+            </motion.h1>
+            <motion.p variants={fadeInUp} className="text-base md:text-lg text-slate-600 mb-10 max-w-lg leading-relaxed">
+              Platform modern pengelolaan kegiatan kampus untuk mempermudah alur pengajuan proposal, verifikasi anggaran, hingga proses LPJ secara transparan dan efisien.
+            </motion.p>
+            <motion.div variants={fadeInUp} className="flex flex-wrap gap-3 sm:gap-4">
+              <Link to="/login" className="flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 rounded-full bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                <LayoutDashboard size={20} />
+                Buka Dashboard
+              </Link>
+              <a href="#proses" onClick={(e) => { e.preventDefault(); smoothScroll('proses'); }} className="flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 rounded-full bg-white text-slate-700 font-bold border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all hover:-translate-y-1">
+                Pelajari Alur
+              </a>
+            </motion.div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, x: 40 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, type: 'spring' }}
+            className="relative hidden md:block group"
+          >
+            <div className="absolute -inset-4 md:-inset-6 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-[3rem] blur-2xl -z-10 transition-all duration-700 group-hover:from-emerald-400/30 group-hover:to-teal-400/30 group-hover:blur-3xl"></div>
+            <div className="relative rounded-[2.5rem] border border-white/60 bg-white/50 p-2 sm:p-4 backdrop-blur-2xl shadow-2xl shadow-slate-200/50">
+               <div className="absolute inset-0 bg-[url('/svg/pattern-bg.svg')] opacity-20 -z-10 bg-repeat rounded-[2.5rem] mix-blend-multiply"></div>
+               <img src="/svg/hero-illustration.svg" alt="Hero Illustration" className="w-full rounded-3xl shadow-sm group-hover:-translate-y-2 group-hover:scale-[1.02] transition-all duration-700 ease-out relative z-10" />
+               
+               {/* Decorative UI elements overlapping the image */}
+               <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center gap-4 z-20 animate-bounce" style={{animationDuration: '3s'}}>
+                  <div className="size-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <ShieldCheck size={20} />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-800 text-sm">Disetujui PPK</h5>
+                    <p className="text-xs text-slate-500 font-medium">10 Menit yang lalu</p>
+                  </div>
+               </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Feature Highlights ── */}
+      <section id="fitur" className="py-24 bg-white relative">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <motion.div 
+            initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}
+            className="text-center max-w-2xl mx-auto mb-12 md:mb-16"
+          >
+            <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Kapasitas Platform Terintegrasi</h2>
+            <p className="text-slate-500 text-base md:text-lg">Setiap aspek operasional kegiatan direkam secara digital menunjang akuntabilitas publik.</p>
+          </motion.div>
+
+          <motion.div 
+            initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={staggerContainer}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8"
+          >
+            {features.map((f, i) => (
+              <motion.div key={i} variants={fadeInUp} className="group p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 flex items-start sm:block gap-4">
+                <div className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-[12px] sm:rounded-2xl ${f.bg} ${f.color} flex items-center justify-center sm:mb-6 shadow-sm group-hover:scale-110 transition-transform`}>
+                  <f.icon strokeWidth={2.5} className="size-5 sm:size-7" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-xl font-bold text-slate-800 mb-1 sm:mb-3">{f.title}</h3>
+                  <p className="text-slate-600 leading-relaxed text-xs sm:text-sm">{f.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Process Timeline ── */}
+      <section id="proses" className="py-24 bg-slate-900 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-b from-emerald-900/20 to-transparent pointer-events-none"></div>
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+          <motion.div 
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+            className="text-center md:text-left md:flex justify-between items-end mb-16 gap-8"
+          >
+            <div className="max-w-xl">
+              <div className="inline-flex items-center gap-2 text-emerald-400 text-xs sm:text-sm font-bold uppercase tracking-wider mb-4">
+                <Route size={16} /> Alur Birokrasi
+              </div>
+              <h2 className="text-2xl md:text-4xl font-extrabold mb-4 tracking-tight leading-snug">Sistematis, Transparan, Bebas Hambatan.</h2>
+            </div>
+            <p className="text-slate-400 max-w-sm text-sm">Birokrasi berlapis kini digantikan dengan aliran status realtime. Seluruh verifikator terhubung dalam satu pipeline.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {steps.map((st, i) => (
+              <motion.div 
+                key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 * i }}
+                className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 p-4 shrink-0 sm:p-6 rounded-[1rem] sm:rounded-2xl hover:bg-slate-800 transition-colors relative group flex items-start sm:items-stretch sm:block gap-4"
+              >
+                <div className="text-3xl shrink-0 sm:text-4xl font-black text-slate-700 group-hover:text-emerald-500/20 transition-colors mb-0 sm:mb-4 leading-none pt-1 sm:pt-0">{`0${i + 1}`}</div>
+                <div>
+                  <h4 className="text-emerald-400 font-bold mb-1 sm:mb-2 text-sm sm:text-base">{st.title}</h4>
+                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">{st.desc}</p>
+                </div>
+                {i < steps.length - 1 && (
+                  <ArrowRight className="hidden lg:block absolute -right-5 top-1/2 -translate-y-1/2 text-slate-600 z-10" />
+                )}
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── Footer ───────────────────────────────────────────── */}
-      <footer className="lp-footer">
-        <div className="lp-footer-grid">
-          <div className="lp-footer-brand">
-            <h3>Si-Latorjana</h3>
-            <p>
-              Sistem Layanan Terpadu Administrasi Pengajuan Kegiatan Jurusan & Himpunan
-              Politeknik Negeri Jakarta.
-            </p>
+      {/* ── Stats ── */}
+      <section className="py-20 bg-emerald-600 relative">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 sm:gap-y-0 gap-x-4 sm:gap-x-8 lg:divide-x divide-emerald-500/40 text-center">
+            {stats.map((s, i) => (
+              <div key={i} className="px-2 sm:px-4">
+                <div className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 drop-shadow-sm">{s.num}</div>
+                <div className="text-[10px] sm:text-xs md:text-sm font-medium text-emerald-100 uppercase tracking-widest">{s.label}</div>
+              </div>
+            ))}
           </div>
+        </div>
+      </section>
 
-          <div className="lp-footer-col">
-            <h4>Navigasi</h4>
-            <ul>
-              {[
-                { label: 'Home', id: 'home' },
-                { label: 'Fitur', id: 'fitur' },
-                { label: 'Alur Kerja', id: 'proses' },
-                { label: 'Manfaat', id: 'manfaat' },
-              ].map(item => (
-                <li key={item.id}>
-                  <a href={`#${item.id}`} onClick={e => { e.preventDefault(); smoothScroll(item.id); }}>
-                    {item.label}
-                  </a>
-                </li>
+      {/* ── Benefits ── */}
+      <section id="manfaat" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 grid md:grid-cols-2 gap-16 items-center">
+          <motion.div 
+             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+             className="text-center md:text-left"
+          >
+            <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-4 sm:mb-6 tracking-tight">Mengapa Menggunakan Ekosistem Si-Latorjana?</h2>
+            <p className="text-slate-600 mb-8 sm:mb-10 text-base sm:text-lg">Standardisasi pengajuan yang meminimalisir kesalahan format, kehilangan fisik dokumen, dan blind-spot status proposal.</p>
+            <div className="space-y-5 sm:space-y-6 text-left">
+              {benefits.map((b, i) => (
+                <div key={i} className="flex gap-4 items-start">
+                  <div className="mt-1 p-2 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
+                    <b.icon className="size-5 sm:size-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-base sm:text-lg font-bold text-slate-800 mb-1">{b.title}</h4>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">{b.desc}</p>
+                  </div>
+                </div>
               ))}
+            </div>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.7 }}
+            className="bg-slate-50 relative p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-slate-100/60 overflow-hidden mx-auto max-w-sm sm:max-w-none"
+          >
+             <div className="absolute inset-0 bg-[url('/svg/pattern-bg.svg')] opacity-30 bg-repeat bg-center mix-blend-multiply"></div>
+             <div className="absolute top-1/2 -translate-y-1/2 -left-6 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-emerald-500 z-20">
+               <CheckCircle size={24} />
+             </div>
+             <img src="/svg/benefits-illustration.svg" alt="Benefits System Overview" className="w-full relative z-10 drop-shadow-2xl transition-transform hover:scale-105 duration-700 ease-out" />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Minimalist CTA ── */}
+      <section className="py-24 sm:py-32 bg-slate-50 border-t border-slate-200">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 sm:mb-6 tracking-tight">Mulai Otomasi Alur Birokrasi</h2>
+          <p className="text-base sm:text-lg text-slate-500 mb-8 sm:mb-10 max-w-2xl mx-auto">
+             Portal administratif ini ditujukan secara eksklusif kepada Himpunan Mahasiswa dan Dosen Pengusul yang berafiliasi institusional.
+          </p>
+          <Link to="/login" className="inline-flex items-center gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-full bg-emerald-700 text-white font-bold text-base sm:text-lg hover:bg-emerald-800 transition-all shadow-xl hover:-translate-y-1">
+            Masuk dengan Akun SI<ArrowRight className="size-5 sm:size-6" />
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="bg-slate-900 text-slate-400 py-16 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 grid md:grid-cols-4 gap-10 mb-12">
+          <div className="md:col-span-2">
+             <div className="flex items-center gap-3 mb-6">
+                <AppLogo className="h-8 w-8 shrink-0" />
+                <span className="font-extrabold text-xl text-white tracking-tight">Si-Latorjana</span>
+             </div>
+             <p className="max-w-sm text-sm leading-relaxed mb-6">Sistem Layanan Terpadu Administrasi Pengajuan Kegiatan. Membawa semangat tata kelola modern di lingkungan akademik institusi.</p>
+          </div>
+          <div>
+            <h4 className="font-bold text-white mb-4 uppercase tracking-wider text-sm">Platform</h4>
+            <ul className="space-y-3 text-sm">
+              <li><Link to="/login" className="hover:text-emerald-400 transition-colors">Akses Login</Link></li>
+              <li><Link to="/forgot-password" className="hover:text-emerald-400 transition-colors">Lupa Akses</Link></li>
             </ul>
           </div>
-
-          <div className="lp-footer-col">
-            <h4>Sistem</h4>
-            <ul>
-              <li><Link to="/login" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: 14, transition: 'color 0.3s' }}>Login</Link></li>
-              <li><Link to="/forgot-password" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: 14, transition: 'color 0.3s' }}>Lupa Password</Link></li>
-            </ul>
-          </div>
-
-          <div className="lp-footer-col">
-            <h4>Institusi</h4>
-            <ul>
-              <li><a href="https://www.pnj.ac.id" target="_blank" rel="noopener noreferrer">PNJ Official</a></li>
-              <li><a href="#">Kebijakan Privasi</a></li>
-              <li><a href="#">Panduan Pengguna</a></li>
+          <div>
+            <h4 className="font-bold text-white mb-4 uppercase tracking-wider text-sm">Institusi</h4>
+            <ul className="space-y-3 text-sm">
+              <li><a href="https://pnj.ac.id" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">Portal PNJ Official</a></li>
+              <li><a href="#" className="hover:text-emerald-400 transition-colors">Buku Panduan Teknis</a></li>
             </ul>
           </div>
         </div>
-
-        <div className="lp-footer-bottom">
-          © {new Date().getFullYear()} Politeknik Negeri Jakarta — Si-Latorjana. Hak Cipta Dilindungi.
+        <div className="max-w-7xl mx-auto px-6 md:px-12 text-center border-t border-slate-800/60 pt-8 text-sm">
+           © {new Date().getFullYear()} Politeknik Negeri Jakarta. Hak Cipta Administrasi Sistem Terlindungi.
         </div>
       </footer>
     </div>

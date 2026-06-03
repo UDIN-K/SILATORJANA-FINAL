@@ -59,7 +59,7 @@ export function MonitoringPage({ items, isLoading, title = 'Monitoring Kegiatan'
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-1 sm:space-y-1.5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h2>
         <p className="text-slate-500">Pantau progress setiap kegiatan secara real-time.</p>
       </div>

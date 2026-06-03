@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ProgressTracker } from '@/components/ProgressTracker';
 import { formatDate, formatCurrency, getUserId, fetchKegiatan } from '@/lib/helpers';
-import { ArrowLeft, FileText, Clock, MapPin, User, Loader2, Printer, CheckCircle, Plus, Trash, Upload, DollarSign, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, FileText, Clock, MapPin, User, Loader2, Printer, CheckCircle, Plus, Trash, Upload, DollarSign, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
 
 function parseIndikatorKinerja(rawValue: string | undefined | null): any[] {
   if (!rawValue) return [];
@@ -47,6 +48,7 @@ export function DetailUsulanPage() {
   const [isUploadingFile, setIsUploadingFile] = useState<boolean>(false);
   const [isSubmittingPpk, setIsSubmittingPpk] = useState<boolean>(false);
   const [isTakingAdvance, setIsTakingAdvance] = useState<boolean>(false);
+  const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
 
   useEffect(() => {
     if (!id) return;
@@ -181,7 +183,7 @@ export function DetailUsulanPage() {
             <span className="text-sm font-medium text-slate-500 flex items-center gap-1.5"><Clock className="size-3.5"/> {formatDate(kegiatan.created_at)}</span>
           </div>
         </div>
-        <Button className="bg-slate-800 hover:bg-slate-900 text-white shadow-md w-full md:w-auto h-11 px-6 rounded-xl transition-all" onClick={() => navigate(`/dashboard/pengusul/print/${id}`)}>
+        <Button className="bg-slate-800 hover:bg-slate-900 text-white shadow-md w-full md:w-auto h-11 px-6 rounded-xl transition-all" onClick={() => setShowPrintModal(true)}>
           <Printer className="size-4 mr-2" /> Cetak PDF Dokumen
         </Button>
       </div>
@@ -523,6 +525,26 @@ export function DetailUsulanPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* MODAL PRINT PREVIEW */}
+      <Dialog open={showPrintModal} onOpenChange={setShowPrintModal}>
+        <DialogContent className="max-w-[95vw] md:max-w-5xl h-[90vh] md:h-[85vh] p-0 flex flex-col bg-slate-100 overflow-hidden border-slate-200">
+          <DialogTitle className="sr-only">Pratinjau PDF Dokumen</DialogTitle>
+          <div className="flex h-14 shrink-0 items-center justify-between px-6 border-b border-slate-100 shadow-sm z-10 bg-white">
+            <span className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+              <Printer className="size-4 text-emerald-600" /> Pratinjau Dokumen
+            </span>
+            <DialogClose render={<Button variant="ghost" size="icon" className="size-8 text-slate-500 rounded-full hover:bg-rose-50 hover:text-rose-600 transition-colors" />}>
+              <X className="size-4" />
+            </DialogClose>
+          </div>
+          <iframe 
+             src={`/dashboard/pengusul/print/${id}?modal=1&token=${encodeURIComponent(localStorage.getItem('auth_token') || '')}`} 
+             className="w-full flex-1 border-0 bg-slate-100 block" 
+             title="Print Preview"
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -53,7 +53,10 @@ export function IkuConfigPage() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <div><h2 className="text-2xl font-bold text-slate-900">Konfigurasi IKU</h2><p className="text-slate-500">Kelola Indikator Kinerja Utama master data.</p></div>
+      <div className="space-y-1 sm:space-y-1.5">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Konfigurasi IKU</h2>
+        <p className="text-slate-500 mt-1">Kelola Indikator Kinerja Utama master data.</p>
+      </div>
 
       <Card className="shadow-sm border-slate-200">
         <CardHeader className="bg-slate-50/50 border-b"><CardTitle className="text-base">Tambah Indikator Baru</CardTitle></CardHeader>

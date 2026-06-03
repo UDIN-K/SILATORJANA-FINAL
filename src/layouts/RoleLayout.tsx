@@ -116,11 +116,14 @@ export function RoleLayout() {
 
   // FRONTEND ROLE GUARD: Cegah ganti URL manual
   useEffect(() => {
+    if (location.pathname.includes('/print/')) {
+      return; // Bypass role guard for printable views
+    }
     if (normalizedActualRole && normalizedUrlRole && normalizedUrlRole !== normalizedActualRole) {
       // Jika mencoba akses dashboard role lain, kembalikan ke dashboard aslinya
       navigate(`/dashboard/${normalizedActualRole}`, { replace: true });
     }
-  }, [normalizedActualRole, normalizedUrlRole, navigate]);
+  }, [normalizedActualRole, normalizedUrlRole, navigate, location.pathname]);
 
   const toggleDarkMode = (e: React.MouseEvent) => {
     const nextDark = !isDarkMode;
@@ -168,6 +171,8 @@ export function RoleLayout() {
   const [tourFinished, setTourFinished] = useState(false);
 
   const [tourKey, setTourKey] = useState(0);
+
+  const isModal = new URLSearchParams(location.search).get('modal') === '1';
 
   useEffect(() => {
     // Reset page tour steps on navigation so we don't bleed previous tours into pages that lack one
@@ -314,8 +319,35 @@ export function RoleLayout() {
     </>
   );
 
+  if (isModal) {
+    return (
+      <div className="min-h-screen font-sans selection:bg-emerald-200 selection:text-emerald-900 bg-white">
+        <Outlet context={{ setPageTourSteps }} />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans selection:bg-emerald-200 selection:text-emerald-900 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 flex font-sans selection:bg-emerald-200 selection:text-emerald-900 overflow-hidden relative">
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02]">
+          <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M0 40L40 0H20L0 20M40 40V20L20 40" stroke="currentColor" strokeWidth="1" fill="none" className="text-emerald-900 dark:text-emerald-100"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-pattern)">
+              <animate attributeName="x" from="0" to="-40" dur="4s" repeatCount="indefinite" />
+              <animate attributeName="y" from="0" to="-40" dur="4s" repeatCount="indefinite" />
+            </rect>
+          </svg>
+        </div>
+        
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-200/30 dark:bg-emerald-800/10 blur-[100px] mix-blend-multiply dark:mix-blend-screen animate-blob" />
+        <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] rounded-full bg-teal-200/30 dark:bg-teal-800/10 blur-[100px] mix-blend-multiply dark:mix-blend-screen animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[60%] rounded-full bg-cyan-200/30 dark:bg-cyan-800/10 blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-blob animation-delay-4000" />
+      </div>
       {!tourFinished && activeTourSteps.length > 0 && (
         <Joyride
           key={tourKey}

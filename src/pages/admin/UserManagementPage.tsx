@@ -53,17 +53,32 @@ export function UserManagementPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h2 className="text-2xl font-bold text-slate-900">Manajemen User</h2><p className="text-slate-500">Kelola semua akun pengguna sistem.</p></div>
+        <div className="space-y-1 sm:space-y-1.5">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Manajemen User</h2>
+          <p className="text-slate-500 mt-1">Kelola semua akun pengguna sistem.</p>
+        </div>
         <Button onClick={() => navigate('/dashboard/admin/users/tambah')} className="bg-emerald-700 hover:bg-emerald-800"><Plus className="size-4 mr-2" />Tambah User</Button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setRoleFilter('')}>
-          <CardContent className="p-4 flex items-center gap-3"><Users className="size-8 text-blue-500" /><div><p className="text-2xl font-bold">{users.length}</p><p className="text-xs text-slate-500">Total</p></div></CardContent>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group" onClick={() => setRoleFilter('')}>
+          <CardContent className="p-4 flex items-center gap-4">
+            <Users className="size-8 sm:size-10 text-emerald-500 transition-transform group-hover:scale-110" />
+            <div>
+               <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{users.length}</h3>
+               <p className="text-xs sm:text-sm text-slate-500 font-medium">Total Akun</p>
+            </div>
+          </CardContent>
         </Card>
         {Object.entries(roleCounts).slice(0,3).map(([role, count]) => (
-          <Card key={role} className="shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setRoleFilter(role)}>
-            <CardContent className="p-4 flex items-center gap-3"><Shield className="size-8 text-slate-400" /><div><p className="text-2xl font-bold">{count}</p><p className="text-xs text-slate-500 capitalize">{role}</p></div></CardContent>
+          <Card key={role} className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-pointer group" onClick={() => setRoleFilter(role)}>
+            <CardContent className="p-4 flex items-center gap-4">
+              <Shield className="size-8 sm:size-10 text-emerald-500 transition-transform group-hover:scale-110" />
+              <div>
+                 <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{count}</h3>
+                 <p className="text-xs sm:text-sm text-slate-500 font-medium capitalize">{role.startsWith('wadir') ? `Wadir ${role.slice(5)}` : role}</p>
+              </div>
+            </CardContent>
           </Card>
         ))}
       </div>

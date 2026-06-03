@@ -33,39 +33,35 @@ export function VerifikatorDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-1 sm:space-y-1.5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900">Workspace Verifikator</h2>
-        <p className="text-slate-500">Tinjau dan verifikasi usulan masuk sebelum diteruskan ke PPK.</p>
+        <p className="text-slate-500 mt-1">Tinjau dan verifikasi usulan masuk sebelum diteruskan ke PPK.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <Card className="shadow-sm border-slate-200">
-          <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <div className="p-2 sm:p-3 rounded-full bg-amber-100 text-amber-600 shrink-0">
-               <Clock className="size-4 sm:size-6" />
-            </div>
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+          <CardContent className="p-4 flex items-center gap-4">
+            <Clock className="size-8 sm:size-10 text-amber-500 transition-transform group-hover:scale-110" />
             <div>
-               <p className="text-[11px] sm:text-sm font-medium text-slate-500 leading-tight">Menunggu Verifikasi</p>
-               <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{menunggu.length}</h3>
+               <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{menunggu.length}</h3>
+               <p className="text-xs sm:text-sm text-slate-500 font-medium">Menunggu Verifikasi</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-slate-200">
-          <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <div className="p-2 sm:p-3 rounded-full bg-green-100 text-green-600 shrink-0">
-               <CheckCircle className="size-4 sm:size-6" />
-            </div>
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+          <CardContent className="p-4 flex items-center gap-4">
+            <CheckCircle className="size-8 sm:size-10 text-emerald-500 transition-transform group-hover:scale-110" />
             <div>
-               <p className="text-[11px] sm:text-sm font-medium text-slate-500 leading-tight">Telah Diverifikasi</p>
-               <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{diverifikasi.length}</h3>
+               <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{diverifikasi.length}</h3>
+               <p className="text-xs sm:text-sm text-slate-500 font-medium">Telah Diverifikasi</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4">
+      <Card className="shadow-lg border-white/50 bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden">
+        <CardHeader className="bg-white/40 border-b border-white/50 p-4">
            <div className="flex flex-col sm:flex-row justify-between gap-4">
              <div className="relative w-full sm:max-w-xs">
                 <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />

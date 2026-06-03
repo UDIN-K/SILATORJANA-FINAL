@@ -3,7 +3,7 @@ import { apiListKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Input } from '@/components/ui/input';
-import { Search, AlertTriangle, Edit, Eye, Loader2, Clock } from 'lucide-react';
+import { Search, AlertTriangle, Edit, Eye, Loader2, Clock, ClipboardList, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getUserId, formatDate, timeAgo } from '@/lib/helpers';
@@ -27,7 +27,7 @@ function renderCatatanRevisi(catatan: string) {
   return (
     <div className="space-y-1.5 mt-3 bg-amber-50/40 border border-amber-100/50 rounded-xl p-3">
       <p className="font-bold text-amber-800 text-[11px] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-        <span>📋</span> Rincian Catatan Revisi:
+        <ClipboardList className="size-4 shrink-0" /> Rincian Catatan Revisi:
       </p>
       <div className="grid gap-2 text-xs text-slate-700">
         {items.map((it, idx) => (
@@ -68,7 +68,7 @@ export function NeedsWorkPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-1 sm:space-y-1.5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
           <AlertTriangle className="size-6 text-amber-500" /> Perlu Dikerjakan
         </h2>
@@ -98,7 +98,9 @@ export function NeedsWorkPage() {
           ) : filtered.length === 0 ? (
             <div className="py-12 text-center text-slate-500">
               <Clock className="size-12 mx-auto mb-3 text-slate-300" />
-              <p className="font-medium">Tidak ada kegiatan yang perlu direvisi 🎉</p>
+              <p className="font-medium flex items-center justify-center gap-2">
+                Tidak ada kegiatan yang perlu direvisi <CheckCircle2 className="size-5 text-emerald-500" />
+              </p>
               <p className="text-sm mt-1">Semua kegiatan Anda sudah dalam kondisi baik.</p>
             </div>
           ) : (

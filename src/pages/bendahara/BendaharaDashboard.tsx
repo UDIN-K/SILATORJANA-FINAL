@@ -46,39 +46,35 @@ export function BendaharaDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+        <div className="space-y-1 sm:space-y-1.5">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard Bendahara</h2>
-          <p className="text-slate-500">Kelola Pencairan Dana dan Verifikasi LPJ.</p>
+          <p className="text-slate-500 mt-1">Kelola Pencairan Dana dan Verifikasi LPJ.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
-         <Card className={`cursor-pointer transition-all border-2 ${activeTab === 'pencairan' ? 'border-blue-600 shadow-md' : 'border-transparent hover:border-slate-200'}`} onClick={() => setActiveTab('pencairan')}>
-           <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-               <div className={`p-2 sm:p-3 rounded-full self-start ${activeTab === 'pencairan' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
-                  <DollarSign className="size-4 sm:size-6" />
-               </div>
-               <div className="mt-2 sm:mt-4">
-                 <h3 className="font-semibold text-slate-900 text-[13px] sm:text-base leading-tight">Permintaan Pencairan</h3>
-                 <p className="text-[11px] sm:text-sm text-slate-500 mt-1">{usulanPencairan.length} Dokumen</p>
+         <Card className={`shadow-sm cursor-pointer hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl group ${activeTab === 'pencairan' ? 'ring-2 ring-blue-500' : ''}`} onClick={() => setActiveTab('pencairan')}>
+           <CardContent className="p-4 flex items-center gap-4">
+               <DollarSign className={`size-8 sm:size-10 transition-transform group-hover:scale-110 ${activeTab === 'pencairan' ? 'text-blue-500' : 'text-slate-400'}`} />
+               <div>
+                 <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{usulanPencairan.length}</h3>
+                 <p className="text-xs sm:text-sm text-slate-500 font-medium">Permintaan Pencairan</p>
                </div>
            </CardContent>
          </Card>
-         <Card className={`cursor-pointer transition-all border-2 ${activeTab === 'lpj' ? 'border-emerald-600 shadow-md' : 'border-transparent hover:border-slate-200'}`} onClick={() => setActiveTab('lpj')}>
-           <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-               <div className={`p-2 sm:p-3 rounded-full self-start ${activeTab === 'lpj' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
-                  <FileCheck className="size-4 sm:size-6" />
-               </div>
-               <div className="mt-2 sm:mt-4">
-                 <h3 className="font-semibold text-slate-900 text-[13px] sm:text-base leading-tight">Verifikasi LPJ</h3>
-                 <p className="text-[11px] sm:text-sm text-slate-500 mt-1">{usulanLpj.length} LPJ</p>
+         <Card className={`shadow-sm cursor-pointer hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl group ${activeTab === 'lpj' ? 'ring-2 ring-emerald-500' : ''}`} onClick={() => setActiveTab('lpj')}>
+           <CardContent className="p-4 flex items-center gap-4">
+               <FileCheck className={`size-8 sm:size-10 transition-transform group-hover:scale-110 ${activeTab === 'lpj' ? 'text-emerald-500' : 'text-slate-400'}`} />
+               <div>
+                 <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{usulanLpj.length}</h3>
+                 <p className="text-xs sm:text-sm text-slate-500 font-medium">Verifikasi LPJ</p>
                </div>
            </CardContent>
          </Card>
       </div>
 
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader className="border-b border-slate-100 pb-4">
+      <Card className="shadow-lg border-white/50 bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden">
+        <CardHeader className="border-b border-white/50 p-4 sm:p-6 bg-white/40">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <CardTitle className="text-lg">Daftar {activeTab === 'pencairan' ? 'Pencairan Dana' : 'Verifikasi LPJ'}</CardTitle>

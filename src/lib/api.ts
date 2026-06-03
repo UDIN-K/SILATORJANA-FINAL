@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * Si-LATORJANA API Client
  * Centralized fetch wrapper for Laravel backend API.
@@ -10,7 +11,8 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 // Token Management
 // ============================================================
 export function getToken(): string | null {
-  return localStorage.getItem('auth_token');
+  const urlToken = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null;
+  return urlToken || localStorage.getItem('auth_token');
 }
 
 export function setToken(token: string): void {

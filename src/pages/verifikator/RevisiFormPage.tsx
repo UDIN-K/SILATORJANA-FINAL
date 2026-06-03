@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { apiGetKegiatan, apiUpdateKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
-import { ArrowLeft, Save, Send, Loader2, MessageSquare, FileText, TrendingUp, DollarSign, Info } from 'lucide-react';
+import { ArrowLeft, Save, Send, Loader2, MessageSquare, FileText, TrendingUp, DollarSign, Info, Trash2, AlertCircle } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { fetchKAK, fetchIKU, fetchRAB, formatCurrency, formatDate } from '@/lib/helpers';
@@ -27,6 +27,7 @@ export function RevisiFormPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [comments, setComments] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -44,9 +45,18 @@ export function RevisiFormPage() {
     setComments(prev => ({ ...prev, [field]: value }));
   };
 
+  const removeComment = (field: string) => {
+    setComments(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   const handleSubmitRevision = async () => {
     if (!id) return;
     setIsSaving(true);
+    setSubmitError('');
     try {
       const catatan = Object.entries(comments)
         .filter(([, v]) => (v as string).trim())
@@ -57,11 +67,10 @@ export function RevisiFormPage() {
         status: 'revision_requested',
         catatan_revisi: catatan || 'Perlu revisi',
       });
-      alert('Revisi berhasil dikirim!');
       navigate('/dashboard/verifikator/proposals');
     } catch (e: any) {
       console.error(e);
-      alert('Gagal mengirim revisi: ' + (e.message || ''));
+      setSubmitError(e?.response?.data?.message || e.message || 'Terjadi kesalahan sistem');
     } finally { setIsSaving(false); }
   };
 
@@ -69,246 +78,285 @@ export function RevisiFormPage() {
   if (!kegiatan) return <div className="py-12 text-center text-slate-500">Data tidak ditemukan.</div>;
 
   const rabTotal = rabList.reduce((sum: number, r: any) => sum + (parseFloat(r.total) || 0), 0);
-  const hasComments = Object.values(comments).some(v => (v as string).trim());
+  const activeCommentsEntries = Object.entries(comments).filter(([, v]) => (v as string).trim());
+  const hasComments = activeCommentsEntries.length > 0;
 
-  const CommentBox = ({ field }: { field: string }) => (
-    <div className="mt-3 flex items-start gap-2">
-      <MessageSquare className="size-4 text-amber-500 mt-2 shrink-0" />
-      <textarea
-        className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none resize-none bg-amber-50/50"
-        rows={2}
-        placeholder={`Catatan revisi untuk ${field}...`}
-        value={comments[field] || ''}
-        onChange={e => handleCommentChange(field, e.target.value)}
-      />
-    </div>
-  );
+  const CommentBox = ({ field }: { field: string }) => {
+    const hasValue = !!comments[field];
+    return (
+      <div className={`mt-2 sm:mt-3 flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl transition-all ${hasValue ? 'bg-amber-50 border-amber-200 shadow-sm border' : 'bg-slate-50/50 border border-slate-200'}`}>
+        <MessageSquare className={`size-4 sm:size-5 mt-0.5 sm:mt-1 shrink-0 ${hasValue ? 'text-amber-500' : 'text-slate-400'}`} />
+        <div className="w-full">
+           <textarea
+             className="w-full bg-transparent text-xs sm:text-sm focus:outline-none resize-none placeholder:text-slate-400 font-medium text-slate-700"
+             rows={hasValue ? 3 : 2}
+             placeholder={hasValue ? '' : `Tambahkan instruksi revisi di sini...`}
+             value={comments[field] || ''}
+             onChange={e => handleCommentChange(field, e.target.value)}
+           />
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 py-4 border-b border-slate-100/60">
-        <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="shrink-0 h-10 w-10 border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 shadow-sm transition-all rounded-xl"><ArrowLeft className="size-5" /></Button>
+    <div className="max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 py-6 border-b border-slate-200/80 mb-6">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="shrink-0 h-10 w-10 border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 shadow-sm rounded-xl">
+           <ArrowLeft className="size-5" />
+        </Button>
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-1">
-             <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Formulir Pengecekan & Revisi</h2>
-             <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-md border border-amber-200/50">Draft</span>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1.5">
+             <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Formulir Mode Revisi</h2>
+             <span className="bg-amber-100 text-amber-800 text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-md border border-amber-200 whitespace-nowrap">Mode Intervensi</span>
           </div>
-          <p className="text-[15px] font-medium text-slate-500">{kegiatan.nama_kegiatan}</p>
+          <p className="text-sm sm:text-[15px] font-medium text-slate-500">{kegiatan.nama_kegiatan}</p>
         </div>
-        <div className="mt-2 sm:mt-0">
+        <div className="mt-2 sm:mt-0 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
+           <span className="text-[11px] uppercase tracking-widest text-slate-400 font-bold block mb-1">Status Saat Ini</span>
            <StatusBadge status={kegiatan.status} />
         </div>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200/50 rounded-2xl p-5 flex items-start gap-4 shadow-sm mb-8">
-         <div className="bg-amber-100/80 p-2 rounded-lg shrink-0">
-            <MessageSquare className="size-5 text-amber-600" />
-         </div>
-         <div>
-            <h4 className="text-[15px] font-bold text-amber-900 mb-1">Mode Pemberian Catatan Revisi Aktif</h4>
-            <p className="text-[14px] text-amber-800/80 leading-relaxed max-w-3xl">Pilih tab di bawah ini untuk melihat bagian spesifik dari dokumen, lalu isikan catatan revisi pada kotak komentar terkait jika terdapat kesalahan atau hal yang perlu diperbaiki oleh pengusul.</p>
-         </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="flex bg-slate-100/50 rounded-xl border border-slate-200/60 p-1.5 gap-1.5 overflow-x-auto shadow-sm">
-        {TABS.map(tab => (
-          <button key={tab.key}
-            className={`flex-1 px-4 py-3 text-[13px] font-bold uppercase tracking-wider rounded-lg transition-all whitespace-nowrap text-center flex items-center justify-center gap-2.5 relative ${
-              activeTab === tab.key 
-                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20 translate-y-0' 
-                : 'text-slate-500 hover:text-slate-800 hover:bg-white border border-transparent hover:border-slate-200/60 hover:shadow-sm'
-            }`}
-             onClick={() => setActiveTab(tab.key)}>
-             <tab.icon className={`size-4.5 ${activeTab === tab.key ? 'text-white' : 'text-slate-400'}`} /> {tab.label}
-             {comments[tab.key] && <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full shadow-sm" />}
-          </button>
-        ))}
-      </div>
-
-      {/* Info Kegiatan Tab */}
-      {activeTab === 'info' && (
-        <Card className="shadow-sm border-slate-200/60 bg-white overflow-hidden relative">
-           <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
-           <CardContent className="p-8 space-y-8">
-             <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-                <Info className="size-6 text-blue-500" />
-                <h3 className="text-xl font-bold text-slate-800 tracking-tight">Informasi Utama Kegiatan</h3>
-             </div>
-             
-             <div className="grid grid-cols-1 gap-8">
-                <div className="space-y-4">
-                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 p-5 rounded-2xl bg-slate-50/50 border border-slate-100">
-                      <div className="sm:w-1/3 shrink-0"><span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-1">Nama Terdaftar Kegiatan</span><p className="font-semibold text-slate-800 text-[15px]">{kegiatan.nama_kegiatan}</p></div>
-                      <div className="sm:w-2/3 w-full"><CommentBox field="Info - Nama Kegiatan" /></div>
-                   </div>
-                   
-                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 p-5 rounded-2xl bg-slate-50/50 border border-slate-100">
-                      <div className="sm:w-1/3 shrink-0"><span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-1">Kategori / Jenis Kegiatan</span><p className="font-semibold text-slate-800 text-[15px]">{kegiatan.jenis_kegiatan || '-'}</p></div>
-                      <div className="sm:w-2/3 w-full"><CommentBox field="Info - Jenis Kegiatan" /></div>
-                   </div>
-
-                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 p-5 rounded-2xl bg-slate-50/50 border border-slate-100">
-                      <div className="sm:w-1/3 shrink-0"><span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-1">Jurusan Terkait</span><p className="font-semibold text-slate-800 text-[15px]">{kegiatan.nama_jurusan || '-'}</p></div>
-                      <div className="sm:w-2/3 w-full"><CommentBox field="Info - Jurusan" /></div>
-                   </div>
-
-                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 p-5 rounded-2xl bg-slate-50/50 border border-slate-100">
-                      <div className="sm:w-1/3 shrink-0"><span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-1">Identitas Pengusul</span><p className="font-semibold text-slate-800 text-[15px]">{kegiatan.pengusul_nama || '-'}</p></div>
-                      <div className="sm:w-2/3 w-full"><CommentBox field="Info - Pengusul" /></div>
-                   </div>
-                </div>
-             </div>
-           </CardContent>
-        </Card>
+      {submitError && (
+        <div className="mb-6 bg-red-50 text-red-700 border border-red-200 p-4 rounded-xl font-medium flex gap-3 items-center shadow-sm">
+           <AlertCircle className="size-5 shrink-0 text-red-500"/> 
+           Gagal mengirim revisi: {submitError}
+        </div>
       )}
 
-      {/* KAK Tab */}
-      {activeTab === 'kak' && (
-        <Card className="shadow-sm border-slate-200/60 bg-white overflow-hidden relative">
-           <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
-           <CardContent className="p-8 space-y-8">
-             <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-                <FileText className="size-6 text-indigo-500" />
-                <h3 className="text-xl font-bold text-slate-800 tracking-tight">Rincian Kerangka Acuan Kerja (KAK)</h3>
-             </div>
-             
-             {kak ? (
-               <div className="grid grid-cols-1 gap-8">
-                 {['gambaran_umum', 'penerima_manfaat', 'strategi_pencapaian', 'metode_pelaksanaan', 'tahapan_pelaksanaan'].map(key => (
-                   <div key={key} className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 p-5 rounded-2xl bg-slate-50/50 border border-slate-100">
-                      <div className="sm:w-1/3 shrink-0">
-                         <span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-2">{key.replace(/_/g, ' ')}</span>
-                         <p className="font-medium text-slate-700 text-[14px] leading-relaxed line-clamp-4">{kak[key] || '-'}</p>
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        {/* Left Side: Work Area */}
+        <div className="w-full lg:w-2/3 relative">
+           
+          {/* Tab Navigation */}
+          <div className="flex bg-slate-100/50 rounded-xl border border-slate-200/60 p-1.5 gap-1.5 overflow-x-auto shadow-sm mb-6 sticky top-4 z-10 backdrop-blur-md custom-scrollbar">
+            {TABS.map(tab => (
+              <button key={tab.key}
+                className={`flex-none sm:flex-1 px-3 py-2 sm:px-4 sm:py-3 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider rounded-lg transition-all whitespace-nowrap text-center flex items-center justify-center gap-2 sm:gap-2.5 relative ${
+                  activeTab === tab.key 
+                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20 translate-y-0' 
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-white border border-transparent hover:border-slate-200/60 hover:shadow-sm'
+                }`}
+                 onClick={() => setActiveTab(tab.key)}>
+                 <tab.icon className={`size-4.5 ${activeTab === tab.key ? 'text-white' : 'text-slate-400'}`} /> {tab.label}
+                 {comments[tab.key] && <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full shadow-sm" />}
+              </button>
+            ))}
+          </div>
+
+          {/* Info Kegiatan Tab */}
+          {activeTab === 'info' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
+                 <Info className="size-5 sm:size-6 text-blue-500" />
+                 <h3 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">Informasi Utama Kegiatan</h3>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                 {[
+                   { label: 'Nama Terdaftar Kegiatan', value: kegiatan.nama_kegiatan, field: 'Info - Nama Kegiatan' },
+                   { label: 'Kategori / Jenis Kegiatan', value: kegiatan.jenis_kegiatan || '-', field: 'Info - Jenis Kegiatan' },
+                   { label: 'Jurusan Terkait', value: kegiatan.nama_jurusan || '-', field: 'Info - Jurusan' },
+                   { label: 'Identitas Pengusul', value: kegiatan.pengusul_nama || '-', field: 'Info - Pengusul' }
+                 ].map((item, idx) => (
+                   <div key={idx} className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3 sm:gap-4">
+                      <div>
+                         <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest block mb-1">{item.label}</span>
+                         <p className="font-semibold text-slate-800 text-sm sm:text-[15px]">{item.value}</p>
                       </div>
-                      <div className="sm:w-2/3 w-full"><CommentBox field={`KAK - ${key.replace(/_/g, ' ')}`} /></div>
+                      <CommentBox field={item.field} />
                    </div>
                  ))}
-                 {kak.kurun_waktu_mulai && (
-                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 p-5 rounded-2xl bg-slate-50/50 border border-slate-100">
-                     <div className="sm:w-1/3 shrink-0">
-                        <span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-2">Kurun Waktu Operasional</span>
-                        <p className="font-semibold text-slate-800 text-[15px]">{formatDate(kak.kurun_waktu_mulai)} — {formatDate(kak.kurun_waktu_selesai)}</p>
-                     </div>
-                     <div className="sm:w-2/3 w-full"><CommentBox field="KAK - Kurun Waktu Operasional" /></div>
-                   </div>
-                 )}
-               </div>
-             ) : (
-                <div className="py-12 flex flex-col items-center justify-center text-slate-500">
-                   <FileText className="size-10 mb-4 opacity-50" />
-                   <p className="font-semibold text-lg">Data KAK Kosong.</p>
-                   <p className="text-sm">Dokumen Kerangka Acuan belum diinput oleh pengusul.</p>
-                </div>
-             )}
-           </CardContent>
-        </Card>
-      )}
+              </div>
+            </div>
+          )}
 
-      {/* IKU Tab */}
-      {activeTab === 'iku' && (
-        <Card className="shadow-sm border-slate-200/60 bg-white overflow-hidden relative">
-           <div className="absolute top-0 left-0 w-1.5 h-full bg-teal-500"></div>
-           <CardContent className="p-8 space-y-8">
-             <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-                <TrendingUp className="size-6 text-teal-500" />
-                <h3 className="text-xl font-bold text-slate-800 tracking-tight">Indikator Kinerja Utama (IKU)</h3>
-             </div>
-             
-             {ikuList.length > 0 ? (
-               <div className="grid grid-cols-1 gap-6">
-                 {ikuList.map((iku: any, i: number) => (
-                   <div key={iku.id || i} className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
-                     <div className="sm:w-1/3 shrink-0 flex flex-col justify-between h-full">
-                        <div>
-                           <span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-2">Item IKU #{i+1}</span>
-                           <p className="font-bold text-slate-800 text-[15px] leading-snug">{iku.nama_iku || iku.indikator || '-'}</p>
-                        </div>
-                        <div className="mt-4 inline-block bg-teal-50 px-3 py-1.5 rounded border border-teal-100/50 w-fit">
-                           <span className="text-xs text-teal-600 font-semibold uppercase tracking-wider block">Target Keberhasilan</span>
-                           <span className="font-black text-teal-700 text-lg">{iku.target_persen != null ? `${iku.target_persen}%` : '-'}</span>
-                        </div>
-                     </div>
-                     <div className="sm:w-2/3 w-full"><CommentBox field={`IKU #${i + 1}`} /></div>
-                   </div>
-                 ))}
-               </div>
-             ) : (
-                <div className="py-12 flex flex-col items-center justify-center text-slate-500">
-                   <TrendingUp className="size-10 mb-4 opacity-50" />
-                   <p className="font-semibold text-lg">Data IKU Kosong.</p>
-                   <p className="text-sm">Dokumen Indikator kinerja belum direkam.</p>
+          {/* KAK Tab */}
+          {activeTab === 'kak' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
+                 <FileText className="size-5 sm:size-6 text-indigo-500" />
+                 <h3 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">Rincian Kerangka Acuan Kerja (KAK)</h3>
+              </div>
+              
+              {kak ? (
+                <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                  {['gambaran_umum', 'penerima_manfaat', 'strategi_pencapaian', 'metode_pelaksanaan', 'tahapan_pelaksanaan'].map(key => (
+                    <div key={key} className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3 sm:gap-4">
+                       <div>
+                          <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest block mb-1.5 sm:mb-2">{key.replace(/_/g, ' ')}</span>
+                          <p className="font-medium text-slate-700 text-[13px] sm:text-[14px] leading-relaxed max-sm:line-clamp-none line-clamp-6">{kak[key] || '-'}</p>
+                       </div>
+                       <CommentBox field={`KAK - ${key.replace(/_/g, ' ')}`} />
+                    </div>
+                  ))}
+                  {kak.kurun_waktu_mulai && (
+                    <div className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3 sm:gap-4">
+                      <div>
+                         <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest block mb-1.5 sm:mb-2">Kurun Waktu Operasional</span>
+                         <p className="font-semibold text-slate-800 text-sm sm:text-[15px]">{formatDate(kak.kurun_waktu_mulai)} — {formatDate(kak.kurun_waktu_selesai)}</p>
+                      </div>
+                      <CommentBox field="KAK - Kurun Waktu Operasional" />
+                    </div>
+                  )}
                 </div>
-             )}
-           </CardContent>
-        </Card>
-      )}
+              ) : (
+                 <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+                    <FileText className="size-10 mx-auto mb-4 text-slate-300" />
+                    <p className="font-bold text-slate-500">Data KAK Kosong.</p>
+                 </div>
+              )}
+            </div>
+          )}
 
-      {/* RAB Tab */}
-      {activeTab === 'rab' && (
-        <Card className="shadow-sm border-slate-200/60 bg-white overflow-hidden relative">
-           <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
-           <CardContent className="p-8 space-y-8">
-             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div className="flex items-center gap-3">
-                   <DollarSign className="size-6 text-emerald-500" />
-                   <h3 className="text-xl font-bold text-slate-800 tracking-tight">Rincian Anggaran (RAB)</h3>
-                </div>
-                <div className="bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100/60 text-emerald-800">
-                   <span className="text-[11px] font-bold uppercase tracking-widest block mb-0.5 opacity-80">Total Kalkulasi</span>
-                   <span className="font-black text-lg">{formatCurrency(rabTotal)}</span>
-                </div>
-             </div>
-             
-             {rabList.length > 0 ? (
-                <div className="grid grid-cols-1 gap-6">
-                  {rabList.map((r: any, i: number) => (
-                    <div key={r.id || i} className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
-                      <div className="absolute top-0 left-0 w-1 h-full bg-slate-200/60"></div>
-                      <div className="sm:w-2/5 shrink-0">
-                         <span className="text-slate-400 text-[11px] font-bold uppercase tracking-widest block mb-2">Item Anggaran #{i+1} <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-500 ml-2">{r.kategori || '-'}</span></span>
-                         <p className="font-bold text-slate-800 text-[15px] mb-4">{r.uraian}</p>
-                         
-                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                               <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest block mb-0.5">Biaya Satuan</span>
-                               <span className="font-semibold text-slate-600 text-sm">{formatCurrency(r.harga_satuan)}</span>
-                            </div>
-                            <div>
-                               <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest block mb-0.5">Total Harga</span>
-                               <span className="font-bold text-slate-800 text-[15px]">{formatCurrency(r.total)}</span>
-                            </div>
+          {/* IKU Tab */}
+          {activeTab === 'iku' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
+                 <TrendingUp className="size-5 sm:size-6 text-teal-500" />
+                 <h3 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">Indikator Kinerja Utama (IKU)</h3>
+              </div>
+              
+              {ikuList.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                  {ikuList.map((iku: any, i: number) => (
+                    <div key={iku.id || i} className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3 sm:gap-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+                         <div>
+                            <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest block mb-1.5 sm:mb-2">Item IKU #{i+1}</span>
+                            <p className="font-bold text-slate-800 text-[15px] sm:text-[16px] leading-snug">{iku.nama_iku || iku.indikator || '-'}</p>
+                         </div>
+                         <div className="sm:text-right bg-teal-50/50 sm:bg-transparent p-2.5 sm:p-0 rounded-lg w-fit">
+                            <span className="text-[10px] text-teal-600 font-bold uppercase tracking-wider block mb-0.5 sm:mb-1">Target</span>
+                            <span className="font-black text-teal-600 text-lg sm:text-xl">{iku.target_persen != null ? `${iku.target_persen}%` : '-'}</span>
                          </div>
                       </div>
-                      <div className="sm:w-3/5 w-full bg-amber-50/30 p-2 rounded-xl"><CommentBox field={`RAB Item #${i+1} (${r.uraian})`} /></div>
+                      <CommentBox field={`IKU #${i + 1}`} />
                     </div>
                   ))}
                 </div>
-             ) : (
-                <div className="py-12 flex flex-col items-center justify-center text-slate-500">
-                   <DollarSign className="size-10 mb-4 opacity-50" />
-                   <p className="font-semibold text-lg">Data RAB Kosong.</p>
-                   <p className="text-sm">Rincian biaya anggaran belum dirancang.</p>
-                </div>
-             )}
-           </CardContent>
-        </Card>
-      )}
+              ) : (
+                 <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+                    <TrendingUp className="size-10 mx-auto mb-4 text-slate-300" />
+                    <p className="font-bold text-slate-500">Data IKU Kosong.</p>
+                 </div>
+              )}
+            </div>
+          )}
 
-      {/* Submit Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 sm:px-8 py-5 flex flex-col sm:flex-row justify-between items-center shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
-        <div className="flex items-center gap-3 mb-4 sm:mb-0 w-full sm:w-auto">
-           <div className={`flex items-center justify-center h-10 px-4 rounded-xl font-bold text-sm ${hasComments ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
-              <MessageSquare className="size-4 mr-2" />
-              {hasComments ? `${Object.values(comments).filter(v => (v as string).trim()).length} Poin Catatan Revisi Aktif` : 'Belum Ada Instruksi Revisi'}
-           </div>
+          {/* RAB Tab */}
+          {activeTab === 'rab' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
+                 <div className="flex items-center gap-3">
+                    <DollarSign className="size-5 sm:size-6 text-emerald-500" />
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">Rincian Anggaran (RAB)</h3>
+                 </div>
+                 <div className="bg-emerald-50 px-3 py-2 sm:px-4 sm:py-2 rounded-xl text-emerald-800 w-fit">
+                    <span className="text-[10px] font-bold uppercase tracking-widest block mb-0.5 opacity-80">Total Kalkulasi</span>
+                    <span className="font-black text-sm sm:text-[15px]">{formatCurrency(rabTotal)}</span>
+                 </div>
+              </div>
+              
+              {rabList.length > 0 ? (
+                 <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                   {rabList.map((r: any, i: number) => (
+                     <div key={r.id || i} className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col gap-4 sm:gap-5">
+                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                          <div className="sm:pr-4">
+                             <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                                <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">Item Anggaran #{i+1}</span>
+                                <span className="bg-slate-100 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded text-slate-500">{r.kategori || '-'}</span>
+                             </div>
+                             <p className="font-bold text-slate-800 text-sm sm:text-[15px]">{r.uraian}</p>
+                          </div>
+                          <div className="sm:text-right shrink-0 bg-slate-50 sm:bg-transparent p-2.5 sm:p-0 rounded-lg w-fit">
+                             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest block mb-0.5">Total Akhir Item</span>
+                             <span className="font-black text-slate-800 text-[15px] sm:text-[17px]">{formatCurrency(r.total)}</span>
+                          </div>
+                       </div>
+                       
+                       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-slate-50 border border-slate-100">
+                          <div>
+                             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest block mb-1">Vol / Qty</span>
+                             <span className="font-semibold text-slate-700 text-xs sm:text-sm">{r.qty1} {r.satuan1} {r.qty2 ? `x ${r.qty2}`: ''} {r.qty3 ? `x ${r.qty3}`: ''}</span>
+                          </div>
+                          <div className="sm:flex-1 sm:text-right">
+                             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest block mb-1">Harga Satuan</span>
+                             <span className="font-semibold text-slate-700 text-xs sm:text-sm">{formatCurrency(r.harga_satuan)}</span>
+                          </div>
+                       </div>
+                       
+                       <CommentBox field={`RAB Item #${i+1} (${r.uraian})`} />
+                     </div>
+                   ))}
+                 </div>
+              ) : (
+                 <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+                    <DollarSign className="size-10 mx-auto mb-4 text-slate-300" />
+                    <p className="font-bold text-slate-500">Data RAB Kosong.</p>
+                 </div>
+              )}
+            </div>
+          )}
         </div>
-        <div className="flex gap-3 w-full sm:w-auto">
-          <Button variant="outline" className="h-12 px-6 rounded-xl font-bold bg-white w-full sm:w-auto" onClick={() => navigate(-1)}>Batalkan</Button>
-          <Button className="bg-amber-500 hover:bg-amber-600 h-12 px-8 rounded-xl font-bold text-white shadow-xl shadow-amber-500/20 active:scale-95 transition-all w-full sm:w-auto text-[14.5px]" disabled={!hasComments || isSaving} onClick={handleSubmitRevision}>
-            {isSaving ? <Loader2 className="animate-spin size-4.5 mr-2" /> : <Send className="size-4.5 mr-2.5" />}
-            Konfirmasi & Kirim Instruksi Revisi
-          </Button>
+
+        {/* Right Side: Accumulated Comments Sidebar */}
+        <div className="w-full lg:w-1/3 lg:sticky lg:top-4 h-auto lg:max-h-[85vh] flex flex-col pt-2 lg:pt-0">
+           <Card className="shadow-xl shadow-amber-900/5 border-amber-200 bg-white flex flex-col flex-1 max-h-[600px] lg:max-h-[85vh] overflow-hidden rounded-2xl">
+             <div className="h-2 w-full bg-gradient-to-r from-amber-400 to-amber-600"></div>
+             
+             <CardContent className="p-0 flex flex-col h-full overflow-hidden">
+                <div className="p-4 sm:p-6 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                   <h3 className="text-md sm:text-lg font-bold text-slate-800 mb-0.5 sm:mb-1 flex items-center gap-2">
+                     <MessageSquare className="size-4 sm:size-5 text-amber-500" /> 
+                     Kompilasi Revisi
+                   </h3>
+                   <p className="text-xs sm:text-sm text-slate-500">
+                     {activeCommentsEntries.length} instruksi revisi telah direkam
+                   </p>
+                </div>
+
+                <div className="p-4 sm:p-6 flex-1 overflow-y-auto space-y-3 sm:space-y-4 custom-scrollbar">
+                   {activeCommentsEntries.length === 0 ? (
+                      <div className="text-center py-8 sm:py-10 opacity-60">
+                         <MessageSquare className="size-8 sm:size-10 mx-auto mb-2 sm:mb-3 text-slate-300" />
+                         <p className="text-xs sm:text-sm font-semibold text-slate-500">Belum Ada Rekaman Revisi</p>
+                         <p className="text-[11px] sm:text-xs text-slate-400 mt-1 sm:mt-2 leading-relaxed max-w-[200px] mx-auto">Masukan catatan di bagian kiri dokumen untuk menumpuk instruksi di sini.</p>
+                      </div>
+                   ) : (
+                      activeCommentsEntries.map(([field, value]) => (
+                         <div key={field} className="group p-3 sm:p-4 bg-amber-50/50 border border-amber-100 rounded-xl relative hover:bg-amber-50 transition-colors pr-10">
+                            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-amber-600/70 block mb-1.5 sm:mb-2">{field}</span>
+                            <p className="text-xs sm:text-[13px] text-slate-700 font-medium leading-relaxed mb-0 sm:mb-1">"{value}"</p>
+                            <Button 
+                               variant="ghost" 
+                               size="sm" 
+                               className="h-7 w-7 p-0 absolute top-2.5 right-2.5 sm:opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 hover:bg-red-50 bg-white/50"
+                               onClick={() => removeComment(field)}
+                             >
+                               <Trash2 className="size-3.5" />
+                            </Button>
+                         </div>
+                      ))
+                   )}
+                </div>
+
+                <div className="p-4 sm:p-6 border-t border-slate-100 bg-white shrink-0">
+                   <Button 
+                      disabled={!hasComments || isSaving} 
+                      onClick={handleSubmitRevision}
+                      className="w-full h-10 sm:h-12 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-xl shadow-amber-500/25 active:scale-95 transition-all text-sm sm:text-[15px] font-bold"
+                   >
+                     {isSaving ? <Loader2 className="animate-spin size-4 mr-2" /> : <Send className="size-4 sm:size-4.5 mr-2" />}
+                     Kirim {activeCommentsEntries.length} Instruksi Revisi
+                   </Button>
+                   <Button variant="ghost" className="w-full mt-2 sm:mt-3 h-10 text-slate-500 text-sm font-semibold" onClick={() => navigate(-1)}>
+                      Batalkan Verifikasi
+                   </Button>
+                </div>
+             </CardContent>
+           </Card>
         </div>
       </div>
     </div>

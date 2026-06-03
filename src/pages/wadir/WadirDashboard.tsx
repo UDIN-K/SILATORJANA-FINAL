@@ -30,39 +30,38 @@ export function WadirDashboard() {
 
   return (
     <div className="space-y-6">
-      <div><h2 className="text-2xl font-bold text-slate-900">Dashboard Wadir</h2><p className="text-slate-500">Persetujuan kegiatan tingkat Wakil Direktur.</p></div>
+      <div className="space-y-1 sm:space-y-1.5">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard Wadir</h2>
+        <p className="text-slate-500 mt-1">Persetujuan kegiatan tingkat Wakil Direktur.</p>
+      </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-        <Card className="shadow-sm border-slate-200">
-          <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-            <div className="flex items-start sm:items-center justify-between pb-2 gap-1 sm:gap-2">
-              <p className="text-[11px] sm:text-sm font-medium text-slate-600 leading-tight">Menunggu</p>
-              <div className="p-1.5 sm:p-3 rounded-xl bg-amber-100 shrink-0"><Clock className="size-3.5 sm:size-5 text-amber-600" /></div>
-            </div>
-            <div className="flex items-baseline gap-2 mt-auto">
-              <p className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{pendingReview.length}</p>
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+          <CardContent className="p-4 flex items-center gap-4">
+            <Clock className="size-8 sm:size-10 text-amber-500 transition-transform group-hover:scale-110" />
+            <div>
+               <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{pendingReview.length}</h3>
+               <p className="text-xs sm:text-sm text-slate-500 font-medium">Menunggu</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-slate-200">
-          <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-            <div className="flex items-start sm:items-center justify-between pb-2 gap-1 sm:gap-2">
-              <p className="text-[11px] sm:text-sm font-medium text-slate-600 leading-tight">Disetujui</p>
-              <div className="p-1.5 sm:p-3 rounded-xl bg-emerald-100 shrink-0"><CheckCircle className="size-3.5 sm:size-5 text-emerald-600" /></div>
-            </div>
-            <div className="flex items-baseline gap-2 mt-auto">
-              <p className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{approved.length}</p>
+        
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+          <CardContent className="p-4 flex items-center gap-4">
+            <CheckCircle className="size-8 sm:size-10 text-emerald-500 transition-transform group-hover:scale-110" />
+            <div>
+               <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{approved.length}</h3>
+               <p className="text-xs sm:text-sm text-slate-500 font-medium">Disetujui</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-slate-200 col-span-2 sm:col-span-1">
-          <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-            <div className="flex items-start sm:items-center justify-between pb-2 gap-1 sm:gap-2">
-              <p className="text-[11px] sm:text-sm font-medium text-slate-600 leading-tight">Total</p>
-              <div className="p-1.5 sm:p-3 rounded-xl bg-blue-100 shrink-0"><FileText className="size-3.5 sm:size-5 text-blue-600" /></div>
-            </div>
-            <div className="flex items-baseline gap-2 mt-auto">
-              <p className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{items.length}</p>
+        
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group col-span-2 sm:col-span-1">
+          <CardContent className="p-4 flex items-center gap-4">
+            <FileText className="size-8 sm:size-10 text-blue-500 transition-transform group-hover:scale-110" />
+            <div>
+               <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{items.length}</h3>
+               <p className="text-xs sm:text-sm text-slate-500 font-medium">Total</p>
             </div>
           </CardContent>
         </Card>

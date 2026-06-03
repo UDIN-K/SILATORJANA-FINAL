@@ -3,7 +3,7 @@ import api, { apiCreateKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Send, Plus, Loader2, Trash2, Target, ShoppingCart, Wrench, Plane, X, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Send, Plus, Loader2, Trash2, Target, ShoppingCart, Wrench, Plane, X, CheckCircle, Building2, Calendar, FileText, Users, Lightbulb, CheckSquare, CalendarRange, Info, CircleDollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { formatCurrency, getCurrentUser } from '@/lib/helpers';
@@ -67,22 +67,101 @@ function RabTable({
 
   return (
     <Card className="shadow-sm border-slate-200/60 bg-white overflow-hidden">
-      <CardHeader className="bg-slate-50/30 border-b border-slate-100/60 py-4 px-6 flex flex-row items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-9 rounded-lg bg-emerald-100 text-emerald-700">
+      <CardHeader className="bg-slate-50/30 border-b border-slate-100/60 py-4 px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center justify-center size-9 rounded-lg bg-emerald-100 text-emerald-700 shrink-0">
             {icon}
           </div>
-          <div>
-            <CardTitle className="text-base text-emerald-900">{title}</CardTitle>
+          <div className="flex-1">
+            <CardTitle className="text-base text-emerald-900 leading-tight">{title}</CardTitle>
             <p className="text-xs text-slate-500">{items.length} item</p>
           </div>
         </div>
-        <Button type="button" variant="outline" size="sm" className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={onAdd}>
-          <Plus className="size-3.5 mr-1" /> Tambah Item
+        <Button type="button" variant="outline" size="sm" className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50 w-full sm:w-auto" onClick={onAdd}>
+          <Plus className="size-3.5 mr-1 shrink-0" /> Tambah Item
         </Button>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
+        {/* Mobile View */}
+        <div className="lg:hidden flex flex-col gap-4 p-2 sm:p-4 bg-slate-50/50">
+          {items.length === 0 && (
+            <div className="text-center py-8 text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-2xl bg-white m-2">
+              Belum ada item. Klik "Tambah Item" untuk menambahkan.
+            </div>
+          )}
+          {items.map((item, idx) => (
+             <div key={idx} className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                  <div className="font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg text-xs">Item {idx + 1}</div>
+                  <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-red-500 hover:text-red-700 hover:bg-red-50 focus:ring-0" onClick={() => onRemove(idx)}>
+                    <Trash2 className="size-4" /> <span className="ml-1 text-xs">Hapus</span>
+                  </Button>
+                </div>
+                <div>
+                  <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Uraian Belanja <span className="text-red-500">*</span></Label>
+                  <Input placeholder="Ketik uraian belanja..." value={item.uraian} onChange={e => onUpdate(idx, 'uraian', e.target.value)} className="h-11 rounded-xl text-sm" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Jml 1 <span className="text-red-500">*</span></Label>
+                    <Input type="number" min={1} value={item.qty1} onChange={e => onUpdate(idx, 'qty1', Math.max(1, parseInt(e.target.value) || 1))} className="h-11 rounded-xl px-3 text-sm focus:ring-emerald-500/20" />
+                  </div>
+                  <div>
+                    <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Satuan 1 <span className="text-red-500">*</span></Label>
+                    <select value={item.satuan1} onChange={e => onUpdate(idx, 'satuan1', e.target.value)} className="w-full h-11 rounded-xl border border-slate-200 text-sm px-3 bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                      {satuanOptions.map(s => <option key={s} value={s}>{s || 'Pilih'}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Jml 2 <span className="text-red-500">*</span></Label>
+                    <Input type="number" min={1} value={item.qty2} onChange={e => onUpdate(idx, 'qty2', Math.max(1, parseInt(e.target.value) || 1))} className="h-11 rounded-xl px-3 text-sm focus:ring-emerald-500/20" />
+                  </div>
+                  <div>
+                    <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Satuan 2 <span className="text-red-500">*</span></Label>
+                    <select value={item.satuan2} onChange={e => onUpdate(idx, 'satuan2', e.target.value)} className="w-full h-11 rounded-xl border border-slate-200 text-sm px-3 bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                      {satuanOptions.map(s => <option key={s} value={s}>{s || 'Pilih'}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Jml 3 (Opsional)</Label>
+                    <Input type="number" min={0} value={item.qty3 ?? ''} placeholder="0" onChange={e => onUpdate(idx, 'qty3', e.target.value ? Math.max(0, parseInt(e.target.value) || 0) : null)} className="h-11 rounded-xl px-3 text-sm focus:ring-emerald-500/20" />
+                  </div>
+                  <div>
+                    <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Satuan 3</Label>
+                    <select value={item.satuan3} onChange={e => onUpdate(idx, 'satuan3', e.target.value)} className="w-full h-11 rounded-xl border border-slate-200 text-sm px-3 bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                      {satuanOptions.map(s => <option key={s} value={s}>{s || 'Pilih'}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                   <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Harga Satuan (Rp) <span className="text-red-500">*</span></Label>
+                   <Input type="number" min={0} value={item.harga_satuan === 0 ? '' : item.harga_satuan} placeholder="0" onChange={e => onUpdate(idx, 'harga_satuan', Math.max(0, parseInt(e.target.value) || 0))} className="h-11 rounded-xl text-right font-medium text-sm focus:ring-emerald-500/20" />
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                  <span className="text-sm font-bold text-slate-600">Subtotal:</span>
+                  <span className="font-extrabold text-emerald-700 text-base">{formatCurrency(calcTotal(item))}</span>
+                </div>
+             </div>
+          ))}
+          {items.length > 0 && (
+             <div className="bg-emerald-50/50 p-5 rounded-2xl flex justify-between items-center border border-emerald-200/60 shadow-sm mt-2">
+               <span className="font-bold text-emerald-900 text-sm uppercase tracking-wide">Subtotal</span>
+               <span className="font-black text-emerald-700 text-xl">{formatCurrency(subtotal)}</span>
+             </div>
+          )}
+        </div>
+
+        {/* Desktop View */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-xs text-left min-w-[860px]">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
               <tr>
@@ -122,7 +201,7 @@ function RabTable({
                     <Input
                       type="number" min={1}
                       value={item.qty1}
-                      onChange={e => onUpdate(idx, 'qty1', parseInt(e.target.value) || 1)}
+                      onChange={e => onUpdate(idx, 'qty1', Math.max(1, parseInt(e.target.value) || 1))}
                       className="h-9 rounded-lg text-xs text-center px-1"
                     />
                   </td>
@@ -139,7 +218,7 @@ function RabTable({
                     <Input
                       type="number" min={1}
                       value={item.qty2}
-                      onChange={e => onUpdate(idx, 'qty2', parseInt(e.target.value) || 1)}
+                      onChange={e => onUpdate(idx, 'qty2', Math.max(1, parseInt(e.target.value) || 1))}
                       className="h-9 rounded-lg text-xs text-center px-1"
                     />
                   </td>
@@ -157,7 +236,7 @@ function RabTable({
                       type="number" min={0}
                       value={item.qty3 ?? ''}
                       placeholder="Opsional"
-                      onChange={e => onUpdate(idx, 'qty3', e.target.value ? parseInt(e.target.value) : null)}
+                      onChange={e => onUpdate(idx, 'qty3', e.target.value ? Math.max(0, parseInt(e.target.value) || 0) : null)}
                       className="h-9 rounded-lg text-xs text-center px-1"
                     />
                   </td>
@@ -175,7 +254,7 @@ function RabTable({
                       type="number" min={0}
                       value={item.harga_satuan === 0 ? '' : item.harga_satuan}
                       placeholder="0"
-                      onChange={e => onUpdate(idx, 'harga_satuan', parseInt(e.target.value) || 0)}
+                      onChange={e => onUpdate(idx, 'harga_satuan', Math.max(0, parseInt(e.target.value) || 0))}
                       className="h-9 rounded-lg text-xs text-right px-2"
                     />
                   </td>
@@ -322,26 +401,28 @@ export function CreateUsulanPage() {
     if (!user) { navigate('/login'); return; }
     setCurrentUser(user);
 
+    const fallbackIku = [
+      { id: 1, nama_indikator: 'Lulusan Mendapat Pekerjaan yang Layak', is_visible: true },
+      { id: 2, nama_indikator: 'Mahasiswa Mendapat Pengalaman di Luar Kampus', is_visible: true },
+      { id: 3, nama_indikator: 'Dosen Berkegatan di Luar Kampus', is_visible: true },
+      { id: 4, nama_indikator: 'Praktisi Mengajar di Dalam Kampus', is_visible: true },
+      { id: 5, nama_indikator: 'Hasil Kerja Dosen Digunakan oleh Masyarakat', is_visible: true },
+      { id: 6, nama_indikator: 'Program Studi Bekerja sama dengan Mitra Kelas Dunia', is_visible: true },
+      { id: 7, nama_indikator: 'Kelas yang Kolaboratif dan Partisipatif', is_visible: true },
+      { id: 8, nama_indikator: 'Program Studi Bestandar Internasional', is_visible: true },
+    ];
+
     // Fetch IKU master list
-    api.get('/api/iku-master').then(res => {
-      const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
-      setIkuMasterList(data.filter((item: any) => item.is_visible !== false));
-    }).catch(() => {
-      setIkuMasterList([
-        { id: 1, nama_indikator: 'Lulusan Mendapat Pekerjaan yang Layak', is_visible: true },
-        { id: 2, nama_indikator: 'Mahasiswa Mendapat Pengalaman di Luar Kampus', is_visible: true },
-        { id: 3, nama_indikator: 'Dosen Berkegatan di Luar Kampus', is_visible: true },
-        { id: 4, nama_indikator: 'Praktisi Mengajar di Dalam Kampus', is_visible: true },
-        { id: 5, nama_indikator: 'Hasil Kerja Dosen Digunakan oleh Masyarakat', is_visible: true },
-        { id: 6, nama_indikator: 'Program Studi Bekerja sama dengan Mitra Kelas Dunia', is_visible: true },
-        { id: 7, nama_indikator: 'Kelas yang Kolaboratif dan Partisipatif', is_visible: true },
-        { id: 8, nama_indikator: 'Program Studi Bestandar Internasional', is_visible: true },
-        { id: 9, nama_indikator: 'Peserta terlayani (%)', is_visible: true },
-        { id: 10, nama_indikator: 'Kepuasan pengguna (%)', is_visible: true },
-        { id: 11, nama_indikator: 'Tingkat kelulusan (%)', is_visible: true },
-        { id: 12, nama_indikator: 'Efektivitas program (%)', is_visible: true },
-      ]);
-    });
+    api.get('/api/iku-master')
+      .then((res: any) => {
+        let data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+        data = data.filter((item: any) => item.is_visible !== false);
+        if (data.length === 0) data = fallbackIku;
+        setIkuMasterList(data);
+      })
+      .catch(() => {
+        setIkuMasterList(fallbackIku);
+      });
   }, [navigate]);
 
   // ── Form State ──
@@ -438,7 +519,8 @@ export function CreateUsulanPage() {
       navigate('/dashboard/pengusul/usulan');
     } catch (error: any) {
       console.error(error);
-      alert('Gagal membuat usulan: ' + (error?.response?.data?.message || error.message));
+      const errMsg = error?.response?.data?.message || error.message;
+      setErrors(prev => ({ ...prev, submit: 'Gagal mengirim usulan: ' + errMsg }));
     } finally {
       setIsSubmitting(false);
       setShowVerifikatorModal(false);
@@ -532,32 +614,45 @@ export function CreateUsulanPage() {
 
       <div className="space-y-6 max-w-5xl mx-auto pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 py-4 border-b border-slate-100">
-          <Button variant="outline" size="icon" onClick={() => navigate('/dashboard/pengusul/usulan')} className="h-10 w-10 border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 shadow-sm transition-all rounded-xl shrink-0">
+        <div className="flex items-center gap-4 py-4 border-b border-slate-100">
+          <Button variant="outline" size="icon" onClick={() => navigate('/dashboard/pengusul/usulan')} className="h-10 w-10 sm:h-11 sm:w-11 border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 shadow-sm transition-all rounded-xl shrink-0">
             <ArrowLeft className="size-5" />
           </Button>
           <div className="flex-1">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">Buat Usulan Baru</h2>
-            <p className="text-slate-500 font-medium tracking-tight mt-1">Isi formulir terpadu untuk Informasi Kegiatan, KAK, IKU, dan RAB.</p>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Buat Usulan Baru</h2>
+            <p className="text-slate-500 mt-1">Isi formulir terpadu untuk Informasi Kegiatan, KAK, IKU, dan RAB.</p>
           </div>
         </div>
 
         {/* Step Progress */}
-        <div className="flex items-center gap-2 sm:gap-4 py-4 mt-2">
+        <div className="flex items-center gap-2 sm:gap-4 py-4 mt-2 overflow-x-auto hide-scrollbar">
           {steps.map((step, idx) => (
             <React.Fragment key={step.id}>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className={`flex items-center justify-center size-8 sm:size-10 rounded-full font-bold transition-all text-sm sm:text-base ${currentStep === step.id ? 'bg-[#047857] text-white shadow-md' : currentStep > step.id ? 'bg-emerald-100 text-[#047857]' : 'bg-slate-100 text-slate-400'}`}>
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <div className={`flex shrink-0 items-center justify-center size-8 sm:size-10 rounded-full font-bold transition-all text-sm sm:text-base ${currentStep === step.id ? 'bg-[#047857] text-white shadow-md' : currentStep > step.id ? 'bg-emerald-100 text-[#047857]' : 'bg-slate-100 text-slate-400'}`}>
                   {step.id}
                 </div>
-                <span className={`font-semibold text-xs sm:text-sm ${currentStep === step.id ? 'text-slate-900' : currentStep > step.id ? 'text-[#047857]' : 'text-slate-400'}`}>{step.name}</span>
+                <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${currentStep === step.id ? 'text-slate-900' : currentStep > step.id ? 'text-[#047857]' : 'text-slate-400'}`}>{step.name}</span>
               </div>
-              {idx < 3 && <div className={`flex-1 h-1 rounded-full ${currentStep > step.id ? 'bg-emerald-500' : 'bg-slate-100'}`} />}
+              {idx < 3 && <div className={`flex-1 min-w-[20px] h-1 rounded-full ${currentStep > step.id ? 'bg-emerald-500' : 'bg-slate-100'}`} />}
             </React.Fragment>
           ))}
         </div>
 
         <div className="space-y-10 mt-2">
+          
+          {errors.submit && (
+            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 font-semibold mb-6 flex items-center justify-between">
+              <div>
+                 <span className="block text-sm">Gagal Mengirim Usulan</span>
+                 <span className="block text-xs font-normal mt-1">{errors.submit}</span>
+                 <span className="block text-xs font-normal mt-1">Saran: Silakan cek apakah backend Laravel di laptopmu sudah menyala dan URL sudah tersambung, contoh: jika pakai SSH tunnel pastikan perintah ssh belum mati.</span>
+              </div>
+              <Button variant="ghost" className="h-8 w-8 p-0" onClick={() => setErrors(prev => { const n = {...prev}; delete n.submit; return n; })}>
+                <X className="size-4" />
+              </Button>
+            </div>
+          )}
 
           {/* ══════════════ STEP 1: INFO KEGIATAN ══════════════ */}
           <div className={currentStep !== 1 ? 'hidden' : 'space-y-6'}>
@@ -603,7 +698,7 @@ export function CreateUsulanPage() {
                 {/* Jurusan & Pengusul */}
                 <div className="rounded-xl bg-gradient-to-br from-slate-50 to-emerald-50 border border-emerald-100 p-5 space-y-4">
                   <h4 className="text-sm font-bold text-[#047857] flex items-center gap-2">
-                    <span className="material-icons text-base">business</span>
+                    <Building2 className="size-4" />
                     Pengelola &amp; Penanggung Jawab
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -634,7 +729,7 @@ export function CreateUsulanPage() {
                 {/* Tanggal & Tempat */}
                 <div className="rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-100 p-5 space-y-4">
                   <h4 className="text-sm font-bold text-amber-800 flex items-center gap-2">
-                    <span>🗓</span> Waktu &amp; Lokasi Kegiatan
+                    <Calendar className="size-4" /> Waktu &amp; Lokasi Kegiatan
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -681,7 +776,7 @@ export function CreateUsulanPage() {
               <CardContent className="space-y-6 pt-6 pl-6 sm:pl-8 pr-4 sm:pr-6">
                 {/* Gambaran Umum */}
                 <div className="rounded-xl bg-gradient-to-br from-slate-50 to-emerald-50 border border-emerald-100 p-5 space-y-4">
-                  <h4 className="text-sm font-bold text-[#047857] flex items-center gap-2">📄 Gambaran Umum Kegiatan</h4>
+                  <h4 className="text-sm font-bold text-[#047857] flex items-center gap-2"><FileText className="size-4" /> Gambaran Umum Kegiatan</h4>
                   <div className="space-y-2">
                     <Label className="text-slate-700 font-semibold">Gambaran Umum Acara <span className="text-red-500">*</span></Label>
                     <textarea
@@ -698,7 +793,7 @@ export function CreateUsulanPage() {
 
                 {/* Penerima Manfaat */}
                 <div className="rounded-xl bg-gradient-to-br from-slate-50 to-emerald-50 border border-emerald-100 p-5 space-y-4">
-                  <h4 className="text-sm font-bold text-[#047857] flex items-center gap-2">👥 Penerima Manfaat</h4>
+                  <h4 className="text-sm font-bold text-[#047857] flex items-center gap-2"><Users className="size-4" /> Penerima Manfaat</h4>
                   <div className="space-y-2">
                     <Label className="text-slate-700 font-semibold">Penerima Manfaat <span className="text-red-500">*</span></Label>
                     <textarea
@@ -714,7 +809,7 @@ export function CreateUsulanPage() {
 
                 {/* Strategi Pelaksanaan */}
                 <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-5 space-y-4">
-                  <h4 className="text-sm font-bold text-indigo-800 flex items-center gap-2">💡 Strategi Pelaksanaan</h4>
+                  <h4 className="text-sm font-bold text-indigo-800 flex items-center gap-2"><Lightbulb className="size-4" /> Strategi Pelaksanaan</h4>
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label className="text-slate-700 font-semibold">Metode Pelaksanaan <span className="text-red-500">*</span></Label>
@@ -750,15 +845,68 @@ export function CreateUsulanPage() {
                 </div>
 
                 {/* Indikator Kinerja Table */}
-                <div className="rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-100 p-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-amber-800 flex items-center gap-2">✅ Indikator Keberhasilan</h4>
-                    <Button type="button" variant="secondary" size="sm" className="h-9 rounded-xl" onClick={addIndikatorRow}>
-                      <Plus className="mr-1 h-3.5 w-3.5" /> Tambah Baris
+                <div className="rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-100 p-3 sm:p-5 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h4 className="text-sm font-bold text-amber-800 flex items-center gap-2">
+                      <CheckSquare className="size-4 shrink-0" />
+                      <span className="leading-tight">Indikator Keberhasilan</span>
+                    </h4>
+                    <Button type="button" variant="secondary" size="sm" className="h-9 rounded-xl w-full sm:w-auto" onClick={addIndikatorRow}>
+                      <Plus className="mr-1 h-3.5 w-3.5 shrink-0" /> Tambah Baris
                     </Button>
                   </div>
-                  <div className="border border-slate-200/80 rounded-xl overflow-x-auto shadow-sm">
-                    <table className="w-full text-sm text-left min-w-[640px]">
+                  <div className="border border-slate-200/80 rounded-xl shadow-sm overflow-hidden">
+                    {/* Mobile View */}
+                    <div className="lg:hidden flex flex-col gap-4 bg-slate-50/50 p-2 sm:p-4">
+                      {indikatorRows.length === 0 && (
+                        <div className="text-center py-6 text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl bg-white mx-2 mt-2">
+                          Belum ada indikator. Klik "Tambah Baris" untuk menambahkan.
+                        </div>
+                      )}
+                      {indikatorRows.map((row, idx) => (
+                        <div key={idx} className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                          <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                            <div className="font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg text-xs">Indikator {idx + 1}</div>
+                            <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-red-500 hover:text-red-700 hover:bg-red-50 focus:ring-0" onClick={() => removeIndikatorRow(idx)}>
+                              <Trash2 className="size-4" /> <span className="ml-1 text-xs">Hapus</span>
+                            </Button>
+                          </div>
+                          <div>
+                            <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Bulan</Label>
+                            <select
+                                value={row.bulan}
+                                onChange={e => updateIndikator(idx, 'bulan', e.target.value)}
+                                className="w-full h-11 rounded-xl border border-slate-200 text-sm px-3 bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                              >
+                                <option value="">Pilih Bulan</option>
+                                {BULAN_INDONESIA.map(b => (
+                                  <option key={b} value={b}>{b}</option>
+                                ))}
+                            </select>
+                          </div>
+                          <div>
+                            <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Indikator Keberhasilan</Label>
+                            <Input
+                                placeholder="Contoh: Tersusunnya dokumen RPKL"
+                                value={row.indikator}
+                                onChange={e => updateIndikator(idx, 'indikator', e.target.value)}
+                                className="h-11 rounded-xl text-sm focus:ring-indigo-500/20"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Target (%)</Label>
+                            <Input
+                                type="number" min={0} placeholder="0"
+                                value={row.target ?? ''}
+                                onChange={e => updateIndikator(idx, 'target', e.target.value ? Math.max(0, Number(e.target.value)) : null)}
+                                className="h-11 rounded-xl text-sm focus:ring-indigo-500/20"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Desktop View */}
+                    <table className="hidden lg:table w-full text-sm text-left min-w-[640px]">
                       <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase tracking-wider">
                         <tr>
                           <th className="px-3 py-3 w-8 text-center">No</th>
@@ -804,7 +952,7 @@ export function CreateUsulanPage() {
                               <Input
                                 type="number" min={0} placeholder="0"
                                 value={row.target ?? ''}
-                                onChange={e => updateIndikator(idx, 'target', e.target.value ? Number(e.target.value) : null)}
+                                onChange={e => updateIndikator(idx, 'target', e.target.value ? Math.max(0, Number(e.target.value)) : null)}
                                 className="h-9 rounded-lg text-sm text-center"
                               />
                             </td>
@@ -828,7 +976,7 @@ export function CreateUsulanPage() {
 
                 {/* Kurun Waktu */}
                 <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 p-5 space-y-4">
-                  <h4 className="text-sm font-bold text-indigo-800 flex items-center gap-2">📅 Waktu Pelaksanaan</h4>
+                  <h4 className="text-sm font-bold text-indigo-800 flex items-center gap-2"><CalendarRange className="size-4" /> Waktu Pelaksanaan</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="kurun_waktu_dari" className="text-slate-700 font-semibold">Kurun Waktu Pelaksanaan (Dari) <span className="text-red-500">*</span></Label>
@@ -887,13 +1035,13 @@ export function CreateUsulanPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <Label className="text-slate-700 font-semibold">Daftar IKU yang Dipilih</Label>
-                      <p className="text-slate-500 text-sm">Klik "+ Tambah IKU" untuk menambahkan indikator baru.</p>
+                      <Label className="text-slate-700 font-semibold leading-tight block">Daftar IKU yang Dipilih</Label>
+                      <p className="text-slate-500 text-sm mt-1">Klik "+ Tambah IKU" untuk menambahkan.</p>
                     </div>
-                    <Button type="button" variant="secondary" size="sm" className="h-10 rounded-xl" onClick={addIku}>
-                      <Plus className="mr-2 h-4 w-4" /> Tambah IKU
+                    <Button type="button" variant="secondary" size="sm" className="h-10 rounded-xl w-full sm:w-auto" onClick={addIku}>
+                      <Plus className="mr-2 h-4 w-4 shrink-0" /> Tambah IKU
                     </Button>
                   </div>
 
@@ -916,7 +1064,7 @@ export function CreateUsulanPage() {
                                 onChange={e => { updateIku(index, 'nama_indikator', e.target.value); setErrors(prev => { const n = {...prev}; delete n[`iku_nama_${index}`]; return n; }); }}
                                 className={`mt-1 w-full h-12 rounded-xl border border-slate-200 px-3 bg-white text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 ${errors[`iku_nama_${index}`] ? 'border-red-400 bg-red-50/30' : ''}`}
                               >
-                                <option value="">-- Memuat Indikator... --</option>
+                                <option value="">-- Pilih Indikator --</option>
                                 {ikuMasterList.map(item => (
                                   <option key={item.id} value={item.nama_indikator || item.nama_iku || String(item.id)}>
                                     {item.nama_indikator || item.nama_iku}
@@ -930,13 +1078,13 @@ export function CreateUsulanPage() {
                               <Input
                                 type="number" min={0} max={100}
                                 value={iku.target_persen ?? ''}
-                                onChange={e => { updateIku(index, 'target_persen', e.target.value ? Number(e.target.value) : null); setErrors(prev => { const n = {...prev}; delete n[`iku_target_${index}`]; return n; }); }}
+                                onChange={e => { updateIku(index, 'target_persen', e.target.value ? Math.max(0, Math.min(100, Number(e.target.value))) : null); setErrors(prev => { const n = {...prev}; delete n[`iku_target_${index}`]; return n; }); }}
                                 placeholder="0"
                                 className={`mt-1 h-12 rounded-xl focus-visible:ring-purple-500/20 ${errors[`iku_target_${index}`] ? 'border-red-400 bg-red-50/30' : ''}`}
                               />
                               {errors[`iku_target_${index}`] && <p className="text-xs text-red-500 font-medium mt-1">{errors[`iku_target_${index}`]}</p>}
                             </div>
-                            <Button type="button" variant="ghost" size="icon" className="h-10 w-10 text-rose-500 mt-6" onClick={() => removeIku(index)}>
+                            <Button type="button" variant="ghost" size="icon" className="h-10 w-10 text-rose-500 sm:mt-6 place-self-end sm:place-self-auto" onClick={() => removeIku(index)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -953,7 +1101,7 @@ export function CreateUsulanPage() {
           <div className={currentStep !== 4 ? 'hidden' : 'space-y-6'}>
             {/* Info Satuan */}
             <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
-              <h5 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">ℹ️ Penjelasan Kode Satuan</h5>
+              <h5 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2"><Info className="size-4" /> Penjelasan Kode Satuan</h5>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                 {[
                   ['OK', 'Orang dalam Kegiatan – untuk konsumsi peserta/panitia'],
@@ -1002,19 +1150,19 @@ export function CreateUsulanPage() {
             />
 
             {/* Grand Total */}
-            <div className="rounded-2xl bg-gradient-to-r from-[#0B6B4A] to-[#047857] p-6 flex items-center justify-between shadow-xl">
-              <div className="flex items-center gap-3 text-white">
-                <div className="text-2xl">💰</div>
+            <div className="rounded-2xl bg-gradient-to-r from-[#0B6B4A] to-[#047857] p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between shadow-xl gap-4 sm:gap-0 mt-6 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center gap-3 text-white">
+                <div className="bg-white/20 p-2 sm:p-2.5 rounded-xl shrink-0"><CircleDollarSign className="size-6 sm:size-7 text-white" /></div>
                 <div>
-                  <p className="text-white/80 text-sm font-medium uppercase tracking-wider">Total Anggaran Keseluruhan</p>
+                  <p className="text-white/80 text-xs sm:text-sm font-medium uppercase tracking-wider">Total Anggaran Keseluruhan</p>
                 </div>
               </div>
-              <div className="text-3xl font-black text-emerald-300">{formatCurrency(totalRab)}</div>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-300">{formatCurrency(totalRab)}</div>
             </div>
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row justify-between gap-4 pt-6 border-t border-slate-200">
+          <div className="flex flex-col-reverse sm:flex-row justify-between gap-4 pt-6 pb-8 border-t border-slate-200">
             {currentStep > 1 ? (
               <Button type="button" variant="outline" className="h-14 px-8 rounded-2xl font-bold text-slate-600 hover:bg-slate-100 border-slate-300 w-full sm:w-auto transition-all" onClick={() => setCurrentStep(prev => prev - 1)}>Kembali</Button>
             ) : (
@@ -1022,11 +1170,14 @@ export function CreateUsulanPage() {
             )}
 
             {currentStep < 4 ? (
-              <Button type="button" className="h-14 px-8 rounded-2xl font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 w-full sm:w-auto transition-all active:scale-95 text-[15px]" onClick={handleNextStep}>Selanjutnya</Button>
+              <Button type="button" className="h-14 w-full sm:w-auto rounded-2xl px-6 sm:px-8 font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 transition-all active:scale-95 text-[15px] flex items-center justify-center group" onClick={handleNextStep}>
+                <span className="inline">Selanjutnya</span>
+                <ArrowRight className="size-5 ml-2 transition-transform group-hover:translate-x-1" />
+              </Button>
             ) : (
-              <Button type="button" disabled={isSubmitting} onClick={() => setShowVerifikatorModal(true)} className="h-14 px-8 rounded-2xl font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 w-full sm:w-auto transition-all active:scale-95 text-[15px]">
-                {isSubmitting ? <Loader2 className="size-5 mr-3 animate-spin" /> : <Send className="size-5 mr-3" />}
-                {isSubmitting ? 'Memproses Pengajuan...' : 'Kirim Semua Data'}
+              <Button type="button" disabled={isSubmitting} onClick={() => setShowVerifikatorModal(true)} className="h-14 w-full sm:w-auto rounded-2xl px-6 sm:px-8 font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 transition-all active:scale-95 text-[15px] flex items-center justify-center group">
+                {isSubmitting ? <Loader2 className="size-5 mr-3 animate-spin" /> : <Send className="size-5 mr-3 transition-transform group-hover:translate-x-1" />}
+                <span className="inline">{isSubmitting ? 'Memproses...' : 'Kirim Semua Data'}</span>
               </Button>
             )}
           </div>

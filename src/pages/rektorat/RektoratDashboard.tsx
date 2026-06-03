@@ -87,24 +87,21 @@ export function RektoratDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900">Dashboard Rektorat</h2>
-        <p className="text-slate-500">Ringkasan kegiatan seluruh politeknik.</p>
+      <div className="space-y-1 sm:space-y-1.5">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard Rektorat</h2>
+        <p className="text-slate-500 mt-1">Ringkasan kegiatan seluruh politeknik.</p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {cards.map((c, i) => (
-          <Card key={i} className="shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
-              <div className="flex items-start sm:items-center justify-between mb-2 sm:mb-3 gap-1 sm:gap-2">
-                <p className="text-[11px] sm:text-sm font-medium text-slate-500 leading-tight">{c.label}</p>
-                <div className={`p-1.5 sm:p-2.5 rounded-xl ${c.color} shrink-0`}><c.icon className="size-3.5 sm:size-4" /></div>
-              </div>
-              <div className="mt-auto pt-2">
-                 <p className="text-2xl sm:text-3xl font-bold text-slate-900">{c.value}</p>
-                 <p className="text-[10px] sm:text-xs text-slate-400 mt-1 truncate">{c.sub}</p>
-              </div>
+          <Card key={i} className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+            <CardContent className="p-4 flex items-center gap-4">
+               <c.icon className={`size-8 sm:size-10 ${c.color.replace('bg-', 'text-').replace('100 text-', '').replace('600', '500').replace('700', '500').replace('50 ', '')} transition-transform group-hover:scale-110`} />
+               <div>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{c.value}</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 font-medium">{c.label}</p>
+               </div>
             </CardContent>
           </Card>
         ))}

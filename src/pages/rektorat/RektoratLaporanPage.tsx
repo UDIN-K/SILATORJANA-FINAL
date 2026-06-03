@@ -36,7 +36,10 @@ export function RektoratLaporanPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h2 className="text-2xl font-bold text-slate-900">Laporan & Analisis</h2><p className="text-slate-500">Rekap kegiatan dan realisasi anggaran.</p></div>
+        <div className="space-y-1 sm:space-y-1.5">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Laporan & Analisis</h2>
+          <p className="text-slate-500 mt-1">Rekap kegiatan dan realisasi anggaran.</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

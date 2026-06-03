@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiListKegiatan } from '@/lib/api';
-import { Package, Clock, ShieldCheck, CheckCircle, Plus, FileText, Loader2 } from 'lucide-react';
+import { Package, Clock, ShieldCheck, CheckCircle, Plus, FileText, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { useNavigate, useOutletContext } from 'react-router-dom';
@@ -116,8 +116,8 @@ export function PengusulDashboard() {
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard Pengusul</h2>
           <p className="text-slate-500">Selamat datang kembali! Berikut ringkasan usulan Anda.</p>
         </div>
-        <Button onClick={() => navigate('/dashboard/pengusul/usulan/baru')} className="tour-pengusul-add bg-emerald-700 hover:bg-emerald-800">
-          <Plus className="size-4 mr-2" />
+        <Button onClick={() => navigate('/dashboard/pengusul/usulan/baru')} className="tour-pengusul-add bg-emerald-700 hover:bg-emerald-800 text-white shadow-md shadow-emerald-700/20 px-6 h-11 rounded-full transition-all font-bold group">
+          <Plus className="size-5 mr-2 group-hover:rotate-90 transition-transform" />
           Buat Usulan Baru
         </Button>
       </div>
@@ -127,58 +127,42 @@ export function PengusulDashboard() {
       ) : (
         <>
           <div className="tour-pengusul-stats grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <Card className="shadow-sm border-slate-200">
-              <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-                <div className="flex items-start sm:items-center justify-between pb-2 gap-1 sm:gap-2">
-                  <p className="text-[11px] sm:text-sm font-medium text-slate-600 leading-tight">Total</p>
-                  <div className="p-1 sm:p-2 rounded-xl bg-emerald-100 shrink-0">
-                    <Package className="size-3.5 sm:size-4 text-emerald-700" />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2 mt-auto">
-                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{counts.total}</h3>
+            <Card className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+              <CardContent className="p-4 flex items-center gap-4">
+                <Package className="size-8 sm:size-10 text-emerald-500 transition-transform group-hover:scale-110" />
+                <div>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{counts.total}</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 font-medium">Total</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm border-slate-200">
-              <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-                <div className="flex items-start sm:items-center justify-between pb-2 gap-1 sm:gap-2">
-                  <p className="text-[11px] sm:text-sm font-medium text-slate-600 leading-tight">Verifikasi</p>
-                  <div className="p-1 sm:p-2 rounded-xl bg-amber-100 shrink-0">
-                    <Clock className="size-3.5 sm:size-4 text-amber-600" />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2 mt-auto">
-                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{counts.menunggu}</h3>
+            <Card className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+              <CardContent className="p-4 flex items-center gap-4">
+                <Clock className="size-8 sm:size-10 text-amber-500 transition-transform group-hover:scale-110" />
+                <div>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{counts.menunggu}</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 font-medium">Verifikasi</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm border-slate-200">
-              <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-                <div className="flex items-start sm:items-center justify-between pb-2 gap-1 sm:gap-2">
-                  <p className="text-[11px] sm:text-sm font-medium text-slate-600 leading-tight">Berjalan</p>
-                  <div className="p-1 sm:p-2 rounded-xl bg-indigo-100 shrink-0">
-                    <ShieldCheck className="size-3.5 sm:size-4 text-indigo-600" />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2 mt-auto">
-                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{counts.berjalan}</h3>
+            <Card className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+              <CardContent className="p-4 flex items-center gap-4">
+                <ShieldCheck className="size-8 sm:size-10 text-indigo-500 transition-transform group-hover:scale-110" />
+                <div>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{counts.berjalan}</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 font-medium">Berjalan</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm border-slate-200">
-              <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-                <div className="flex items-start sm:items-center justify-between pb-2 gap-1 sm:gap-2">
-                  <p className="text-[11px] sm:text-sm font-medium text-slate-600 leading-tight">Selesai</p>
-                  <div className="p-1 sm:p-2 rounded-xl bg-emerald-100 shrink-0">
-                    <CheckCircle className="size-3.5 sm:size-4 text-emerald-600" />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2 mt-auto">
-                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{counts.selesai}</h3>
+            <Card className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+              <CardContent className="p-4 flex items-center gap-4">
+                <CheckCircle className="size-8 sm:size-10 text-emerald-500 transition-transform group-hover:scale-110" />
+                <div>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{counts.selesai}</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 font-medium">Selesai</p>
                 </div>
               </CardContent>
             </Card>
@@ -189,7 +173,7 @@ export function PengusulDashboard() {
             <Card className="shadow-sm border-rose-200 bg-rose-50/30">
               <CardHeader className="border-b border-rose-100 bg-rose-50/50">
                 <CardTitle className="text-base text-rose-800 flex items-center gap-2">
-                  ⚠️ Usulan Perlu Direvisi ({usulanList.filter((i: any) => i.status === 'revision_requested').length})
+                  <AlertTriangle className="size-5 shrink-0" /> Usulan Perlu Direvisi ({usulanList.filter((i: any) => i.status === 'revision_requested').length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -215,7 +199,7 @@ export function PengusulDashboard() {
             <Card className="shadow-sm border-emerald-200 bg-emerald-50/20">
               <CardHeader className="border-b border-emerald-100 bg-emerald-50/30">
                 <CardTitle className="text-base text-emerald-800 flex items-center gap-2">
-                  ✅ Terverifikasi – Siap Diteruskan ke PPK ({usulanList.filter((i: any) => i.status === 'verified' || i.status === 'diverifikasi').length})
+                  <CheckCircle2 className="size-5 shrink-0" /> Terverifikasi – Siap Diteruskan ke PPK ({usulanList.filter((i: any) => i.status === 'verified' || i.status === 'diverifikasi').length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -236,8 +220,8 @@ export function PengusulDashboard() {
             </Card>
           )}
 
-          <Card className="shadow-sm border-slate-200">
-            <CardHeader className="border-b border-slate-100 bg-slate-50/50">
+            <Card className="shadow-lg border-white/50 bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-white/50 bg-white/40">
               <CardTitle className="text-lg">Aktivitas Terakhir</CardTitle>
             </CardHeader>
             <CardContent className="p-0">

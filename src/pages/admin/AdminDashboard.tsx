@@ -92,26 +92,21 @@ export function AdminDashboard() {
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8 sm:pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 sm:pb-4 border-b border-slate-100/60">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-800">Dashboard Administrator</h2>
-          <p className="text-[14px] sm:text-[15px] font-medium text-slate-500 mt-1 sm:mt-2">Ringkasan aktivitas dan metrik sistem Si-LATORJANA.</p>
+        <div className="space-y-1 sm:space-y-1.5">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard Administrator</h2>
+          <p className="text-slate-500 mt-1">Ringkasan aktivitas dan metrik sistem Si-LATORJANA.</p>
         </div>
       </div>
 
       {/* Stats Pipeline */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {stats.map((stat, index) => (
-          <Card key={index} className="shadow-sm border-slate-200/60 rounded-2xl bg-white hover:shadow-md transition-all relative overflow-hidden group">
-             <div className={`absolute top-0 left-0 w-1.5 h-full ${stat.bg.replace('bg-', 'bg-').replace('100', '500')}`} />
-            <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-              <div className="flex items-start sm:items-center justify-between space-y-0 pb-2 gap-2">
-                <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-slate-500 leading-tight">{stat.label}</p>
-                <div className={`p-1.5 sm:p-2.5 rounded-xl ${stat.bg} border ${stat.bg.replace('bg-', 'border-').replace('100', '200/50')} shadow-sm transition-transform group-hover:scale-105 shrink-0`}>
-                  <stat.icon className={`size-3.5 sm:size-4.5 ${stat.color.replace('text-', 'text-').replace('600', '700')}`} />
-                </div>
-              </div>
-              <div className="flex items-baseline pt-2 sm:pt-3 mt-auto">
-                <h3 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-800">{stat.value}</h3>
+          <Card key={index} className="shadow-sm hover:shadow-md transition-shadow border-slate-200/60 rounded-2xl cursor-default group">
+            <CardContent className="p-4 flex items-center gap-4">
+              <stat.icon className={`size-8 sm:size-10 ${stat.color.replace('700', '500').replace('600', '500')} transition-transform group-hover:scale-110`} />
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{stat.value}</h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium">{stat.label.split(' / ')[0]}</p>
               </div>
             </CardContent>
           </Card>

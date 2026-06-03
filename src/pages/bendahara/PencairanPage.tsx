@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import { formatCurrency, formatDate } from '@/lib/helpers';
+import { StatusBadge } from '@/components/StatusBadge';
 
 export function PencairanPage() {
   const navigate = useNavigate();

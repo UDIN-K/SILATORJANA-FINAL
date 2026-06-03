@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="sidebarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b"/>
+      <stop offset="100%" stop-color="#022c22"/>
+    </linearGradient>
+    <radialGradient id="sideGlow" cx="50%" cy="20%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <pattern id="sideLines" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+      <!-- Diagonal lines -->
+      <line x1="0" y1="60" x2="60" y2="0" stroke="#10b981" stroke-width="0.3" stroke-opacity="0.04"/>
+      <!-- Intersection diamonds -->
+      <rect x="27" y="27" width="6" height="6" rx="1" fill="none" stroke="#10b981" stroke-width="0.3" stroke-opacity="0.05" transform="rotate(45 30 30)"/>
+    </pattern>
+    <pattern id="sideGrid" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+      <circle cx="15" cy="15" r="0.5" fill="#34d399" fill-opacity="0.08"/>
+    </pattern>
+  </defs>
+
+  <!-- Base gradient -->
+  <rect width="800" height="800" fill="url(#sidebarGrad)"/>
+  
+  <!-- Glow -->
+  <rect width="800" height="800" fill="url(#sideGlow)"/>
+  
+  <!-- Patterns -->
+  <rect width="800" height="800" fill="url(#sideLines)"/>
+  <rect width="800" height="800" fill="url(#sideGrid)"/>
+
+  <!-- Decorative vertical accent line -->
+  <line x1="780" y1="0" x2="780" y2="800" stroke="#10b981" stroke-width="1" stroke-opacity="0.06"/>
+  <line x1="785" y1="0" x2="785" y2="800" stroke="#10b981" stroke-width="0.5" stroke-opacity="0.03"/>
+
+  <!-- Top ornament (like a campus crest) -->
+  <g transform="translate(400, 100)" opacity="0.04">
+    <circle r="40" fill="none" stroke="#34d399" stroke-width="1.5"/>
+    <circle r="32" fill="none" stroke="#10b981" stroke-width="0.8"/>
+    <!-- Book shape -->
+    <path d="M-12,-8 L0,-2 L12,-8 L12,8 L0,14 L-12,8 Z" fill="none" stroke="#34d399" stroke-width="1.2"/>
+    <line x1="0" y1="-2" x2="0" y2="14" stroke="#34d399" stroke-width="0.8"/>
+  </g>
+
+  <!-- Bottom ornament (gear/settings) -->
+  <g transform="translate(400, 700)" opacity="0.03">
+    <circle r="25" fill="none" stroke="#10b981" stroke-width="1"/>
+    <circle r="10" fill="none" stroke="#10b981" stroke-width="1"/>
+    <!-- Gear teeth -->
+    <rect x="-3" y="-28" width="6" height="8" rx="1" fill="#10b981"/>
+    <rect x="-3" y="20" width="6" height="8" rx="1" fill="#10b981"/>
+    <rect x="-28" y="-3" width="8" height="6" rx="1" fill="#10b981"/>
+    <rect x="20" y="-3" width="8" height="6" rx="1" fill="#10b981"/>
+    <rect x="15" y="-22" width="6" height="8" rx="1" fill="#10b981" transform="rotate(45 18 -18)"/>
+    <rect x="-21" y="14" width="6" height="8" rx="1" fill="#10b981" transform="rotate(45 -18 18)"/>
+    <rect x="14" y="15" width="6" height="8" rx="1" fill="#10b981" transform="rotate(-45 17 19)"/>
+    <rect x="-20" y="-23" width="6" height="8" rx="1" fill="#10b981" transform="rotate(-45 -17 -19)"/>
+  </g>
+
+  <!-- Scattered small circles for depth -->
+  <circle cx="200" cy="300" r="60" fill="none" stroke="#10b981" stroke-width="0.3" stroke-opacity="0.04"/>
+  <circle cx="600" cy="500" r="80" fill="none" stroke="#34d399" stroke-width="0.3" stroke-opacity="0.03"/>
+</svg>

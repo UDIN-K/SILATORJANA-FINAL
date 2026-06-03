@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { apiCreateKegiatan, apiGetKegiatan, apiGetUser, apiListUsers, apiUpdateKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check, X, AlertCircle, Loader2, User, FileText, DollarSign, Target, Info } from 'lucide-react';
+import { ArrowLeft, Check, X, AlertCircle, Loader2, User, FileText, DollarSign, Target, Info, AlertTriangle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
@@ -220,8 +220,9 @@ export function BendaharaDetailPage() {
                     <InfoRow label="Jurusan" value={data.nama_jurusan} />
                     <InfoRow label="Tanggal Pengajuan" value={fmt(data.created_at)} />
                     <div className="col-span-2">
-                      <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded border border-amber-200">
-                        ⚠️ Detail data user lengkap tidak ditemukan di database. Menampilkan data yang tersedia dari kegiatan.
+                      <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200/50 flex items-start gap-2">
+                        <AlertTriangle className="size-4 shrink-0 mt-0.5" /> 
+                        <span>Detail data user lengkap tidak ditemukan di database. Menampilkan data yang tersedia dari kegiatan.</span>
                       </p>
                     </div>
                   </div>
