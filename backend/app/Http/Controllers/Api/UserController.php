@@ -55,6 +55,7 @@ class UserController extends Controller
             'role' => 'required|string|in:admin,pengusul,verifikator,ppk,wadir2,bendahara,rektorat',
             'jurusan' => 'nullable|string',
             'nip' => 'nullable|string',
+            'verifikator_unit' => 'nullable|string|in:wadir1,wadir2,wadir3,wadir4',
         ]);
 
         $user = User::create($validated);
@@ -79,6 +80,7 @@ class UserController extends Controller
             'role' => 'sometimes|string|in:admin,pengusul,verifikator,ppk,wadir2,bendahara,rektorat',
             'jurusan' => 'nullable|string',
             'nip' => 'nullable|string',
+            'verifikator_unit' => 'nullable|string|in:wadir1,wadir2,wadir3,wadir4',
         ]);
 
         $user->update($validated);

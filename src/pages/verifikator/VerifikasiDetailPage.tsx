@@ -44,14 +44,10 @@ export function VerifikasiDetailPage() {
         // Fetch Pengusul info
         if (kegiatan.pengusul_id) {
           try {
-            const userList = await apiListUsers();
-            if (userList.documents.length > 0) setPengusulData(userList.documents[0]);
-          } catch {
-            // user_id from Laravel
-            try {
-              const userDoc = await apiGetUser(String(kegiatan.pengusul_id));
-              setPengusulData(userDoc);
-            } catch { /* skip */ }
+            const userDoc = await apiGetUser(kegiatan.pengusul_id);
+            setPengusulData(userDoc);
+          } catch (err) {
+            console.error('Error fetching proposer details', err);
           }
         }
 

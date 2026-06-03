@@ -18,6 +18,7 @@ class User extends Authenticatable
         'role',
         'jurusan',
         'nip',
+        'verifikator_unit',
     ];
 
     protected $hidden = [

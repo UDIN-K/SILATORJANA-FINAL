@@ -24,6 +24,10 @@ class KegiatanController extends Controller
         $user = $request->user();
         if ($user && $user->role === 'pengusul') {
             $query->where('pengusul_id', $user->id);
+        } elseif ($user && $user->role === 'verifikator') {
+            if (!empty($user->verifikator_unit)) {
+                $query->where('verifikator_target', $user->verifikator_unit);
+            }
         } elseif ($request->has('pengusul_id')) {
             $query->where('pengusul_id', $request->pengusul_id);
         }

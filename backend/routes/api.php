@@ -41,10 +41,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('kegiatan/{kegiatan}', [KegiatanController::class, 'update']);
     });
 
-    // Users — admin only
+    // Users — admin only (except show)
     Route::middleware('role:admin')->group(function () {
-        Route::apiResource('users', UserController::class);
+        Route::apiResource('users', UserController::class)->except(['show']);
     });
+
+    // Users show — all authenticated users can view a user profile
+    Route::get('users/{user}', [UserController::class, 'show']);
 
     // IKU Master — admin only
     Route::middleware('role:admin')->group(function () {
