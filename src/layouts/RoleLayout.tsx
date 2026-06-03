@@ -64,7 +64,10 @@ const ROLE_LABELS: Record<string, string> = {
   pengusul: 'Pengusul',
   verifikator: 'Verifikator',
   ppk: 'PPK',
+  wadir1: 'Wadir I',
   wadir2: 'Wadir II',
+  wadir3: 'Wadir III',
+  wadir4: 'Wadir IV',
   bendahara: 'Bendahara',
   rektorat: 'Rektorat',
 };
@@ -273,7 +276,7 @@ export function RoleLayout() {
             {!isCollapsed && (
               <div className="flex flex-col items-center animate-in fade-in duration-300">
                 <span className="text-emerald-50 font-bold tracking-wide leading-tight group-hover:text-white transition-colors">Si-LATORJANA</span>
-                <span className="text-emerald-400 font-bold text-[9px] tracking-[0.2em] uppercase">{ROLE_LABELS[role] || role}</span>
+                <span className="text-emerald-400 font-bold text-[9px] tracking-[0.2em] uppercase">{ROLE_LABELS[actualRole] || actualRole}</span>
               </div>
             )}
           </div>
@@ -396,7 +399,7 @@ export function RoleLayout() {
             </div>
             
             <h1 className="hidden md:block tour-header-title text-[15px] sm:text-[17px] font-bold text-slate-800 tracking-tight bg-slate-100/80 px-3 py-1.5 rounded-lg border border-slate-200/50 truncate">
-              Panel {ROLE_LABELS[role] || role}
+              Panel {ROLE_LABELS[actualRole] || actualRole}
             </h1>
           </div>
           
@@ -425,7 +428,7 @@ export function RoleLayout() {
                 </div>
                 <div className="hidden sm:block text-left pr-2">
                   <p className="text-[13px] font-bold text-slate-800 leading-tight">{userName}</p>
-                  <p className="text-[11px] font-semibold text-slate-500 tracking-wider uppercase mt-0.5">{ROLE_LABELS[role] || role}</p>
+                  <p className="text-[11px] font-semibold text-slate-500 tracking-wider uppercase mt-0.5">{ROLE_LABELS[actualRole] || actualRole}</p>
                 </div>
               </button>
 
@@ -500,7 +503,7 @@ export function RoleLayout() {
                 </div>
                 <div>
                   <h4 className="text-lg font-semibold text-slate-900">{userName}</h4>
-                  <p className="text-sm font-medium text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full inline-block mt-1">{ROLE_LABELS[role] || role}</p>
+                  <p className="text-sm font-medium text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full inline-block mt-1">{ROLE_LABELS[actualRole] || actualRole}</p>
                 </div>
               </div>
               <div className="space-y-3 pt-2">

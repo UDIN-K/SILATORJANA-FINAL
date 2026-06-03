@@ -27,6 +27,25 @@ function formatDateIndo(dateStr: string): string {
     return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 }
 
+function parseIndikatorKinerja(rawValue: string | undefined | null): any[] {
+    if (!rawValue) return [];
+    try {
+        const parsed = JSON.parse(rawValue);
+        if (Array.isArray(parsed)) {
+            return parsed.map((item: any) => ({
+                bulan: item.bulan || '',
+                indikator: item.indikator || '',
+                target: item.target !== undefined && item.target !== null ? Number(item.target) : null,
+            }));
+        }
+    } catch {
+        if (rawValue && rawValue.trim()) {
+            return [{ bulan: '', indikator: rawValue, target: null }];
+        }
+    }
+    return [];
+}
+
 export function PrintProposalPage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -295,6 +314,43 @@ export function PrintProposalPage() {
                                         <div className="sub-title">E. Tahapan Pelaksanaan</div>
                                         <div className="text-content">
                                             <p>{kak.tahapan_pelaksanaan}</p>
+                                        </div>
+                                    </>
+                                )}
+                                {kak.indikator_kinerja && (
+                                    <>
+                                        <div className="sub-title">F. Indikator Kinerja</div>
+                                        <div className="text-content">
+                                            {(() => {
+                                                const indicators = parseIndikatorKinerja(kak.indikator_kinerja);
+                                                if (indicators.length === 0) return <p>-</p>;
+                                                const isTabular = indicators.some(i => i.bulan || i.target);
+                                                if (!isTabular) {
+                                                    return <p style={{ whiteSpace: 'pre-wrap' }}>{indicators[0]?.indikator || '-'}</p>;
+                                                }
+                                                return (
+                                                    <table className="data-table" style={{ width: '100%', marginTop: '8px', marginBottom: '8px', tableLayout: 'auto' }}>
+                                                        <thead>
+                                                            <tr>
+                                                                <th style={{ width: '40px', textAlign: 'center' }}>No</th>
+                                                                <th style={{ width: '120px' }}>Bulan</th>
+                                                                <th>Indikator Keberhasilan</th>
+                                                                <th style={{ width: '100px', textAlign: 'center' }}>Target Kumulatif</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {indicators.map((item: any, idx: number) => (
+                                                                <tr key={idx}>
+                                                                    <td className="text-center">{idx + 1}</td>
+                                                                    <td>{item.bulan || '-'}</td>
+                                                                    <td>{item.indikator || '-'}</td>
+                                                                    <td className="text-center" style={{ fontWeight: 'bold' }}>{item.target ? `${item.target}%` : '-'}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                );
+                                            })()}
                                         </div>
                                     </>
                                 )}

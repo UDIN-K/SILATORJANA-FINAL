@@ -11,13 +11,15 @@ import { StatusBadge } from '@/components/StatusBadge';
 const ROLE_COLORS: Record<string, string> = {
   admin: 'bg-purple-100 text-purple-700', pengusul: 'bg-blue-100 text-blue-700',
   verifikator: 'bg-emerald-100 text-emerald-700', ppk: 'bg-amber-100 text-amber-700',
-  wadir2: 'bg-indigo-100 text-indigo-700', bendahara: 'bg-rose-100 text-rose-700',
-  rektorat: 'bg-cyan-100 text-cyan-700',
+  wadir1: 'bg-indigo-100 text-indigo-700', wadir2: 'bg-indigo-100 text-indigo-700',
+  wadir3: 'bg-indigo-100 text-indigo-700', wadir4: 'bg-indigo-100 text-indigo-700',
+  bendahara: 'bg-rose-100 text-rose-700', rektorat: 'bg-cyan-100 text-cyan-700',
 };
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrator', pengusul: 'Pengusul', verifikator: 'Verifikator',
-  ppk: 'PPK', wadir2: 'Wakil Direktur II', bendahara: 'Bendahara', rektorat: 'Rektorat',
+  ppk: 'PPK', wadir1: 'Wakil Direktur I', wadir2: 'Wakil Direktur II', wadir3: 'Wakil Direktur III', wadir4: 'Wakil Direktur IV',
+  bendahara: 'Bendahara', rektorat: 'Rektorat',
 };
 
 export function UserDetailPage() {

@@ -51,11 +51,16 @@ export function ArchivePage({ role, detailPath }: ArchivePageProps) {
     return acc;
   }, {});
 
+  const actualRole = getUserRole() || role;
   const ROLE_LABELS: Record<string, string> = {
     verifikator: 'Verifikator',
     ppk: 'PPK',
+    wadir1: 'Wadir I',
     wadir2: 'Wadir II',
+    wadir3: 'Wadir III',
+    wadir4: 'Wadir IV',
   };
+  const currentRoleLabel = ROLE_LABELS[actualRole] || ROLE_LABELS[role] || role;
 
   return (
     <div className="space-y-6">
@@ -63,7 +68,7 @@ export function ArchivePage({ role, detailPath }: ArchivePageProps) {
         <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
           <Archive className="size-6 text-slate-600" /> Arsip Proposal
         </h2>
-        <p className="text-slate-500">Proposal yang sudah selesai diproses atau ditolak — {ROLE_LABELS[role]}.</p>
+        <p className="text-slate-500">Proposal yang sudah selesai diproses atau ditolak — {currentRoleLabel}.</p>
       </div>
 
       {/* Stats */}

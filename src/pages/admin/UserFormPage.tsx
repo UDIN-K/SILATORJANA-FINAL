@@ -67,7 +67,15 @@ export function UserFormPage() {
               <Select value={form.role} onValueChange={v => setForm({...form, role: v})}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {['pengusul','verifikator','ppk','wadir2','bendahara','rektorat','admin'].map(r => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                  {['pengusul','verifikator','ppk','wadir1','wadir2','wadir3','wadir4','bendahara','rektorat','admin'].map(r => (
+                    <SelectItem key={r} value={r}>
+                      {r === 'admin' 
+                        ? 'Admin' 
+                        : r.startsWith('wadir') 
+                          ? `Wadir ${r.slice(5) === '1' ? 'I' : r.slice(5) === '2' ? 'II' : r.slice(5) === '3' ? 'III' : 'IV'}` 
+                          : r.charAt(0).toUpperCase() + r.slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

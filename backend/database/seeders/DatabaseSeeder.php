@@ -132,6 +132,33 @@ class DatabaseSeeder extends Seeder
             'nip' => '196505051990031001',
         ]);
 
+        // Wadir 1
+        User::create([
+            'nama' => 'Dr. Ir. H. Akhmad Syakhroni, M.T.',
+            'email' => 'wadir1@pnj.ac.id',
+            'password' => $password,
+            'role' => 'wadir1',
+            'nip' => '196805051993031001',
+        ]);
+
+        // Wadir 3
+        User::create([
+            'nama' => 'Ir. H. Iwan Supriyadi, M.T.',
+            'email' => 'wadir3@pnj.ac.id',
+            'password' => $password,
+            'role' => 'wadir3',
+            'nip' => '196705051992031001',
+        ]);
+
+        // Wadir 4
+        User::create([
+            'nama' => 'Dr. Ir. H. M. Yusuf, M.T.',
+            'email' => 'wadir4@pnj.ac.id',
+            'password' => $password,
+            'role' => 'wadir4',
+            'nip' => '196905051994031001',
+        ]);
+
         // Bendahara
         $bendahara = User::create([
             'nama' => 'Ratna Sari, S.E., M.Ak.',
@@ -330,15 +357,21 @@ class DatabaseSeeder extends Seeder
         $this->command->info('✅ Database seeded successfully!');
         $this->command->info('');
         $this->command->info('📋 Login credentials (password: 12345678):');
-        $this->command->info('   Admin:       admin@pnj.ac.id');
-        $this->command->info('   Pengusul 1:  budi@pnj.ac.id');
-        $this->command->info('   Pengusul 2:  siti@pnj.ac.id');
-        $this->command->info('   Pengusul 3:  fajar@pnj.ac.id');
-        $this->command->info('   Verifikator: lestari@pnj.ac.id');
-        $this->command->info('   PPK:         hendri@pnj.ac.id');
-        $this->command->info('   Wadir 2:     susanto@pnj.ac.id');
-        $this->command->info('   Bendahara:   ratna@pnj.ac.id');
-        $this->command->info('   Rektorat:    agus@pnj.ac.id');
+        $this->command->info('   Admin:            admin@pnj.ac.id');
+        $this->command->info('   Pengusul 1:       budi@pnj.ac.id');
+        $this->command->info('   Pengusul 2:       siti@pnj.ac.id');
+        $this->command->info('   Pengusul 3:       fajar@pnj.ac.id');
+        $this->command->info('   Verif Wadir I:    verifikator.wadir1@si-latorjana.com');
+        $this->command->info('   Verif Wadir II:   verifikator.wadir2@si-latorjana.com');
+        $this->command->info('   Verif Wadir III:  verifikator.wadir3@si-latorjana.com');
+        $this->command->info('   Verif Wadir IV:   verifikator.wadir4@si-latorjana.com');
+        $this->command->info('   PPK:              hendri@pnj.ac.id');
+        $this->command->info('   Wadir I:          wadir1@pnj.ac.id');
+        $this->command->info('   Wadir II:         susanto@pnj.ac.id');
+        $this->command->info('   Wadir III:        wadir3@pnj.ac.id');
+        $this->command->info('   Wadir IV:         wadir4@pnj.ac.id');
+        $this->command->info('   Bendahara:        ratna@pnj.ac.id');
+        $this->command->info('   Rektorat:         agus@pnj.ac.id');
         $this->command->info('');
         $this->command->info("📊 Created 8 kegiatan with various statuses.");
     }

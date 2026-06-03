@@ -30,8 +30,16 @@ export function UserManagementPage() {
   users.forEach(u => { roleCounts[u.role] = (roleCounts[u.role] || 0) + 1; });
 
   const roleColors: Record<string, string> = {
-    admin: 'bg-purple-100 text-purple-700', pengusul: 'bg-blue-100 text-blue-700', verifikator: 'bg-emerald-100 text-emerald-700',
-    ppk: 'bg-amber-100 text-amber-700', wadir2: 'bg-indigo-100 text-indigo-700', bendahara: 'bg-rose-100 text-rose-700', rektorat: 'bg-cyan-100 text-cyan-700',
+    admin: 'bg-purple-100 text-purple-700', 
+    pengusul: 'bg-blue-100 text-blue-700', 
+    verifikator: 'bg-emerald-100 text-emerald-700',
+    ppk: 'bg-amber-100 text-amber-700', 
+    wadir1: 'bg-indigo-100 text-indigo-700',
+    wadir2: 'bg-indigo-100 text-indigo-700',
+    wadir3: 'bg-indigo-100 text-indigo-700',
+    wadir4: 'bg-indigo-100 text-indigo-700',
+    bendahara: 'bg-rose-100 text-rose-700', 
+    rektorat: 'bg-cyan-100 text-cyan-700',
   };
 
   const handleDelete = async (userId: string) => {
@@ -66,8 +74,10 @@ export function UserManagementPage() {
             <div className="relative flex-1"><Search className="absolute left-3 top-2.5 size-4 text-slate-400" /><Input placeholder="Cari nama/email..." className="pl-9 bg-white" value={search} onChange={e => setSearch(e.target.value)} /></div>
             <div className="flex gap-2 flex-wrap">
               <Button size="sm" variant={roleFilter === '' ? 'default' : 'outline'} onClick={() => setRoleFilter('')}>Semua</Button>
-              {['pengusul','verifikator','ppk','wadir2','bendahara','rektorat','admin'].map(r => (
-                <Button key={r} size="sm" variant={roleFilter === r ? 'default' : 'outline'} onClick={() => setRoleFilter(r)} className="capitalize">{r}</Button>
+              {['pengusul','verifikator','ppk','wadir1','wadir2','wadir3','wadir4','bendahara','rektorat','admin'].map(r => (
+                <Button key={r} size="sm" variant={roleFilter === r ? 'default' : 'outline'} onClick={() => setRoleFilter(r)}>
+                  {r.startsWith('wadir') ? `Wadir ${r.slice(5) === '1' ? 'I' : r.slice(5) === '2' ? 'II' : r.slice(5) === '3' ? 'III' : 'IV'}` : r.charAt(0).toUpperCase() + r.slice(1)}
+                </Button>
               ))}
             </div>
           </div>
@@ -82,7 +92,13 @@ export function UserManagementPage() {
                 <TableRow key={u.id} className="hover:bg-slate-50/50">
                   <TableCell className="px-6 font-medium">{u.nama}</TableCell>
                   <TableCell className="px-6 text-slate-600">{u.email}</TableCell>
-                  <TableCell className="px-6"><Badge className={`${roleColors[u.role] || 'bg-slate-100 text-slate-700'} capitalize`}>{u.role}</Badge></TableCell>
+                  <TableCell className="px-6">
+                    <Badge className={`${roleColors[u.role] || 'bg-slate-100 text-slate-700'}`}>
+                      {u.role.startsWith('wadir') 
+                        ? `Wadir ${u.role.slice(5) === '1' ? 'I' : u.role.slice(5) === '2' ? 'II' : u.role.slice(5) === '3' ? 'III' : 'IV'}` 
+                        : u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="px-6 text-right space-x-2">
                     <Button variant="outline" size="icon" className="h-8 w-8 text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={() => navigate(`/dashboard/admin/users/${u.id}`)}><Eye className="size-4" /></Button>
                     <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => navigate(`/dashboard/admin/users/edit/${u.id}`)}><Edit className="size-4" /></Button>

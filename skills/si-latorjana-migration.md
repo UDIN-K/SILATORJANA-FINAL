@@ -651,3 +651,14 @@ Pada tanggal 3 Juni 2026, fungsionalitas workflow usulan kegiatan disinkronisasi
   - **LPJ Disetujui**: Mengubah status menjadi `lpj_approved`.
   - **Minta Revisi LPJ**: Mengubah status menjadi `lpj_revision` (pengusul akan melihat catatan revisi dari bendahara di halaman pengisian LPJ).
 
+#### E. Penyelarasan Kesenjangan Fitur & Wadir Roles (Batch 1 & 2)
+- **Visualisasi KAK Indikator**: Ditambahkan fungsi parsing `parseIndikatorKinerja` untuk merender data JSON `indikator_kinerja` dalam bentuk tabel terstruktur di halaman detail (`DetailUsulanPage.tsx`), halaman review approval (`ReviewApprovalPage.tsx`), dan halaman cetak PDF (`PrintProposalPage.tsx`).
+- **Dukungan Multi-Wadir (Wadir I - IV)**:
+  - Backend `UserController.php` diperbarui untuk memvalidasi pendaftaran semua sub-role Wadir (`wadir1`, `wadir2`, `wadir3`, `wadir4`).
+  - Frontend `UserFormPage.tsx` dan `UserManagementPage.tsx` diperbarui untuk mendukung pembuatan, pengelolaan, dan filter status berdasarkan sub-role Wadir tersebut.
+  - Halaman `UserDetailPage.tsx` diperbarui untuk menampilkan label dan warna badge yang tepat bagi seluruh sub-role Wadir.
+  - Halaman `ArchivePage.tsx` diperbarui untuk melabeli judul arsip secara dinamis sesuai role Wadir yang sedang aktif.
+  - Endpoint index kegiatan di `KegiatanController.php` diperbarui sehingga setiap role Wadir hanya melihat dan menyetujui kegiatan yang ditujukan untuk unit mereka (`verifikator_target`), dengan Wadir II sebagai unit default.
+  - Database seeder (`DatabaseSeeder.php`) diperbarui untuk menyertakan user test untuk Wadir I, III, dan IV, serta memperbarui output credentials.
+
+

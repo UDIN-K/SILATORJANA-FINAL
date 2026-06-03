@@ -30,6 +30,25 @@ function calcRabTotal(r: any): number {
   return parseFloat(r.total) || 0;
 }
 
+function parseIndikatorKinerja(rawValue: string | undefined | null): any[] {
+  if (!rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (Array.isArray(parsed)) {
+      return parsed.map((item: any) => ({
+        bulan: item.bulan || '',
+        indikator: item.indikator || '',
+        target: item.target !== undefined && item.target !== null ? Number(item.target) : null,
+      }));
+    }
+  } catch {
+    if (rawValue && rawValue.trim()) {
+      return [{ bulan: '', indikator: rawValue, target: null }];
+    }
+  }
+  return [];
+}
+
 export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPageProps) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -80,7 +99,16 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
   if (!kegiatan) return <div className="py-12 text-center text-slate-500">Tidak ditemukan.</div>;
 
   const totalRab = rabList.reduce((s, r) => s + calcRabTotal(r), 0);
-  const roleLabel = role === 'ppk' ? 'PPK' : 'Wakil Direktur II';
+  
+  const actualRole = getUserRole() || role;
+  const roleLabelMap: Record<string, string> = {
+    ppk: 'PPK',
+    wadir1: 'Wakil Direktur I',
+    wadir2: 'Wakil Direktur II',
+    wadir3: 'Wakil Direktur III',
+    wadir4: 'Wakil Direktur IV',
+  };
+  const roleLabel = roleLabelMap[actualRole] || roleLabelMap[role] || 'Reviewer';
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
@@ -153,7 +181,43 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
                 {kak.strategi_pencapaian && <KakField label="Strategi Pencapaian" value={kak.strategi_pencapaian} />}
                 {kak.metode_pelaksanaan && <KakField label="Metode Pelaksanaan" value={kak.metode_pelaksanaan} />}
                 {kak.tahapan_pelaksanaan && <KakField label="Tahapan Pelaksanaan" value={kak.tahapan_pelaksanaan} />}
-                {kak.indikator_kinerja && <KakField label="Indikator Kinerja" value={kak.indikator_kinerja} />}
+                {kak.indikator_kinerja && (
+                  <div className="border-b border-slate-100 pb-4">
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Tahapan Indikator Kinerja</p>
+                    {(() => {
+                      const indicators = parseIndikatorKinerja(kak.indikator_kinerja);
+                      if (indicators.length === 0) return <p className="text-sm text-slate-500">-</p>;
+                      const isTabular = indicators.some(i => i.bulan || i.target);
+                      if (!isTabular) {
+                        return <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">{indicators[0]?.indikator || '-'}</p>;
+                      }
+                      return (
+                        <div className="border border-slate-200/80 rounded-xl overflow-hidden shadow-sm max-w-2xl mt-1.5">
+                          <table className="w-full text-xs text-left">
+                            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+                              <tr>
+                                <th className="px-3 py-2 w-12 text-center">No</th>
+                                <th className="px-3 py-2 w-32">Bulan</th>
+                                <th className="px-3 py-2">Indikator Keberhasilan</th>
+                                <th className="px-3 py-2 w-28 text-center">Target Kumulatif</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-700">
+                              {indicators.map((item: any, idx: number) => (
+                                <tr key={idx} className="bg-white hover:bg-slate-50/50 transition-colors">
+                                  <td className="px-3 py-2 text-center font-medium text-slate-500">{idx + 1}</td>
+                                  <td className="px-3 py-2 font-medium text-slate-800 capitalize">{item.bulan || '-'}</td>
+                                  <td className="px-3 py-2 text-slate-600">{item.indikator || '-'}</td>
+                                  <td className="px-3 py-2 text-center font-semibold text-emerald-600 bg-emerald-50/30">{item.target ? `${item.target}%` : '-'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
                 {(kak.kurun_waktu_mulai || kak.kurun_waktu_selesai) && (
                   <KakField label="Kurun Waktu" value={`${formatDateLong(kak.kurun_waktu_mulai)} — ${formatDateLong(kak.kurun_waktu_selesai)}`} />
                 )}

@@ -48,6 +48,12 @@ class KegiatanController extends Controller
                     $query->where('status', 'pending_ppk');
                 }
             } elseif (str_starts_with($user->role, 'wadir')) {
+                $query->where(function($q) use ($user) {
+                    $q->where('verifikator_target', $user->role);
+                    if ($user->role === 'wadir2') {
+                        $q->orWhereNull('verifikator_target');
+                    }
+                });
                 if ($isArchive) {
                     $query->whereIn('status', ['approved_wadir', 'accepted_funds', 'funds_disbursed', 'lpj_submitted', 'lpj_approved', 'lpj_rejected', 'lpj_done', 'completed', 'rejected']);
                 } else {

@@ -11,6 +11,25 @@ import { ArrowLeft, FileText, Clock, MapPin, User, Loader2, Printer, CheckCircle
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
+function parseIndikatorKinerja(rawValue: string | undefined | null): any[] {
+  if (!rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (Array.isArray(parsed)) {
+      return parsed.map((item: any) => ({
+        bulan: item.bulan || '',
+        indikator: item.indikator || '',
+        target: item.target !== undefined && item.target !== null ? Number(item.target) : null,
+      }));
+    }
+  } catch {
+    if (rawValue.trim()) {
+      return [{ bulan: '', indikator: rawValue, target: null }];
+    }
+  }
+  return [];
+}
+
 export function DetailUsulanPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -200,6 +219,35 @@ export function DetailUsulanPage() {
             {kak.penerima_manfaat && <div><p className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-1.5 flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Penerima Manfaat</p><p className="text-[15px] leading-relaxed text-slate-700 pl-3 border-l-[3px] border-emerald-100">{kak.penerima_manfaat}</p></div>}
             {kak.strategi_pencapaian && <div><p className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-1.5 flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Strategi Pencapaian</p><p className="text-[15px] leading-relaxed text-slate-700 pl-3 border-l-[3px] border-emerald-100">{kak.strategi_pencapaian}</p></div>}
             {kak.metode_pelaksanaan && <div><p className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-1.5 flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Metode Pelaksanaan</p><p className="text-[15px] leading-relaxed text-slate-700 pl-3 border-l-[3px] border-emerald-100">{kak.metode_pelaksanaan}</p></div>}
+            {kak.indikator_kinerja && (
+              <div className="mt-6 pt-6 border-t border-slate-100">
+                <p className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Tahapan Indikator Kinerja
+                </p>
+                <div className="border border-slate-200/80 rounded-xl overflow-hidden shadow-sm">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-slate-50/50">
+                        <TableHead className="w-12 text-center text-xs font-bold uppercase tracking-wider text-slate-500">No</TableHead>
+                        <TableHead className="w-32 text-xs font-bold uppercase tracking-wider text-slate-500">Bulan</TableHead>
+                        <TableHead className="text-xs font-bold uppercase tracking-wider text-slate-500">Indikator Keberhasilan</TableHead>
+                        <TableHead className="w-28 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Target Kumulatif</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {parseIndikatorKinerja(kak.indikator_kinerja).map((item: any, idx: number) => (
+                        <TableRow key={idx} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100/50">
+                          <TableCell className="text-center font-medium text-slate-500">{idx + 1}</TableCell>
+                          <TableCell className="font-medium text-slate-700 capitalize">{item.bulan || '-'}</TableCell>
+                          <TableCell className="text-slate-600">{item.indikator || '-'}</TableCell>
+                          <TableCell className="text-center font-semibold text-emerald-600 bg-emerald-50/30">{item.target ? `${item.target}%` : '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
