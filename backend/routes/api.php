@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\KegiatanController;
+use App\Http\Controllers\Api\LpjController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\IkuMasterController;
 use Illuminate\Http\Request;
@@ -109,6 +110,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // LPJ
+    Route::get('/lpj/detail/{kegiatan_id}', [LpjController::class, 'detail']);
+    Route::post('/lpj/submit', [LpjController::class, 'submit']);
+    Route::delete('/lpj/file/{file_id}', [LpjController::class, 'deleteFile']);
+
+    // Legacy LPJ (simple create/get)
     Route::post('/lpj', function (Request $request) {
         $validated = $request->validate([
             'kegiatan_id' => 'required|integer',

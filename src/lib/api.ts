@@ -203,6 +203,27 @@ export async function apiGetStats() {
 // ============================================================
 // LPJ API
 // ============================================================
+
+/** Get LPJ detail: RAB grouped by kategori with existing realisasi and files */
+export async function apiGetLpjDetail(kegiatanId: string | number) {
+  return apiFetch(`/lpj/detail/${kegiatanId}`);
+}
+
+/** Submit LPJ with realisasi data and file uploads via FormData */
+export async function apiSubmitLpj(formData: FormData) {
+  return apiFetch('/lpj/submit', {
+    method: 'POST',
+    body: formData,
+    // Don't set Content-Type — browser sets it automatically with boundary for FormData
+  });
+}
+
+/** Delete an LPJ file */
+export async function apiDeleteLpjFile(fileId: string | number) {
+  return apiFetch(`/lpj/file/${fileId}`, { method: 'DELETE' });
+}
+
+/** Legacy: simple create LPJ record */
 export async function apiCreateLpj(data: any) {
   return apiFetch('/lpj', {
     method: 'POST',
@@ -210,6 +231,7 @@ export async function apiCreateLpj(data: any) {
   });
 }
 
+/** Legacy: get LPJ record */
 export async function apiGetLpj(kegiatanId: string | number) {
   return apiFetch(`/lpj/${kegiatanId}`);
 }
