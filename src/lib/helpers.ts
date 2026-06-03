@@ -182,7 +182,7 @@ export function getUserName(): string {
 // ============================================================
 // Database Helpers (via Laravel API)
 // ============================================================
-import { apiGetKegiatan, apiListKegiatan } from './api';
+import { apiGetKegiatan, apiListKegiatan, apiListUsers } from './api';
 
 export async function fetchKegiatan(params: Record<string, string> = {}) {
   const res = await apiListKegiatan(params);
@@ -209,7 +209,6 @@ export async function fetchRAB(kegiatanId: string | number) {
 }
 
 export async function fetchUsers(params: Record<string, string> = {}) {
-  const { apiListUsers } = await import('./api');
   const res = await apiListUsers(params);
   return res.data || res;
 }
