@@ -31,6 +31,9 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
+      watch: {
+        ignored: ['**/backend/**'],
+      },
       proxy: {
         '/api': {
           target: 'http://localhost:8000',
