@@ -155,4 +155,27 @@ Model terpenting ada di tabel `kegiatan`, yang berelasi dengan tabel-tabel pendu
 - `lpjs` dan `lpj_files`: Bukti pertanggungjawaban kegiatan.
 
 ---
+
+## 8. Cross-Check & Validasi (Quality Control)
+
+**SANGAT PENTING**: Setelah melakukan perubahan masif pada ratusan baris kode (terutama di file TypeScript/React atau Controller PHP), biasakan selalu melakukan proses validasi mandiri untuk menghindari *Syntax Error* atau *Duplicate Identifiers* sebelum menyelesaikan tugas.
+
+### A. Validasi Frontend (React/TypeScript)
+Lakukan _build test_ untuk memastikan semua komponen lolos verifikasi TypeScript:
+```bash
+cd . # (Root Project)
+npm run build
+```
+*(Jika muncul "built in X.XXs" berarti aman. Jika ada error duplicate identifier atau syntax, segera perbaiki)*.
+
+### B. Validasi Backend (PHP/Laravel)
+Jika mengubah file spesifik di backend, cek syntax tanpa harus menjalankan aplikasinya penuh:
+```bash
+cd ./backend
+php -l app/Http/Controllers/Api/NamaController.php
+php -l app/Models/NamaModel.php
+```
+Atau jalankan unit test bawaan (jika ada): `php artisan test`.
+
+---
 *Gunakan `api.ts` di `/src/lib/api.ts` untuk memanggil seluruh API backend. Autentikasi disisipkan secara otomatis oleh interceptor ke dalam Authorization Header.*
