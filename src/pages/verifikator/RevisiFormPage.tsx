@@ -81,7 +81,7 @@ export function RevisiFormPage() {
   const activeCommentsEntries = Object.entries(comments).filter(([, v]) => (v as string).trim());
   const hasComments = activeCommentsEntries.length > 0;
 
-  const CommentBox = ({ field }: { field: string }) => {
+  const renderCommentBox = (field: string) => {
     const hasValue = !!comments[field];
     return (
       <div className={`mt-2 sm:mt-3 flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl transition-all ${hasValue ? 'bg-amber-50 border-amber-200 shadow-sm border' : 'bg-slate-50/50 border border-slate-200'}`}>
@@ -164,7 +164,7 @@ export function RevisiFormPage() {
                          <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest block mb-1">{item.label}</span>
                          <p className="font-semibold text-slate-800 text-sm sm:text-[15px]">{item.value}</p>
                       </div>
-                      <CommentBox field={item.field} />
+                      {renderCommentBox(item.field)}
                    </div>
                  ))}
               </div>
@@ -187,7 +187,7 @@ export function RevisiFormPage() {
                           <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest block mb-1.5 sm:mb-2">{key.replace(/_/g, ' ')}</span>
                           <p className="font-medium text-slate-700 text-[13px] sm:text-[14px] leading-relaxed max-sm:line-clamp-none line-clamp-6">{kak[key] || '-'}</p>
                        </div>
-                       <CommentBox field={`KAK - ${key.replace(/_/g, ' ')}`} />
+                       {renderCommentBox(`KAK - ${key.replace(/_/g, ' ')}`)}
                     </div>
                   ))}
                   {kak.kurun_waktu_mulai && (
@@ -196,7 +196,7 @@ export function RevisiFormPage() {
                          <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest block mb-1.5 sm:mb-2">Kurun Waktu Operasional</span>
                          <p className="font-semibold text-slate-800 text-sm sm:text-[15px]">{formatDate(kak.kurun_waktu_mulai)} — {formatDate(kak.kurun_waktu_selesai)}</p>
                       </div>
-                      <CommentBox field="KAK - Kurun Waktu Operasional" />
+                      {renderCommentBox("KAK - Kurun Waktu Operasional")}
                     </div>
                   )}
                 </div>
@@ -205,7 +205,7 @@ export function RevisiFormPage() {
                     <FileText className="size-10 mx-auto mb-4 text-slate-300" />
                     <p className="font-bold text-slate-500 mb-4">Data KAK Kosong.</p>
                     <div className="w-full max-w-md mx-auto px-4">
-                       <CommentBox field="KAK - Keseluruhan" />
+                       {renderCommentBox("KAK - Keseluruhan")}
                     </div>
                  </div>
               )}
@@ -234,7 +234,7 @@ export function RevisiFormPage() {
                             <span className="font-black text-teal-600 text-lg sm:text-xl">{iku.target_persen != null ? `${iku.target_persen}%` : '-'}</span>
                          </div>
                       </div>
-                      <CommentBox field={`IKU #${i + 1}`} />
+                      {renderCommentBox(`IKU #${i + 1}`)}
                     </div>
                   ))}
                 </div>
@@ -243,7 +243,7 @@ export function RevisiFormPage() {
                     <TrendingUp className="size-10 mx-auto mb-4 text-slate-300" />
                     <p className="font-bold text-slate-500 mb-4">Data IKU Kosong.</p>
                     <div className="w-full max-w-md mx-auto px-4">
-                       <CommentBox field="IKU - Keseluruhan" />
+                       {renderCommentBox("IKU - Keseluruhan")}
                     </div>
                  </div>
               )}
@@ -293,7 +293,7 @@ export function RevisiFormPage() {
                           </div>
                        </div>
                        
-                       <CommentBox field={`RAB Item #${i+1} (${r.uraian})`} />
+                       {renderCommentBox(`RAB Item #${i+1} (${r.uraian})`)}
                      </div>
                    ))}
                  </div>
@@ -302,7 +302,7 @@ export function RevisiFormPage() {
                     <DollarSign className="size-10 mx-auto mb-4 text-slate-300" />
                     <p className="font-bold text-slate-500 mb-4">Data RAB Kosong.</p>
                     <div className="w-full max-w-md mx-auto px-4">
-                       <CommentBox field="RAB - Keseluruhan" />
+                       {renderCommentBox("RAB - Keseluruhan")}
                     </div>
                  </div>
               )}
