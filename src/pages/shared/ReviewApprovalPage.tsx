@@ -76,18 +76,12 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
     })();
   }, [id]);
 
-  const handleAction = async (action: 'approve' | 'reject' | 'revisi') => {
+  const handleAction = async (action: 'approve') => {
     if (!id) return;
-    if ((action === 'reject' || action === 'revisi') && !catatan.trim()) {
-      alert('Catatan wajib diisi untuk tindakan Tolak / Minta Revisi.');
-      return;
-    }
     setIsSubmitting(true);
     try {
       let newStatus: string;
       if (action === 'approve') newStatus = approveStatus;
-      else if (action === 'revisi') newStatus = 'revision_requested';
-      else newStatus = 'rejected';
       const defaultCatatan = action === 'approve' ? `Disetujui oleh ${roleLabel}` : catatan;
       await apiUpdateKegiatan(id, { 
         status: newStatus,
@@ -313,22 +307,14 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
         </CardHeader>
         <CardContent className="p-6 space-y-4">
           <div>
-            <p className="text-sm font-medium text-slate-700 mb-1">Catatan <span className="text-slate-400 font-normal">(wajib untuk Tolak / Revisi)</span></p>
+            <p className="text-sm font-medium text-slate-700 mb-1">Catatan Tambahan <span className="text-slate-400 font-normal">(opsional)</span></p>
             <textarea className="w-full min-h-[80px] rounded-md border border-slate-200 px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-600 focus:outline-none"
-              value={catatan} onChange={e => setCatatan(e.target.value)} placeholder="Catatan keputusan Anda..." />
+              value={catatan} onChange={e => setCatatan(e.target.value)} placeholder="Catatan persetujuan (opsional)..." />
           </div>
           <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
             <Button variant="outline" onClick={() => navigate(backPath)}>Kembali</Button>
-            <Button variant="outline" onClick={() => handleAction('revisi')} disabled={isSubmitting}
-              className="text-amber-600 border-amber-300 hover:bg-amber-50 hover:text-amber-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="size-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-              Minta Revisi
-            </Button>
-            <Button variant="destructive" onClick={() => handleAction('reject')} disabled={isSubmitting}>
-              <XCircle className="size-4 mr-2" />Tolak
-            </Button>
             <Button onClick={() => handleAction('approve')} disabled={isSubmitting} className="bg-emerald-700 hover:bg-emerald-800">
-              <CheckCircle className="size-4 mr-2" />{isSubmitting ? 'Memproses...' : 'Setujui'}
+              <CheckCircle className="size-4 mr-2" />{isSubmitting ? 'Memproses...' : 'Setujui Pengajuan'}
             </Button>
           </div>
         </CardContent>
