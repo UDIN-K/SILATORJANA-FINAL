@@ -22,6 +22,7 @@ export const STATUS_MAP: Record<string, string> = {
   revisi: 'Perlu Revisi',
   diverifikasi: 'Diverifikasi Verifikator',
   verified: 'Terverifikasi',
+  waiting_surat_pengantar: 'Menunggu Surat Pengantar',
   pending_ppk: 'Menunggu PPK',
   approved_ppk: 'Disetujui PPK',
   approved_wadir: 'Menunggu LPJ (Disetujui Wadir)',
@@ -54,7 +55,7 @@ export function getStatusColor(status: string): StatusColor {
   if (['accepted_funds', 'funds_disbursed'].includes(s)) return 'indigo';
   if (['draft'].includes(s)) return 'slate';
   // Revision related uses amber (kuning)
-  if (['revision_requested', 'revisi', 'lpj_revision', 'pending_ppk', 'submitted'].includes(s)) return 'amber';
+  if (['revision_requested', 'revisi', 'lpj_revision', 'pending_ppk', 'submitted', 'waiting_surat_pengantar'].includes(s)) return 'amber';
   return 'amber';
 }
 
@@ -95,8 +96,8 @@ export function getProgressSteps(status: string): ProgressStep[] {
   } else if (s === 'revision_requested' || s === 'revisi') {
     // Bisa dari verifikator atau PPK — tampilkan di step verifikator sebagai revisi
     steps[0].status = 'success'; steps[1].status = 'revisi';
-  } else if (s === 'diverifikasi' || s === 'verified') {
-    // Verifikator sudah setujui, pengusul perlu teruskan ke PPK
+  } else if (s === 'diverifikasi' || s === 'verified' || s === 'waiting_surat_pengantar') {
+    // Verifikator sudah setujui, pengusul perlu upload surat pengantar
     steps[0].status = 'success'; steps[1].status = 'success'; steps[2].status = 'pending';
   } else if (s === 'pending_ppk') {
     // Diteruskan ke PPK, menunggu review

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiGetKegiatan, apiUpdateKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Loader2, Info, FileText, DollarSign, Target } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -117,7 +117,14 @@ export function ApprovalDetailPage() {
                    <h3 className="text-xl font-bold text-slate-900">{data.nama_kegiatan}</h3>
                    <p className="text-sm text-slate-500 mt-1">Status saat ini: {data.status}</p>
                    {data.tgl_kegiatan && <p className="text-sm text-slate-500 mt-1">Tanggal: {new Date(data.tgl_kegiatan).toLocaleDateString('id-ID')}</p>}
-                   {data.kode_mak && <p className="text-sm text-emerald-700 font-semibold mt-1">Kode MAK: {data.kode_mak}</p>}
+                   {data.kode_mak && (
+                     <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                       <div>
+                         <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Kode MAK (Mata Anggaran Kegiatan)</p>
+                         <p className="text-xl font-black text-emerald-800 tracking-tight">{data.kode_mak}</p>
+                       </div>
+                     </div>
+                   )}
                  </div>
                </CardContent>
              </Card>

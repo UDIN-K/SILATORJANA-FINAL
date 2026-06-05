@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Bell, Menu, User, Home, FileText, Settings, Database, Activity, Users, BarChart3, DollarSign, ClipboardList, X, AlertTriangle, Archive, Building2, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
+import { LogOut, Bell, Menu, User, Home, FileText, Settings, Database, Activity, Users, BarChart3, DollarSign, ClipboardList, X, AlertTriangle, Archive, Building2, ChevronLeft, ChevronRight, HelpCircle, CheckCircle } from 'lucide-react';
 import { getUserName, getUserRole } from '@/lib/helpers';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { CalendarWidget } from '@/components/CalendarWidget';

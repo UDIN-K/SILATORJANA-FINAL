@@ -205,8 +205,18 @@ export function DetailUsulanPage() {
           <div className="space-y-6">
             <InfoRow icon={Clock} label="Tanggal Pelaksanaan" value={formatDate(kegiatan.tanggal_kegiatan || kegiatan.tgl_kegiatan)} />
             <InfoRow icon={MapPin} label="Lokasi Pelaksanaan" value={kegiatan.tempat || '-'} />
-            {kegiatan.kode_mak && <InfoRow icon={FileText} label="Kode MAK" value={kegiatan.kode_mak} />}
           </div>
+          {kegiatan.kode_mak && (
+            <div className="md:col-span-2 mt-2 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div>
+                <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Kode MAK (Mata Anggaran Kegiatan)</p>
+                <p className="text-xl font-black text-emerald-800 tracking-tight">{kegiatan.kode_mak}</p>
+              </div>
+              <div className="hidden sm:flex items-center justify-center size-10 rounded-full bg-emerald-100">
+                <FileText className="size-5 text-emerald-600" />
+              </div>
+            </div>
+          )}
           {kegiatan.deskripsi && <div className="md:col-span-2 pt-4 border-t border-slate-100"><p className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-widest">Deskripsi / Latar Belakang</p><p className="text-sm leading-relaxed text-slate-700 bg-slate-50/50 p-4 rounded-xl border border-slate-100/50">{kegiatan.deskripsi || kegiatan.latar_belakang}</p></div>}
         </CardContent>
       </Card>
@@ -336,7 +346,7 @@ export function DetailUsulanPage() {
       )}
 
       {/* Aksi submit ke PPK untuk Pengusul setelah diverifikasi */}
-      {(kegiatan.status === 'diverifikasi' || kegiatan.status === 'verified') && (
+      {(kegiatan.status === 'diverifikasi' || kegiatan.status === 'verified' || kegiatan.status === 'waiting_surat_pengantar') && (
         <Card className="shadow-lg border-emerald-200/60 bg-white overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-700 to-emerald-800 p-6 text-white">
             <CardTitle className="text-lg flex items-center gap-2">

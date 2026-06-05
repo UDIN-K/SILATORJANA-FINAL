@@ -25,12 +25,9 @@ export function PpkDashboard() {
   // revision_requested = PPK telah meminta revisi, menunggu perbaikan pengusul
   const inRevision = items.filter(i => i.status === 'revision_requested');
   const approved = items.filter(i => ['approved_ppk', 'approved_wadir', 'accepted_funds', 'funds_disbursed', 'completed', 'lpj_done', 'lpj_approved'].includes(i.status?.toLowerCase()));
-  const rejected = items.filter(i => i.status === 'rejected');
-
   const cards = [
     { label: 'Menunggu Review', value: pendingReview.length, icon: Clock, color: 'bg-amber-100 text-amber-600', backColor: 'text-amber-900/5' },
     { label: 'Disetujui', value: approved.length, icon: CheckCircle, color: 'bg-emerald-100 text-emerald-600', backColor: 'text-emerald-900/5' },
-    { label: 'Ditolak', value: rejected.length, icon: XCircle, color: 'bg-red-100 text-red-600', backColor: 'text-red-900/5' },
     { label: 'Total', value: items.length, icon: FileText, color: 'bg-blue-100 text-blue-600', backColor: 'text-blue-900/5' },
   ];
 

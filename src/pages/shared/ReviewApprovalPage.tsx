@@ -156,14 +156,50 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
               <InfoField label="Jurusan" value={kegiatan.nama_jurusan || '-'} />
               <InfoField label="Total Anggaran" value={formatCurrency(totalRab)} highlight />
               <InfoField label="Status" value={kegiatan.status} />
-              {kegiatan.kode_mak && <InfoField label="Kode MAK" value={kegiatan.kode_mak} />}
+              {kegiatan.kode_mak && (
+                <div className="col-span-1 md:col-span-2 mt-2 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                  <div>
+                    <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Kode MAK (Mata Anggaran Kegiatan)</p>
+                    <p className="text-xl font-black text-emerald-800 tracking-tight">{kegiatan.kode_mak}</p>
+                  </div>
+                  <div className="hidden sm:flex items-center justify-center size-10 rounded-full bg-emerald-100">
+                    <FileText className="size-5 text-emerald-600" />
+                  </div>
+                </div>
+              )}
             </div>
-            {kegiatan.deskripsi && (
-              <div className="mt-6 pt-6 border-t border-slate-100">
-                <p className="text-sm font-medium text-slate-500 mb-2">Deskripsi</p>
-                <p className="text-sm text-slate-800 whitespace-pre-wrap">{kegiatan.deskripsi}</p>
-              </div>
-            )}
+              {kegiatan.deskripsi && (
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <p className="text-sm font-medium text-slate-500 mb-2">Deskripsi</p>
+                  <p className="text-sm text-slate-800 whitespace-pre-wrap">{kegiatan.deskripsi}</p>
+                </div>
+              )}
+              {kegiatan.surat_pengantar_path && (
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-medium text-slate-500">Surat Pengantar</p>
+                    <a href={`http://localhost:8000/${kegiatan.surat_pengantar_path}`} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline font-medium px-3 py-1 bg-blue-50 rounded-full">
+                      Buka di Tab Baru
+                    </a>
+                  </div>
+                  {kegiatan.surat_pengantar_path.toLowerCase().endsWith('.pdf') ? (
+                    <div className="border border-slate-200 rounded-xl overflow-hidden h-[600px] bg-slate-50">
+                      <iframe 
+                        src={`http://localhost:8000/${kegiatan.surat_pengantar_path}`} 
+                        className="w-full h-full" 
+                        title="Preview Surat Pengantar"
+                      />
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center">
+                      <a href={`http://localhost:8000/${kegiatan.surat_pengantar_path}`} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline flex items-center gap-2 font-medium">
+                        <FileText className="size-4" />
+                        {kegiatan.surat_pengantar_filename || 'Unduh Dokumen Surat Pengantar'}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
           </CardContent>
         </Card>
       )}

@@ -563,7 +563,7 @@ export function VerifikasiDetailPage() {
                   return;
                 }
                 setShowMakModal(false);
-                updateStatus('pending_ppk', kodeMak);
+                updateStatus('waiting_surat_pengantar', kodeMak);
               }}
               disabled={!kodeMak.trim() || isUpdating}
             >

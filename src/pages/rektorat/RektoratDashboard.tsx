@@ -79,7 +79,6 @@ export function RektoratDashboard() {
     { label: 'Total Usulan', value: stats.total, icon: FileText, color: 'bg-emerald-100 text-emerald-700', sub: 'Semua periode' },
     { label: 'Disetujui', value: stats.approved, icon: CheckCircle, color: 'bg-emerald-50 text-emerald-600', sub: `${stats.total > 0 ? ((stats.approved / stats.total) * 100).toFixed(0) : 0}% approval rate` },
     { label: 'Pending', value: stats.pending, icon: Clock, color: 'bg-amber-50 text-amber-600', sub: 'Menunggu proses' },
-    { label: 'Ditolak', value: stats.rejected, icon: XCircle, color: 'bg-red-50 text-red-600', sub: 'Tidak disetujui' },
   ];
 
   const maxMonthly = Math.max(...monthlyData.map(m => m.count), 1);

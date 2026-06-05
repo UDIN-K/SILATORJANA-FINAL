@@ -152,7 +152,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // File upload (surat pengantar, file KAK)
     Route::post('/upload', function (Request $request) {
         $request->validate([
-            'file' => 'required|file|max:10240', // max 10MB
+            'file' => 'required|file|mimes:pdf,doc,docx|max:10240', // max 10MB
             'type' => 'required|string|in:surat_pengantar,file_kak,lpj_file',
         ]);
 
@@ -234,7 +234,8 @@ Route::post('/chat', function (Request $request) {
             'HTTP-Referer' => config('app.url', 'http://localhost'),
             'X-Title' => 'Si-LATORJANA',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model' => 'google/gemini-2.0-flash-001',
+            'model' => 'openrouter/free',
+            'max_tokens' => 500,
             'messages' => [
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user', 'content' => $message],
@@ -242,7 +243,7 @@ Route::post('/chat', function (Request $request) {
         ]);
 
         $data = $response->json();
-        $reply = $data['choices'][0]['message']['content'] ?? 'Maaf, saya tidak bisa memproses permintaan Anda saat ini.';
+        $reply = $data['choices'][0]['message']['content'] ?? json_encode($data);
 
         return response()->json(['reply' => $reply]);
     } catch (\Exception $e) {

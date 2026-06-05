@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { formatDate, formatCurrency, timeAgo, getUserRole } from '@/lib/helpers';
 
 const ARCHIVE_STATUSES = [
-  'approved_ppk', 'approved_wadir', 'accepted_funds', 'funds_disbursed',
+  'waiting_surat_pengantar', 'approved_ppk', 'approved_wadir', 'accepted_funds', 'funds_disbursed',
   'lpj_submitted', 'lpj_approved', 'lpj_verified', 'lpj_done',
   'selesai', 'completed', 'rejected', 'ditolak',
   'ditolak_verifikator', 'disetujui_ppk', 'disetujui_wadir', 'disetujui_rektorat'
