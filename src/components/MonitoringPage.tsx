@@ -18,6 +18,7 @@ interface MonitoringItem {
   pengusul_nama?: string;
   nama_jurusan?: string;
   jenis_kegiatan?: string;
+  verifikator_target?: string;
   $createdAt?: string;
   $updatedAt?: string;
   created_at?: string;

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\KegiatanController;
 use App\Http\Controllers\Api\LpjController;
+use App\Http\Controllers\Api\SpkController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\IkuMasterController;
 use Illuminate\Http\Request;
@@ -112,6 +113,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('kegiatan/{kegiatan}/submit-ppk', [KegiatanController::class, 'submitPpk']);
     Route::post('kegiatan/{kegiatan}/pencairan', [KegiatanController::class, 'tambahPencairan']);
     Route::post('kegiatan/{kegiatan}/ambil-uang-muka', [KegiatanController::class, 'ambilUangMuka']);
+
+    // SPK (Sistem Pendukung Keputusan) — MOORA
+    Route::prefix('spk')->group(function () {
+        Route::get('/kriteria', [SpkController::class, 'kriteria']);
+        Route::get('/hitung/{kegiatan_id}', [SpkController::class, 'hitung']);
+        Route::get('/hitung-batch', [SpkController::class, 'hitungBatch']);
+        Route::post('/simpan/{kegiatan_id}', [SpkController::class, 'simpan']);
+        Route::get('/riwayat', [SpkController::class, 'riwayat']);
+    });
 
     // LPJ
     Route::get('/lpj/detail/{kegiatan_id}', [LpjController::class, 'detail']);

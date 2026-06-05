@@ -1,11 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { apiGetLpjDetail, apiUpdateKegiatan } from '@/lib/api';
+import { apiGetLpjDetail, apiUpdateKegiatan, apiHitungSpk, apiSimpanSpk, apiGetSpkKriteria } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, CheckCircle2, XCircle, FileText, Download, Loader2, Info, AlertCircle, FileCheck, DollarSign } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
 import { formatCurrency, formatDate } from '@/lib/helpers';
+import { SpkScoreCard } from '@/components/spk/SpkScoreCard';
+import { SpkDetailModal } from '@/components/spk/SpkDetailModal';
+import type { MooraResult, KriteriaDef } from '@/lib/mooraCalculator';
 
 interface RabItem {
   id: number;
@@ -54,6 +57,12 @@ export function LpjVerificationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [catatanVerifikasi, setCatatanVerifikasi] = useState('');
 
+  // SPK MOORA state
+  const [spkResult, setSpkResult] = useState<MooraResult | null>(null);
+  const [spkLoading, setSpkLoading] = useState(false);
+  const [spkDetailOpen, setSpkDetailOpen] = useState(false);
+  const [spkKriteria, setSpkKriteria] = useState<KriteriaDef[]>([]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -74,17 +83,38 @@ export function LpjVerificationPage() {
       }
     };
     fetchData();
+
+    // Fetch SPK score in parallel
+    if (id) {
+      setSpkLoading(true);
+      Promise.all([
+        apiHitungSpk(id).catch(() => null),
+        apiGetSpkKriteria().catch(() => []),
+      ]).then(([spkRes, kriteriaRes]) => {
+        if (spkRes?.perhitungan) {
+          setSpkResult(spkRes.perhitungan as MooraResult);
+        }
+        if (Array.isArray(kriteriaRes)) {
+          setSpkKriteria(kriteriaRes);
+        }
+      }).finally(() => setSpkLoading(false));
+    }
   }, [id]);
 
   const handleVerifikasiLPJ = async (status: string) => {
     if (!id) return;
     setIsSubmitting(true);
     try {
+      // Simpan skor SPK secara permanen saat approve
+      if (status === 'lpj_approved') {
+        await apiSimpanSpk(id).catch(e => console.warn('SPK save warning:', e));
+      }
+
       await apiUpdateKegiatan(id, {
         status: status,
         catatan_revisi: catatanVerifikasi,
       });
-      alert(status === 'lpj_approved' ? 'LPJ Berhasil Disetujui!' : 'Permintaan revisi LPJ berhasil dikirim.');
+      alert(status === 'lpj_approved' ? 'LPJ Berhasil Disetujui! Skor SPK telah disimpan.' : 'Permintaan revisi LPJ berhasil dikirim.');
       navigate('/dashboard/bendahara');
     } catch (error: any) {
       alert("Gagal memproses verifikasi LPJ: " + error.message);
@@ -262,8 +292,14 @@ export function LpjVerificationPage() {
           </div>
         </div>
 
-        {/* Right column: Decisions */}
+        {/* Right column: SPK Score + Decisions */}
         <div className="space-y-6">
+          {/* SPK MOORA Score Card */}
+          <SpkScoreCard
+            result={spkResult}
+            isLoading={spkLoading}
+            onShowDetail={() => setSpkDetailOpen(true)}
+          />
           <Card className="shadow-md border-slate-200 sticky top-20">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100">
               <CardTitle className="text-lg">Putusan Verifikasi LPJ</CardTitle>
@@ -337,6 +373,16 @@ export function LpjVerificationPage() {
           </Card>
         </div>
       </div>
+
+      {/* SPK Detail Modal */}
+      {spkResult && (
+        <SpkDetailModal
+          result={spkResult}
+          kriteria={spkKriteria}
+          isOpen={spkDetailOpen}
+          onClose={() => setSpkDetailOpen(false)}
+        />
+      )}
     </div>
   );
 }

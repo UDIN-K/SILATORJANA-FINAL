@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Search, Filter, DollarSign, FileCheck, CheckCircle2, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SpkDashboardWidget } from '@/components/spk/SpkDashboardWidget';
+
 
 export function BendaharaDashboard() {
   const navigate = useNavigate();
@@ -72,6 +74,9 @@ export function BendaharaDashboard() {
            </CardContent>
          </Card>
       </div>
+
+      {/* SPK MOORA Quality Analysis Widget */}
+      <SpkDashboardWidget />
 
       <Card className="shadow-lg border-white/50 bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden">
         <CardHeader className="border-b border-white/50 p-4 sm:p-6 bg-white/40">

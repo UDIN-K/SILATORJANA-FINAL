@@ -306,4 +306,34 @@ const api = {
 
 export default api;
 
+// ──────────────────────────────────────────
+//  SPK (Sistem Pendukung Keputusan) — MOORA
+// ──────────────────────────────────────────
+
+/** Get daftar kriteria SPK */
+export async function apiGetSpkKriteria() {
+  return apiFetch('/spk/kriteria');
+}
+
+/** Hitung skor SPK untuk 1 kegiatan (real-time, tanpa simpan) */
+export async function apiHitungSpk(kegiatanId: string | number) {
+  return apiFetch(`/spk/hitung/${kegiatanId}`);
+}
+
+/** Hitung MOORA batch untuk semua LPJ menunggu approval */
+export async function apiHitungSpkBatch() {
+  return apiFetch('/spk/hitung-batch');
+}
+
+/** Simpan skor SPK secara permanen (saat approve) */
+export async function apiSimpanSpk(kegiatanId: string | number) {
+  return apiFetch(`/spk/simpan/${kegiatanId}`, { method: 'POST' });
+}
+
+/** Daftar riwayat penilaian SPK */
+export async function apiGetSpkRiwayat() {
+  return apiFetch('/spk/riwayat');
+}
+
+
 
