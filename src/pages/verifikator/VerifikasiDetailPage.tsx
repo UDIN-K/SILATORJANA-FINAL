@@ -602,7 +602,7 @@ function KakField({ label, value, color = "slate" }: { label: string; value: str
   return (
     <div>
       <Label className="text-slate-500 text-xs uppercase tracking-wider">{label}</Label>
-      <p className={`text-sm mt-1.5 leading-relaxed p-4 rounded-xl border ${c}`}>
+      <p className={`text-sm mt-1.5 leading-relaxed p-4 rounded-xl border ${c} break-words whitespace-pre-wrap`}>
         {value || 'Tidak ada data'}
       </p>
     </div>

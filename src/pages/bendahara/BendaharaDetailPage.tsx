@@ -528,7 +528,7 @@ function KakField({ label, value }: { label: string; value: string | null | unde
   return (
     <div>
       <Label className="text-slate-500 text-xs uppercase tracking-wider">{label}</Label>
-      <p className="text-sm text-slate-700 mt-1 leading-relaxed bg-slate-50 p-3 rounded border border-slate-100">
+      <p className="text-sm text-slate-700 mt-1 leading-relaxed bg-slate-50 p-3 rounded border border-slate-100 break-words whitespace-pre-wrap">
         {value || 'Tidak ada data'}
       </p>
     </div>

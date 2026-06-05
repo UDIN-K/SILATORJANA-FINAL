@@ -158,15 +158,26 @@ Route::middleware('auth:sanctum')->group(function () {
 
         $file = $request->file('file');
         
-        $destinationPath = public_path('data/upload');
+        $type = $request->input('type');
+        $folder = 'data/upload';
+        
+        if ($type === 'surat_pengantar') {
+            $folder = 'data/upload/surat_pengantar';
+        } else if ($type === 'lpj_file') {
+            $folder = 'data/upload/lpj';
+        } else if ($type === 'file_kak') {
+            $folder = 'data/upload/kak';
+        }
+
+        $destinationPath = public_path($folder);
         if (!file_exists($destinationPath)) {
             mkdir($destinationPath, 0755, true);
         }
-        
+
         $filename = time() . '_' . $file->getClientOriginalName();
         $file->move($destinationPath, $filename);
-        
-        $path = 'data/upload/' . $filename;
+
+        $path = $folder . '/' . $filename;
 
         return response()->json([
             'path' => $path,

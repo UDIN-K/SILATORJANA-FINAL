@@ -176,7 +176,7 @@ class LpjController extends Controller
             // Handle file uploads per RAB item
             $uploadedFiles = [];
             $errors = [];
-            $uploadDir = base_path('../data/upload/lpj');
+            $uploadDir = public_path('data/upload/lpj');
             $allowedMimes = [
                 'image/jpeg', 'image/png', 'image/gif', 'image/webp',
                 'application/pdf',
@@ -188,7 +188,7 @@ class LpjController extends Controller
             $maxSize = 5 * 1024 * 1024; // 5MB
 
             // Ensure storage directory exists
-            $uploadDir = base_path('../data/upload/lpj');
+            $uploadDir = public_path('data/upload/lpj');
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
@@ -337,7 +337,7 @@ class LpjController extends Controller
         }
 
         // Delete physical file
-        @unlink(base_path('../data/upload/lpj/' . $file->filename));
+        @unlink(public_path('data/upload/lpj/' . $file->filename));
 
         $file->delete();
 

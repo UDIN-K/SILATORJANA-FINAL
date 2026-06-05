@@ -399,7 +399,7 @@ function KakField({ label, value }: { label: string; value: string }) {
   return (
     <div className="border-b border-slate-100 pb-4">
       <p className="text-sm font-semibold text-slate-700 mb-1">{label}</p>
-      <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">{value}</p>
+      <p className="text-sm text-slate-800 whitespace-pre-wrap break-words leading-relaxed">{value}</p>
     </div>
   );
 }
