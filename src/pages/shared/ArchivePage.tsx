@@ -12,6 +12,7 @@ const ARCHIVE_STATUSES = [
   'approved_ppk', 'approved_wadir', 'accepted_funds', 'funds_disbursed',
   'lpj_submitted', 'lpj_approved', 'lpj_verified', 'lpj_done',
   'selesai', 'completed', 'rejected', 'ditolak',
+  'ditolak_verifikator', 'disetujui_ppk', 'disetujui_wadir', 'disetujui_rektorat'
 ];
 
 interface ArchivePageProps {
@@ -41,7 +42,15 @@ export function ArchivePage({ role, detailPath }: ArchivePageProps) {
 
   const filtered = items.filter(i => {
     const matchSearch = !search || i.nama_kegiatan?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || i.status?.toLowerCase() === statusFilter;
+    const statusLower = i.status?.toLowerCase() || '';
+    
+    let matchStatus = false;
+    if (statusFilter === 'all') matchStatus = true;
+    else if (statusFilter === 'completed') matchStatus = ['completed', 'selesai', 'lpj_done'].includes(statusLower);
+    else if (statusFilter === 'rejected') matchStatus = statusLower.includes('ditolak') || statusLower === 'rejected';
+    else if (statusFilter === 'funds_disbursed') matchStatus = ['funds_disbursed', 'accepted_funds'].includes(statusLower);
+    else matchStatus = statusLower === statusFilter;
+
     return matchSearch && matchStatus;
   });
 
@@ -76,7 +85,7 @@ export function ArchivePage({ role, detailPath }: ArchivePageProps) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard label="Total Arsip" value={items.length} color="bg-slate-100 text-slate-700" />
           <StatCard label="Selesai" value={(statusCounts['completed'] || 0) + (statusCounts['selesai'] || 0) + (statusCounts['lpj_done'] || 0)} color="bg-emerald-50 text-emerald-700" />
-          <StatCard label="Ditolak" value={(statusCounts['rejected'] || 0) + (statusCounts['ditolak'] || 0)} color="bg-red-50 text-red-700" />
+          <StatCard label="Ditolak" value={(statusCounts['rejected'] || 0) + (statusCounts['ditolak'] || 0) + (statusCounts['ditolak_verifikator'] || 0)} color="bg-red-50 text-red-700" />
           <StatCard label="Dana Cair" value={(statusCounts['funds_disbursed'] || 0) + (statusCounts['accepted_funds'] || 0)} color="bg-indigo-50 text-indigo-700" />
         </div>
       )}
@@ -94,7 +103,7 @@ export function ArchivePage({ role, detailPath }: ArchivePageProps) {
                 <Button key={s} variant={statusFilter === s ? 'default' : 'outline'} size="sm"
                   className={statusFilter === s ? 'bg-emerald-700 text-white' : ''}
                   onClick={() => setStatusFilter(s)}>
-                  {s === 'all' ? 'Semua' : s === 'completed' ? 'Selesai' : s === 'rejected' ? 'Ditolak' : 'Dana Cair'}
+                  {s === 'all' ? 'Semua' : s === 'completed' ? 'Selesai' : s === 'rejected' ? 'Semua Ditolak' : 'Dana Cair'}
                 </Button>
               ))}
             </div>

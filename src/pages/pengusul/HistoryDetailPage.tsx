@@ -137,6 +137,9 @@ export function HistoryDetailPage() {
             <div className="flex justify-between"><span className="text-slate-500">Jurusan</span><span className="font-medium">{kegiatan.nama_jurusan || '-'}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">Pengusul</span><span className="font-medium">{kegiatan.pengusul_nama || '-'}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">Tanggal</span><span className="font-medium">{formatDate(kegiatan.created_at)}</span></div>
+            {kegiatan.kode_mak && (
+              <div className="flex justify-between"><span className="text-slate-500">Kode MAK</span><span className="font-medium">{kegiatan.kode_mak}</span></div>
+            )}
           </div>
         </CardContent></Card>
 

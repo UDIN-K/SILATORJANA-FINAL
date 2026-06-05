@@ -157,11 +157,20 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
 
         $file = $request->file('file');
-        $path = $file->store($request->type, 'public');
+        
+        $destinationPath = public_path('data/upload');
+        if (!file_exists($destinationPath)) {
+            mkdir($destinationPath, 0755, true);
+        }
+        
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $file->move($destinationPath, $filename);
+        
+        $path = 'data/upload/' . $filename;
 
         return response()->json([
             'path' => $path,
-            'url' => \Illuminate\Support\Facades\Storage::url($path),
+            'url' => url($path),
             'original_name' => $file->getClientOriginalName(),
         ]);
     });

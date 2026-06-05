@@ -205,6 +205,7 @@ export function DetailUsulanPage() {
           <div className="space-y-6">
             <InfoRow icon={Clock} label="Tanggal Pelaksanaan" value={formatDate(kegiatan.tanggal_kegiatan || kegiatan.tgl_kegiatan)} />
             <InfoRow icon={MapPin} label="Lokasi Pelaksanaan" value={kegiatan.tempat || '-'} />
+            {kegiatan.kode_mak && <InfoRow icon={FileText} label="Kode MAK" value={kegiatan.kode_mak} />}
           </div>
           {kegiatan.deskripsi && <div className="md:col-span-2 pt-4 border-t border-slate-100"><p className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-widest">Deskripsi / Latar Belakang</p><p className="text-sm leading-relaxed text-slate-700 bg-slate-50/50 p-4 rounded-xl border border-slate-100/50">{kegiatan.deskripsi || kegiatan.latar_belakang}</p></div>}
         </CardContent>
@@ -388,7 +389,7 @@ export function DetailUsulanPage() {
                 <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center bg-slate-50 hover:bg-slate-100/50 transition-all relative">
                   <input
                     type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
+                    accept=".pdf,.doc,.docx"
                     onChange={handleFileUpload}
                     className="absolute inset-0 opacity-0 cursor-pointer"
                     disabled={isUploadingFile}

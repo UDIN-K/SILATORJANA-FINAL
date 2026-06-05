@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { apiGetKegiatan, apiTambahPencairan } from '@/lib/api';
+import { apiGetKegiatan, apiTambahPencairan, apiAmbilUangMuka } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, CheckCircle2, AlertCircle, Loader2, DollarSign, Clock, Calendar, CheckSquare } from 'lucide-react';
@@ -17,6 +17,7 @@ export function PencairanPage() {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMarking, setIsMarking] = useState(false);
   const [persentaseInput, setPersentaseInput] = useState<string>('');
   const [catatanInput, setCatatanInput] = useState<string>('');
 
@@ -68,18 +69,31 @@ export function PencairanPage() {
 
     setIsSubmitting(true);
     try {
-      await apiTambahPencairan(id, {
+      const result = await apiTambahPencairan(id, {
         persentase: inputPercentNum,
         catatan: catatanInput,
       });
       alert('Pencairan dana berhasil dicatat!');
       setPersentaseInput('');
       setCatatanInput('');
-      fetchData(); // Reload data to show updated history
+      setData(result);
     } catch (error: any) {
       alert("Gagal mencatat pencairan: " + error.message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleMarkTaken = async () => {
+    if (!id || !confirm('Tandai bahwa pencairan telah diambil oleh pengusul?')) return;
+    setIsMarking(true);
+    try {
+      const result = await apiAmbilUangMuka(id);
+      setData(result);
+    } catch (e: any) {
+      alert('Gagal menandai pencairan: ' + (e.message || 'Unknown error'));
+    } finally {
+      setIsMarking(false);
     }
   };
 
@@ -156,9 +170,20 @@ export function PencairanPage() {
                                 Diambil
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                                Menunggu
-                              </span>
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                  Menunggu
+                                </span>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-6 text-[10px] px-2 py-0"
+                                  onClick={handleMarkTaken}
+                                  disabled={isMarking}
+                                >
+                                  {isMarking ? <Loader2 className="size-3 animate-spin mr-1" /> : <CheckCircle2 className="size-3 mr-1" />} Tandai
+                                </Button>
+                              </div>
                             )}
                           </TableCell>
                         </TableRow>

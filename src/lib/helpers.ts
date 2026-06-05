@@ -49,8 +49,8 @@ export type StatusColor = 'green' | 'amber' | 'red' | 'blue' | 'indigo' | 'rose'
 export function getStatusColor(status: string): StatusColor {
   const s = status?.toLowerCase() || '';
   if (['completed', 'selesai', 'lpj_done', 'lpj_approved', 'lpj_verified'].includes(s)) return 'green';
-  if (['rejected', 'ditolak', 'lpj_rejected'].includes(s)) return 'red';
-  if (['verified', 'diverifikasi', 'approved_ppk', 'approved_wadir'].includes(s)) return 'blue';
+  if (s.includes('ditolak') || s.includes('rejected')) return 'red';
+  if (s.includes('disetujui') || ['verified', 'diverifikasi', 'approved_ppk', 'approved_wadir'].includes(s)) return 'blue';
   if (['accepted_funds', 'funds_disbursed'].includes(s)) return 'indigo';
   if (['draft'].includes(s)) return 'slate';
   // Revision related uses amber (kuning)

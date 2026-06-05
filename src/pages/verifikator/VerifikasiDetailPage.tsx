@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatCurrency } from '@/lib/helpers';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
-
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 function parseIndikatorKinerja(rawValue: string | undefined | null): any[] {
   if (!rawValue) return [];
   try {
@@ -41,6 +41,8 @@ export function VerifikasiDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [catatan, setCatatan] = useState('');
+  const [kodeMak, setKodeMak] = useState('');
+  const [showMakModal, setShowMakModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,7 +82,7 @@ export function VerifikasiDetailPage() {
     fetchData();
   }, [id]);
 
-  const updateStatus = async (status: string) => {
+  const updateStatus = async (status: string, kodeMakParam?: string) => {
     if (!id) return;
     setIsUpdating(true);
     try {
@@ -88,6 +90,9 @@ export function VerifikasiDetailPage() {
       // Save catatan if rejecting
       if (status === 'rejected' && catatan.trim()) {
         updateData.catatan_revisi = catatan.trim();
+      }
+      if (kodeMakParam) {
+        updateData.kode_mak = kodeMakParam;
       }
       await apiUpdateKegiatan(id, updateData);
       navigate('/dashboard/verifikator');
@@ -191,6 +196,7 @@ export function VerifikasiDetailPage() {
                     <InfoRow label="Jurusan Terkait" value={data.nama_jurusan} />
                     <InfoRow label="Organisasi / Nama Pengusul" value={data.pengusul_nama || data.pengusul_organisasi} />
                     <InfoRow label="Tujuan Verifikasi (Verifikator)" value={(data.verifikator_target || '').replace('wadir', 'Wadir ')} />
+                    {data.kode_mak && <InfoRow label="Kode MAK" value={data.kode_mak} />}
                     <div>
                       <Label className="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1.5 block">Status Dokumen</Label>
                       <div className="mt-1 inline-block"><StatusBadge status={data.status} /></div>
@@ -491,7 +497,7 @@ export function VerifikasiDetailPage() {
                  <div className="grid grid-cols-2 gap-2.5 sm:gap-3 pt-1">
                     <Button 
                       disabled={isUpdating} 
-                      onClick={() => updateStatus('pending_ppk')} 
+                      onClick={() => setShowMakModal(true)} 
                       className="col-span-2 w-full bg-[#047857] hover:bg-[#065F46] shadow-md shadow-emerald-700/10 text-white h-11 md:h-12 rounded-xl font-bold transition-all active:scale-95 text-xs sm:text-[14px] flex items-center justify-center gap-2"
                     >
                        {isUpdating ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Verifikasi &amp; Setujui
@@ -517,6 +523,56 @@ export function VerifikasiDetailPage() {
         </div>
         )}
       </div>
+
+      <Dialog open={showMakModal} onOpenChange={setShowMakModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Masukkan Kode MAK</DialogTitle>
+            <DialogDescription>
+              Kode MAK (Mata Anggaran Kegiatan) wajib diisi untuk menyetujui proposal ini.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <Label htmlFor="kodeMak" className="text-slate-700 font-semibold">
+              Kode MAK <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="kodeMak"
+              value={kodeMak}
+              onChange={(e) => setKodeMak(e.target.value)}
+              placeholder="Contoh: 1234.567.890"
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowMakModal(false)}
+              className="mt-2 sm:mt-0"
+              disabled={isUpdating}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#047857] hover:bg-[#065F46]"
+              onClick={() => {
+                if (!kodeMak.trim()) {
+                  alert('Kode MAK wajib diisi!');
+                  return;
+                }
+                setShowMakModal(false);
+                updateStatus('pending_ppk', kodeMak);
+              }}
+              disabled={!kodeMak.trim() || isUpdating}
+            >
+              {isUpdating ? <Loader2 className="size-4 animate-spin mr-2" /> : <Check className="size-4 mr-2" />}
+              Setujui & Lanjutkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

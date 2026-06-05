@@ -39,6 +39,7 @@ import { WadirMonitoringPage } from './pages/wadir/WadirMonitoringPage';
 import { ReviewApprovalPage } from './pages/shared/ReviewApprovalPage';
 import { BendaharaDashboard } from './pages/bendahara/BendaharaDashboard';
 import { BendaharaProposalList } from './pages/bendahara/BendaharaProposalList';
+import { BendaharaLaporanPage } from "./pages/bendahara/BendaharaLaporanPage";
 import { BendaharaDetailPage } from './pages/bendahara/BendaharaDetailPage';
 import { BendaharaMonitoringPage } from './pages/bendahara/BendaharaMonitoringPage';
 import { PencairanPage } from './pages/bendahara/PencairanPage';
@@ -132,6 +133,7 @@ export default function App() {
             <Route path="detail/:id" element={<BendaharaDetailPage />} />
             <Route path="pencairan/:id" element={<PencairanPage />} />
             <Route path="lpj/:id" element={<LpjVerificationPage />} />
+            <Route path="laporan-lpj" element={<BendaharaLaporanPage />} />
             <Route path="monitoring" element={<BendaharaMonitoringPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>

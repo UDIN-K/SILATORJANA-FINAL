@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ProgressTracker } from '@/components/ProgressTracker';
 import { ArrowLeft, Calendar, Building2, User, DollarSign, FileText, Loader2, ExternalLink } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { fetchKAK, fetchIKU, fetchRAB, formatDate, formatCurrency } from '@/lib/helpers';
@@ -64,6 +65,31 @@ export function RektoratDetailPage() {
         <h3 className="font-semibold text-slate-900 mb-4">Progress Workflow</h3>
         <ProgressTracker status={kegiatan.status} />
       </CardContent></Card>
+
+      {kegiatan.surat_pengantar_path && (
+        <Card className="shadow-sm"><CardContent className="p-5">
+          <Label className="text-slate-500 text-xs uppercase tracking-wider mb-2 block flex justify-between">
+             <span>Surat Pengantar</span>
+             <a href={`http://localhost:8000/${kegiatan.surat_pengantar_path}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                Buka di Tab Baru
+             </a>
+          </Label>
+          
+          {kegiatan.surat_pengantar_path.toLowerCase().endsWith('.pdf') ? (
+             <div className="mt-3 border rounded-md overflow-hidden h-[500px] bg-white">
+                <iframe 
+                   src={`http://localhost:8000/${kegiatan.surat_pengantar_path}`} 
+                   className="w-full h-full" 
+                   title="Preview Surat Pengantar"
+                />
+             </div>
+          ) : (
+             <a href={`http://localhost:8000/${kegiatan.surat_pengantar_path}`} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline flex items-center gap-2 mt-2">
+               {kegiatan.surat_pengantar_filename || 'Unduh Dokumen Surat Pengantar'}
+             </a>
+          )}
+        </CardContent></Card>
+      )}
 
       {kak && (
         <Card className="shadow-sm"><CardContent className="p-5 space-y-4">

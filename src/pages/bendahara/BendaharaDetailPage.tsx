@@ -34,7 +34,7 @@ export function BendaharaDetailPage() {
         const kakList = await apiGetKegiatan(id).then((r: any) => ({documents: r.kak ? [r.kak] : []}));
         if (kakList.documents.length > 0) setKakData(kakList.documents[0]);
 
-        // Fetch IKU (multiple)
+        // Fetch IKU
         const ikuList = await apiGetKegiatan(id).then((r: any) => ({documents: r.iku || []}));
         setIkuData(ikuList.documents);
 
@@ -270,6 +270,42 @@ export function BendaharaDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* ===== IKU TAB ===== */}
+          {activeTab === 'iku' && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+               <CardTitle className="text-base text-slate-800 flex items-center gap-2.5"><Target className="size-5 text-teal-500"/> Katalog Indikator Kinerja Utama (IKU)</CardTitle>
+                {ikuData.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    {ikuData.map((iku, idx) => (
+                      <div key={idx} className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:border-teal-300/50 transition-colors group">
+                        <div className="mb-4">
+                           <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center mb-3">
+                              <Target className="size-4 text-teal-600" />
+                           </div>
+                           <p className="font-bold text-[14px] sm:text-[15px] text-slate-800 leading-snug group-hover:text-teal-800 transition-colors">{iku.nama_iku || iku.indikator || 'Entri IKU Tanpa Nama'}</p>
+                           {iku.master_id && <p className="text-[10px] font-bold text-slate-400 mt-2 tracking-wider uppercase">Master Ref ID: <span className="text-slate-500">{iku.master_id}</span></p>}
+                        </div>
+                        {iku.target_persen != null && (
+                          <div className="pt-3 border-t border-slate-100/80 flex items-end justify-between">
+                            <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Pencapaian Target</p>
+                            <p className="text-xl sm:text-2xl font-black text-teal-600">{iku.target_persen}%</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                   <div className="py-20 flex flex-col items-center justify-center text-center px-4">
+                      <div className="w-16 h-16 mb-4 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
+                         <Target className="size-8 text-slate-300" />
+                      </div>
+                      <p className="text-slate-500 font-medium">Belum ada IKU yang ditambahkan.</p>
+                      <p className="text-sm text-slate-400 mt-1 max-w-sm">Pengusul belum memilih indikator IKU untuk usulan ini.</p>
+                   </div>
+                )}
+            </div>
+           )}
 
           {/* ===== RAB TAB ===== */}
           {activeTab === 'rab' && (

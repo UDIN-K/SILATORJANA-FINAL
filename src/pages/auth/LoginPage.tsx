@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { AppLogo } from '@/components/AppLogo';
@@ -115,7 +115,7 @@ export function LoginPage() {
             <div className="space-y-2">
               <div className="flex justify-between items-center ml-1">
                  <label className="text-sm font-bold text-slate-700">Password</label>
-                 <a href="#" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors">Lupa Password?</a>
+                 <Link to="/forgot-password" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors">Lupa Password?</Link>
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400">

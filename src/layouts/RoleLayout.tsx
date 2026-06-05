@@ -47,6 +47,7 @@ const ROLE_MENUS: Record<string, { icon: any; label: string; path: string }[]> =
   bendahara: [
     { icon: Home, label: 'Dashboard', path: '' },
     { icon: DollarSign, label: 'Pencairan & LPJ', path: '/proposals' },
+    { icon: CheckCircle, label: 'Laporan LPJ', path: '/laporan-lpj' },
     { icon: Activity, label: 'Monitoring', path: '/monitoring' },
   ],
   rektorat: [

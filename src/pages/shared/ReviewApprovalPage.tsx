@@ -156,6 +156,7 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
               <InfoField label="Jurusan" value={kegiatan.nama_jurusan || '-'} />
               <InfoField label="Total Anggaran" value={formatCurrency(totalRab)} highlight />
               <InfoField label="Status" value={kegiatan.status} />
+              {kegiatan.kode_mak && <InfoField label="Kode MAK" value={kegiatan.kode_mak} />}
             </div>
             {kegiatan.deskripsi && (
               <div className="mt-6 pt-6 border-t border-slate-100">

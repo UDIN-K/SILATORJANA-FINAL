@@ -91,7 +91,7 @@ Aplikasi ini menggunakan sistem *Role-Based Access Control* (RBAC) ketat.
 ### C. Daftar Role & Akses
 1. **`admin`**: Manajemen user (CRUD), konfigurasi IKU master, monitoring sistem (bisa force-change status).
 2. **`pengusul`**: (Mahasiswa/Dosen) Membuat proposal, edit revisi, unggah LPJ, print dokumen.
-3. **`verifikator`**: Penjaga gawang pertama. Mengecek kelengkapan proposal. Punya tombol **Minta Revisi**, **Tolak**, dan **Setujui**.
+3. **`verifikator`**: Penjaga gawang pertama. Mengecek kelengkapan proposal. Punya tombol **Minta Revisi**, **Tolak**, dan **Setujui**. (Hanya Verifikator yang bisa menolak mutlak).
 4. **`ppk`**: Pejabat Pembuat Komitmen. Me-review dokumen yang sudah lolos verifikator. Hanya memiliki tombol **Minta Revisi** dan **Setujui Pengajuan**.
 5. **`wadir1`, `wadir2`, `wadir3`, `wadir4`**: Wakil Direktur (Pimpinan). Menyetujui final. Hanya memiliki tombol **Minta Revisi** dan **Setujui Pengajuan**. Filter usulan didasarkan pada target unit (`verifikator_target`).
 6. **`bendahara`**: Menangani keuangan. Hanya punya tombol **Cairkan Dana** (untuk proposal) dan **Setuju LPJ / Minta Revisi LPJ** (saat LPJ masuk). Tidak memiliki hak menolak.
@@ -130,7 +130,7 @@ Alur persetujuan berjalan sekuensial dan ketat:
 - **History & Snapshot**: Status History mencatat jejak persetujuan sekaligus `payload_snapshot` (bukti data JSON pada saat disetujui, mencegah manipulasi data setelah disetujui).
 
 ### Fitur Pimpinan & Approval
-- **Conditional Action Buttons**: Tombol *Minta Revisi* & *Tolak* disesuaikan dengan wewenang (PPK/Wadir tidak punya fitur Tolak mutlak, Bendahara tidak bisa Tolak). Tombol aksi otomatis hilang jika proposal dibuka dari Arsip (mencegah abuse).
+- **Conditional Action Buttons**: Tombol aksi disesuaikan dengan wewenang. Hanya Verifikator yang memiliki tombol **Tolak** secara mutlak. PPK, Wadir, Rektorat, dan Bendahara hanya dapat melakukan **Minta Revisi** atau **Setujui**. Tombol aksi otomatis hilang jika proposal dibuka dari Arsip (mencegah abuse).
 - **Multi-Wadir Routing**: Routing untuk `wadir1` s/d `wadir4` berdasarkan departemen pengusul.
 - **Arsip Pintar**: Halaman Arsip PPK dan Wadir membaca status khusus (seperti `approved_ppk`, `approved_wadir`, dll).
 

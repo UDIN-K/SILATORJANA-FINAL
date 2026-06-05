@@ -43,7 +43,12 @@ class KegiatanController extends Controller
                 if ($isMonitoring) {
                     $query->whereNotIn('status', ['draft', 'submitted', 'revision_requested', 'revisi_done', 'verified', 'pending_ppk']);
                 } elseif ($isArchive) {
-                    $query->whereIn('status', ['approved_ppk', 'approved_wadir', 'accepted_funds', 'funds_disbursed', 'lpj_submitted', 'lpj_approved', 'lpj_rejected', 'lpj_done', 'completed', 'rejected']);
+                    $query->whereIn('status', [
+                        'approved_ppk', 'approved_wadir', 'accepted_funds', 'funds_disbursed',
+                        'lpj_submitted', 'lpj_approved', 'lpj_rejected', 'lpj_done', 'completed', 'rejected',
+                        'ditolak', 'ditolak_verifikator',
+                        'disetujui_ppk', 'disetujui_wadir', 'disetujui_rektorat'
+                    ]);
                 } else {
                     $query->whereIn('status', ['pending_ppk', 'verified']);
                 }
@@ -57,7 +62,12 @@ class KegiatanController extends Controller
                 if ($isMonitoring) {
                     $query->whereNotIn('status', ['draft', 'submitted', 'revision_requested', 'revisi_done', 'verified', 'pending_ppk']);
                 } elseif ($isArchive) {
-                    $query->whereIn('status', ['approved_wadir', 'accepted_funds', 'funds_disbursed', 'lpj_submitted', 'lpj_approved', 'lpj_rejected', 'lpj_done', 'completed', 'rejected']);
+                    $query->whereIn('status', [
+                        'approved_wadir', 'accepted_funds', 'funds_disbursed',
+                        'lpj_submitted', 'lpj_approved', 'lpj_rejected', 'lpj_done', 'completed', 'rejected',
+                        'ditolak', 'ditolak_verifikator',
+                        'disetujui_ppk', 'disetujui_wadir', 'disetujui_rektorat'
+                    ]);
                 } else {
                     $query->where('status', 'approved_ppk');
                 }
@@ -237,6 +247,7 @@ class KegiatanController extends Controller
             'catatan_revisi' => 'nullable|string',
             'total_anggaran' => 'nullable|numeric',
             'jurusan_id' => 'nullable|integer',
+            'kode_mak' => 'nullable|string|max:100',
             // KAK
             'kak' => 'nullable|array',
             // IKU
@@ -405,9 +416,9 @@ class KegiatanController extends Controller
     {
         $kegiatan = Kegiatan::findOrFail($id);
 
-        if ($kegiatan->pengusul_id !== $request->user()->id) {
+        if ($kegiatan->pengusul_id !== $request->user()->id && $request->user()->role !== 'bendahara') {
             return response()->json([
-                'message' => 'Akses ditolak. Anda bukan pengusul kegiatan ini.',
+                'message' => 'Akses ditolak. Anda bukan pengusul atau bendahara kegiatan ini.',
             ], 403);
         }
 
