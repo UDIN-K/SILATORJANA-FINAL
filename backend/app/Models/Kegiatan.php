@@ -53,6 +53,20 @@ class Kegiatan extends Model
      */
     protected static function booted(): void
     {
+        static::created(function (Kegiatan $kegiatan) {
+            $user = request()->user();
+            StatusHistory::create([
+                'ref_type' => 'kegiatan',
+                'ref_id' => $kegiatan->id,
+                'status_lama' => null,
+                'status_baru' => $kegiatan->status,
+                'catatan' => $kegiatan->catatan_revisi,
+                'user_id' => $user?->id,
+                'user_nama' => $user?->nama,
+                'user_role' => $user?->role,
+            ]);
+        });
+
         static::updating(function (Kegiatan $kegiatan) {
             if ($kegiatan->isDirty('status')) {
                 $user = request()->user();

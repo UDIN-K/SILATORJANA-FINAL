@@ -22,12 +22,7 @@ class KegiatanController extends Controller
             $isArchive = $request->get('archive') === 'true';
 
             if ($user->role === 'pengusul') {
-                $query->where(function ($q) use ($user) {
-                    $q->where('pengusul_id', $user->id);
-                    if ($user->jurusan) {
-                        $q->orWhere('nama_jurusan', $user->jurusan);
-                    }
-                });
+                $query->where('pengusul_id', $user->id);
             } elseif ($user->role === 'verifikator') {
                 if (!empty($user->verifikator_unit)) {
                     $query->where(function($q) use ($user) {
@@ -193,6 +188,14 @@ class KegiatanController extends Controller
 
         $kegiatan->update(['total_anggaran' => $totalAnggaran]);
 
+        // Capture snapshot for BUG-007
+        $latestHistory = $kegiatan->statusHistory()->latest()->first();
+        if ($latestHistory && empty($latestHistory->payload_snapshot)) {
+            $latestHistory->update([
+                'payload_snapshot' => json_encode($kegiatan->load(['kak', 'iku', 'rab']))
+            ]);
+        }
+
         return response()->json(
             $kegiatan->load(['kak', 'iku', 'rab']),
             201
@@ -274,6 +277,14 @@ class KegiatanController extends Controller
                 $totalAnggaran += $total;
             }
             $kegiatan->update(['total_anggaran' => $totalAnggaran]);
+        }
+
+        // Capture snapshot for BUG-007
+        $latestHistory = $kegiatan->statusHistory()->latest()->first();
+        if ($latestHistory && empty($latestHistory->payload_snapshot)) {
+            $latestHistory->update([
+                'payload_snapshot' => json_encode($kegiatan->load(['kak', 'iku', 'rab']))
+            ]);
         }
 
         return response()->json($kegiatan->fresh()->load(['kak', 'iku', 'rab']));

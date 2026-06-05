@@ -80,6 +80,7 @@ export default function App() {
             <Route index element={<PengusulDashboard />} />
             <Route path="usulan" element={<UsulanPage />} />
             <Route path="usulan/baru" element={<CreateUsulanPage />} />
+            <Route path="usulan/edit/:id" element={<CreateUsulanPage />} />
             <Route path="usulan/:id" element={<DetailUsulanPage />} />
             <Route path="lpj/:id" element={<LpjPage />} />
             <Route path="needs-work" element={<NeedsWorkPage />} />

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Pagination } from '@/components/Pagination';
 
 interface MonitoringItem {
   id?: string | number;
@@ -45,6 +46,8 @@ export function MonitoringPage({ items, isLoading, title = 'Monitoring Kegiatan'
   const [expandedId, setExpandedId] = useState<string | number | null>(null);
   const [interveneStatus, setInterveneStatus] = useState<string>('');
   const [isIntervening, setIsIntervening] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const filtered = items.filter(item => {
     const matchesSearch = !search || item.nama_kegiatan?.toLowerCase().includes(search.toLowerCase()) ||
@@ -56,6 +59,11 @@ export function MonitoringPage({ items, isLoading, title = 'Monitoring Kegiatan'
 
     return matchesSearch && matchesStatus;
   });
+
+  const totalFiltered = filtered.length;
+  const lastPage = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, lastPage);
+  const paginatedItems = filtered.slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -89,7 +97,7 @@ export function MonitoringPage({ items, isLoading, title = 'Monitoring Kegiatan'
             <div className="py-12 text-center text-slate-500">Tidak ada data ditemukan.</div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {filtered.map(item => {
+              {paginatedItems.map(item => {
                 const itemId = item.id || item.$id || '';
                 return (
                   <div key={itemId}>
@@ -159,6 +167,16 @@ export function MonitoringPage({ items, isLoading, title = 'Monitoring Kegiatan'
                 );
               })}
             </div>
+          )}
+          {/* BUG-010: Pagination for monitoring */}
+          {!isLoading && totalFiltered > PAGE_SIZE && (
+            <Pagination
+              currentPage={safeCurrentPage}
+              lastPage={lastPage}
+              total={totalFiltered}
+              perPage={PAGE_SIZE}
+              onPageChange={(page) => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            />
           )}
         </CardContent>
       </Card>

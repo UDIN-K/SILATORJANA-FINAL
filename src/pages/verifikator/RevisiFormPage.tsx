@@ -201,9 +201,12 @@ export function RevisiFormPage() {
                   )}
                 </div>
               ) : (
-                 <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+                 <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl relative">
                     <FileText className="size-10 mx-auto mb-4 text-slate-300" />
-                    <p className="font-bold text-slate-500">Data KAK Kosong.</p>
+                    <p className="font-bold text-slate-500 mb-4">Data KAK Kosong.</p>
+                    <div className="w-full max-w-md mx-auto px-4">
+                       <CommentBox field="KAK - Keseluruhan" />
+                    </div>
                  </div>
               )}
             </div>
@@ -236,9 +239,12 @@ export function RevisiFormPage() {
                   ))}
                 </div>
               ) : (
-                 <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+                 <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl relative">
                     <TrendingUp className="size-10 mx-auto mb-4 text-slate-300" />
-                    <p className="font-bold text-slate-500">Data IKU Kosong.</p>
+                    <p className="font-bold text-slate-500 mb-4">Data IKU Kosong.</p>
+                    <div className="w-full max-w-md mx-auto px-4">
+                       <CommentBox field="IKU - Keseluruhan" />
+                    </div>
                  </div>
               )}
             </div>
@@ -292,9 +298,12 @@ export function RevisiFormPage() {
                    ))}
                  </div>
               ) : (
-                 <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+                 <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl relative">
                     <DollarSign className="size-10 mx-auto mb-4 text-slate-300" />
-                    <p className="font-bold text-slate-500">Data RAB Kosong.</p>
+                    <p className="font-bold text-slate-500 mb-4">Data RAB Kosong.</p>
+                    <div className="w-full max-w-md mx-auto px-4">
+                       <CommentBox field="RAB - Keseluruhan" />
+                    </div>
                  </div>
               )}
             </div>

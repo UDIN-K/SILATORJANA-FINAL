@@ -3,7 +3,7 @@ import api, { apiGetKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ProgressTracker } from '@/components/ProgressTracker';
-import { ArrowLeft, Calendar, Building2, User, DollarSign, FileText, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calendar, Building2, User, DollarSign, FileText, Loader2, AlertTriangle, Eye, RotateCcw } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { formatDate, formatCurrency, fetchKAK, fetchIKU, fetchRAB } from '@/lib/helpers';
@@ -50,6 +50,10 @@ export function HistoryDetailPage() {
   const [historyList, setHistoryList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // BUG-007: Original data for restore
+  const [originalData, setOriginalData] = useState<{kak: any, iku: any[], rab: any[]}>({kak: null, iku: [], rab: []});
+  const [selectedSnapshotId, setSelectedSnapshotId] = useState<number | null>(null);
+
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -60,6 +64,7 @@ export function HistoryDetailPage() {
         setKak(kakData);
         setIkuList(ikuData);
         setRabList(rabData);
+        setOriginalData({ kak: kakData, iku: ikuData, rab: rabData });
 
         // Fetch status history
         try {
@@ -77,6 +82,28 @@ export function HistoryDetailPage() {
 
   const rabTotal = rabList.reduce((sum: number, r: any) => sum + (parseFloat(r.total) || 0), 0);
 
+  // BUG-007: Load snapshot into view
+  const loadSnapshot = (hist: any) => {
+    if (!hist.payload_snapshot) return;
+    try {
+      const data = typeof hist.payload_snapshot === 'string' ? JSON.parse(hist.payload_snapshot) : hist.payload_snapshot;
+      setKak(data.kak || null);
+      setIkuList(data.iku || []);
+      setRabList(data.rab || []);
+      setSelectedSnapshotId(hist.id);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      console.error('Failed to parse snapshot', e);
+    }
+  };
+
+  const restoreCurrent = () => {
+    setKak(originalData.kak);
+    setIkuList(originalData.iku);
+    setRabList(originalData.rab);
+    setSelectedSnapshotId(null);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -86,6 +113,21 @@ export function HistoryDetailPage() {
           <div className="flex items-center gap-3 mt-1"><StatusBadge status={kegiatan.status} /></div>
         </div>
       </div>
+
+      {selectedSnapshotId && (
+        <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl shadow-sm flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3">
+            <Eye className="size-5 text-blue-600" />
+            <div>
+              <p className="font-bold text-blue-900">Anda sedang melihat Versi Snapshot Riwayat</p>
+              <p className="text-sm text-blue-700">Data KAK, IKU, dan RAB di bawah ini adalah data pada saat riwayat ini dibuat.</p>
+            </div>
+          </div>
+          <Button variant="default" size="sm" onClick={restoreCurrent} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+            <RotateCcw className="size-4 mr-2" /> Kembali ke Data Terbaru
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="shadow-sm"><CardContent className="p-5 space-y-3">
@@ -210,6 +252,19 @@ export function HistoryDetailPage() {
                       <div className="mt-1.5 p-2.5 bg-slate-50 rounded-lg text-xs text-slate-600 border border-slate-100 font-medium">
                         <span className="font-bold text-slate-500 block mb-0.5">Catatan:</span>
                         {hist.catatan}
+                      </div>
+                    )}
+                    {hist.payload_snapshot && (
+                      <div className="mt-2">
+                        <Button
+                          variant={selectedSnapshotId === hist.id ? 'secondary' : 'outline'}
+                          size="sm"
+                          onClick={() => selectedSnapshotId === hist.id ? restoreCurrent() : loadSnapshot(hist)}
+                          className="h-7 text-xs rounded-lg"
+                        >
+                          <Eye className="size-3.5 mr-1.5" />
+                          {selectedSnapshotId === hist.id ? 'Sedang Dilihat' : 'Lihat Versi Ini'}
+                        </Button>
                       </div>
                     )}
                   </div>

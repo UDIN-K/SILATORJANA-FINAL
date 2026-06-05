@@ -1,12 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import api, { apiCreateKegiatan } from '@/lib/api';
+import api, { apiCreateKegiatan, apiUpdateKegiatan, apiGetKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, ArrowRight, Send, Plus, Loader2, Trash2, Target, ShoppingCart, Wrench, Plane, X, CheckCircle, Building2, Calendar, FileText, Users, Lightbulb, CheckSquare, CalendarRange, Info, CircleDollarSign } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
-import { formatCurrency, getCurrentUser } from '@/lib/helpers';
+import { ArrowLeft, ArrowRight, Send, Plus, Loader2, Trash2, Target, ShoppingCart, Wrench, Plane, X, CheckCircle, Building2, Calendar, FileText, Users, Lightbulb, CheckSquare, CalendarRange, Info, CircleDollarSign, AlertTriangle, Save } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { formatCurrency, getCurrentUser, fetchKAK, fetchIKU, fetchRAB } from '@/lib/helpers';
 
 const BULAN_INDONESIA = [
   'Januari','Februari','Maret','April','Mei','Juni',
@@ -386,11 +386,19 @@ function VerifikatorModal({
 // ──────────────── Main Page ────────────────
 export function CreateUsulanPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const [isLoadingDraft, setIsLoadingDraft] = useState(!!id);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [ikuMasterList, setIkuMasterList] = useState<any[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [draftSaving, setDraftSaving] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const isInitialLoad = useRef(true);
+
+  // BUG-013/015: localStorage draft key
+  const DRAFT_KEY = 'silatorjana_draft_usulan';
 
   // BUG-003: Tanggal minimum = hari ini
   const todayStr = new Date().toISOString().split('T')[0];
@@ -425,8 +433,15 @@ export function CreateUsulanPage() {
       });
   }, [navigate]);
 
-  // ── Form State ──
-  const [step1, setStep1] = useState({
+  // ── Form State (BUG-013: load from localStorage if available) ──
+  const savedDraft = (() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  })();
+
+  const [step1, setStep1] = useState(savedDraft?.step1 || {
     nama_kegiatan: '',
     jenis_kegiatan: '',
     tanggal_kegiatan: '',
@@ -434,7 +449,7 @@ export function CreateUsulanPage() {
     pengusul_organisasi: '',
   });
 
-  const [step2, setStep2] = useState({
+  const [step2, setStep2] = useState(savedDraft?.step2 || {
     gambaran_umum: '',
     penerima_manfaat: '',
     strategi_pencapaian: '',
@@ -444,12 +459,165 @@ export function CreateUsulanPage() {
     kurun_waktu_sampai: '',
   });
 
-  const [indikatorRows, setIndikatorRows] = useState<IndikatorRow[]>([]);
-  const [ikuItems, setIkuItems] = useState<IkuItem[]>([]);
+  const [indikatorRows, setIndikatorRows] = useState<IndikatorRow[]>(savedDraft?.indikatorRows || []);
+  const [ikuItems, setIkuItems] = useState<IkuItem[]>(savedDraft?.ikuItems || []);
 
-  const [rabBarang, setRabBarang] = useState<RabItem[]>([emptyRab()]);
-  const [rabJasa, setRabJasa]     = useState<RabItem[]>([emptyRab()]);
-  const [rabPerjalanan, setRabPerjalanan] = useState<RabItem[]>([emptyRab()]);
+  const [rabBarang, setRabBarang] = useState<RabItem[]>(savedDraft?.rabBarang || [emptyRab()]);
+  const [rabJasa, setRabJasa]     = useState<RabItem[]>(savedDraft?.rabJasa || [emptyRab()]);
+  const [rabPerjalanan, setRabPerjalanan] = useState<RabItem[]>(savedDraft?.rabPerjalanan || [emptyRab()]);
+
+  // BUG-008 Draft Edit Mode: Fetch existing draft from DB if `id` is present
+  useEffect(() => {
+    if (!id) return;
+    setIsLoadingDraft(true);
+    (async () => {
+      try {
+        const doc = await apiGetKegiatan(id);
+        const [kakData, ikuData, rabData] = await Promise.all([fetchKAK(id), fetchIKU(id), fetchRAB(id)]);
+
+        setStep1({
+          nama_kegiatan: doc.nama_kegiatan || '',
+          jenis_kegiatan: doc.jenis_kegiatan || '',
+          tanggal_kegiatan: doc.tanggal_kegiatan || '',
+          tempat: doc.tempat || '',
+          pengusul_organisasi: doc.pengusul_organisasi || '',
+        });
+
+        if (kakData) {
+          setStep2({
+            gambaran_umum: kakData.gambaran_umum || '',
+            penerima_manfaat: kakData.penerima_manfaat || '',
+            strategi_pencapaian: kakData.strategi_pencapaian || '',
+            metode_pelaksanaan: kakData.metode_pelaksanaan || '',
+            tahapan_pelaksanaan: kakData.tahapan_pelaksanaan || '',
+            kurun_waktu_dari: kakData.kurun_waktu_mulai || '',
+            kurun_waktu_sampai: kakData.kurun_waktu_selesai || '',
+          });
+          if (kakData.indikator && kakData.indikator.length > 0) {
+            let inds = kakData.indikator;
+            if (typeof inds === 'string') { try { inds = JSON.parse(inds); } catch(e) {} }
+            if (Array.isArray(inds)) setIndikatorRows(inds);
+          }
+        }
+
+        if (ikuData && ikuData.length > 0) {
+          setIkuItems(ikuData.map((it: any) => ({
+            nama_indikator: it.nama_iku || it.indikator || '',
+            target_persen: it.target_persen
+          })));
+        }
+
+        if (rabData && rabData.length > 0) {
+          const mapRab = (cat: string) => {
+            const filtered = rabData.filter((r: any) => r.kategori === cat);
+            if (filtered.length === 0) return [emptyRab()];
+            return filtered.map((r: any) => ({
+              uraian: r.uraian || '',
+              qty1: r.qty1 || 1, satuan1: r.satuan1 || '',
+              qty2: r.qty2 || 1, satuan2: r.satuan2 || '',
+              qty3: r.qty3 ?? null, satuan3: r.satuan3 || '',
+              harga_satuan: r.harga_satuan || 0,
+            }));
+          };
+          setRabBarang(mapRab('barang'));
+          setRabJasa(mapRab('jasa'));
+          setRabPerjalanan(mapRab('perjalanan'));
+        }
+      } catch (err) {
+        console.error('Failed to load draft:', err);
+      } finally {
+        setIsLoadingDraft(false);
+      }
+    })();
+  }, [id]);
+
+  // BUG-013/015: Auto-save draft to localStorage on any change
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({
+          step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep,
+        }));
+      } catch {}
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep]);
+
+  // Restore step from draft
+  useEffect(() => {
+    if (savedDraft?.currentStep) {
+      setCurrentStep(savedDraft.currentStep);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // BUG-015: Clear draft after successful submit
+  const clearDraft = () => {
+    try { localStorage.removeItem(DRAFT_KEY); } catch {}
+  };
+
+  // BUG-015: Save draft to DATABASE
+  const saveDraft = async () => {
+    if (!currentUser) return;
+    setDraftSaving(true);
+    try {
+      const payload: Record<string, any> = {
+        nama_kegiatan: step1.nama_kegiatan || 'Draft Usulan',
+        jenis_kegiatan: step1.jenis_kegiatan || null,
+        tempat: step1.tempat || null,
+        pengusul_organisasi: step1.pengusul_organisasi || null,
+        status: 'draft',
+      };
+      if (step1.tanggal_kegiatan) payload.tanggal_kegiatan = step1.tanggal_kegiatan;
+
+      payload.kak = {
+        gambaran_umum: step2.gambaran_umum || null,
+        penerima_manfaat: step2.penerima_manfaat || null,
+        strategi_pencapaian: step2.strategi_pencapaian || null,
+        metode_pelaksanaan: step2.metode_pelaksanaan || null,
+        tahapan_pelaksanaan: step2.tahapan_pelaksanaan || null,
+        kurun_waktu_mulai: step2.kurun_waktu_dari || null,
+        kurun_waktu_selesai: step2.kurun_waktu_sampai || null,
+        indikator: indikatorRows.map(r => ({ bulan: r.bulan, indikator: r.indikator, target: r.target })),
+      };
+
+      payload.iku = ikuItems
+        .filter(i => i.nama_indikator.trim())
+        .map(i => ({ nama_iku: i.nama_indikator, target_persen: i.target_persen }));
+
+      const toRabPayload = (items: RabItem[], kategori: string) =>
+        items.filter(it => it.uraian.trim()).map(it => ({
+          kategori, uraian: it.uraian, qty1: it.qty1, satuan1: it.satuan1,
+          qty2: it.qty2, satuan2: it.satuan2, qty3: it.qty3 ?? null, satuan3: it.satuan3,
+          harga_satuan: it.harga_satuan,
+        }));
+
+      payload.rab = [
+        ...toRabPayload(rabBarang, 'barang'),
+        ...toRabPayload(rabJasa, 'jasa'),
+        ...toRabPayload(rabPerjalanan, 'perjalanan'),
+      ];
+
+      if (id) {
+        await apiUpdateKegiatan(id, payload);
+      } else {
+        await apiCreateKegiatan(payload);
+      }
+      clearDraft();
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 3000);
+    } catch (error: any) {
+      console.error(error);
+      const errMsg = error?.response?.data?.message || error.message;
+      setErrors(prev => ({ ...prev, submit: 'Gagal menyimpan draft: ' + errMsg }));
+    } finally {
+      setDraftSaving(false);
+    }
+  };
 
   // ── Helpers ──
   const makeRabUpdater = (setter: React.Dispatch<React.SetStateAction<RabItem[]>>) =>
@@ -515,7 +683,12 @@ export function CreateUsulanPage() {
         ...toRabPayload(rabPerjalanan, 'perjalanan'),
       ];
 
-      await apiCreateKegiatan(payload);
+      if (id) {
+        await apiUpdateKegiatan(id, payload);
+      } else {
+        await apiCreateKegiatan(payload);
+      }
+      clearDraft(); // BUG-015: Clear draft after successful submit
       navigate('/dashboard/pengusul/usulan');
     } catch (error: any) {
       console.error(error);
@@ -579,6 +752,21 @@ export function CreateUsulanPage() {
         if (!item.nama_indikator.trim()) errs[`iku_nama_${idx}`] = 'Indikator wajib dipilih';
         if (item.target_persen === null || item.target_persen === undefined) errs[`iku_target_${idx}`] = 'Target wajib diisi';
       });
+    }
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  // ── BUG-014: Validasi Step 4 (RAB tidak boleh kosong) ──
+  const validateStep4 = (): boolean => {
+    const errs: Record<string, string> = {};
+    const allRab = [...rabBarang, ...rabJasa, ...rabPerjalanan];
+    const filledRab = allRab.filter(it => it.uraian.trim() && it.harga_satuan > 0);
+    if (filledRab.length === 0) {
+      errs.rab_global = 'Minimal 1 item RAB harus diisi lengkap (uraian dan harga satuan)';
+    }
+    if (totalRab <= 0) {
+      errs.rab_total = 'Total anggaran harus lebih dari Rp 0';
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -834,12 +1022,13 @@ export function CreateUsulanPage() {
                     <div className="space-y-2">
                       <Label className="text-slate-700 font-semibold">Strategi Pencapaian Keluaran <span className="text-red-500">*</span></Label>
                       <textarea
-                        className="flex min-h-[100px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none"
+                        className={`flex min-h-[100px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all resize-none ${errors.strategi_pencapaian ? 'border-red-400 bg-red-50/30' : ''}`}
                         placeholder="Jelaskan strategi konkret untuk mencapai target keluaran/output kegiatan"
                         value={step2.strategi_pencapaian}
-                        onChange={e => setStep2({ ...step2, strategi_pencapaian: e.target.value })}
+                        onChange={e => { setStep2({ ...step2, strategi_pencapaian: e.target.value }); setErrors(prev => { const n = {...prev}; delete n.strategi_pencapaian; return n; }); }}
                         required
                       />
+                      {errors.strategi_pencapaian && <p className="text-xs text-red-500 font-medium">{errors.strategi_pencapaian}</p>}
                     </div>
                   </div>
                 </div>
@@ -1099,6 +1288,15 @@ export function CreateUsulanPage() {
 
           {/* ══════════════ STEP 4: RAB ══════════════ */}
           <div className={currentStep !== 4 ? 'hidden' : 'space-y-6'}>
+            {(errors.rab_global || errors.rab_total) && (
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 font-semibold flex items-center gap-3">
+                <AlertTriangle className="size-5 shrink-0" />
+                <div>
+                  {errors.rab_global && <span className="block text-sm">{errors.rab_global}</span>}
+                  {errors.rab_total && <span className="block text-sm">{errors.rab_total}</span>}
+                </div>
+              </div>
+            )}
             {/* Info Satuan */}
             <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
               <h5 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2"><Info className="size-4" /> Penjelasan Kode Satuan</h5>
@@ -1161,6 +1359,14 @@ export function CreateUsulanPage() {
             </div>
           </div>
 
+          {/* Draft saved indicator */}
+          {draftSaved && (
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold text-sm flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+              <CheckCircle className="size-4 shrink-0" />
+              Draft berhasil disimpan ke database!
+            </div>
+          )}
+
           {/* Navigation Buttons */}
           <div className="flex flex-col-reverse sm:flex-row justify-between gap-4 pt-6 pb-8 border-t border-slate-200">
             {currentStep > 1 ? (
@@ -1169,17 +1375,31 @@ export function CreateUsulanPage() {
               <Button type="button" variant="outline" className="h-14 px-8 rounded-2xl font-bold text-slate-600 hover:bg-slate-100 border-slate-300 w-full sm:w-auto transition-all" onClick={() => navigate('/dashboard/pengusul/usulan')}>Batalkan</Button>
             )}
 
-            {currentStep < 4 ? (
-              <Button type="button" className="h-14 w-full sm:w-auto rounded-2xl px-6 sm:px-8 font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 transition-all active:scale-95 text-[15px] flex items-center justify-center group" onClick={handleNextStep}>
-                <span className="inline">Selanjutnya</span>
-                <ArrowRight className="size-5 ml-2 transition-transform group-hover:translate-x-1" />
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {/* BUG-015: Simpan Draft ke DB */}
+              <Button
+                type="button"
+                variant="outline"
+                disabled={draftSaving || isSubmitting}
+                onClick={saveDraft}
+                className="h-14 w-full sm:w-auto rounded-2xl px-6 font-bold text-slate-700 border-slate-300 hover:bg-slate-50 transition-all text-[15px] flex items-center justify-center"
+              >
+                {draftSaving ? <Loader2 className="size-5 mr-2 animate-spin" /> : <Save className="size-5 mr-2" />}
+                {draftSaving ? 'Menyimpan...' : 'Simpan Draft'}
               </Button>
-            ) : (
-              <Button type="button" disabled={isSubmitting} onClick={() => setShowVerifikatorModal(true)} className="h-14 w-full sm:w-auto rounded-2xl px-6 sm:px-8 font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 transition-all active:scale-95 text-[15px] flex items-center justify-center group">
-                {isSubmitting ? <Loader2 className="size-5 mr-3 animate-spin" /> : <Send className="size-5 mr-3 transition-transform group-hover:translate-x-1" />}
-                <span className="inline">{isSubmitting ? 'Memproses...' : 'Kirim Semua Data'}</span>
-              </Button>
-            )}
+
+              {currentStep < 4 ? (
+                <Button type="button" className="h-14 w-full sm:w-auto rounded-2xl px-6 sm:px-8 font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 transition-all active:scale-95 text-[15px] flex items-center justify-center group" onClick={handleNextStep}>
+                  <span className="inline">Selanjutnya</span>
+                  <ArrowRight className="size-5 ml-2 transition-transform group-hover:translate-x-1" />
+                </Button>
+              ) : (
+                <Button type="button" disabled={isSubmitting} onClick={() => { if (validateStep4()) setShowVerifikatorModal(true); }} className="h-14 w-full sm:w-auto rounded-2xl px-6 sm:px-8 font-bold bg-[#047857] hover:bg-[#065F46] text-white shadow-xl shadow-emerald-700/20 transition-all active:scale-95 text-[15px] flex items-center justify-center group">
+                  {isSubmitting ? <Loader2 className="size-5 mr-3 animate-spin" /> : <Send className="size-5 mr-3 transition-transform group-hover:translate-x-1" />}
+                  <span className="inline">{isSubmitting ? 'Memproses...' : 'Kirim Semua Data'}</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

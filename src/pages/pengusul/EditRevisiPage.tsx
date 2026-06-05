@@ -348,7 +348,22 @@ export function EditRevisiPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id || !kegiatan) return;
+
+    // Validation
+    const allRab = [...rabBarang, ...rabJasa, ...rabPerjalanan];
+    const filledRab = allRab.filter(it => it.uraian.trim() && it.harga_satuan > 0);
+    if (filledRab.length === 0) {
+      setForm(prev => ({...prev, submitError: 'Gagal mengirim: Minimal 1 item RAB harus diisi lengkap (uraian dan harga satuan).'}));
+      return;
+    }
+    const filledIku = ikuItems.filter(it => it.nama_indikator.trim() && it.target_persen !== null);
+    if (filledIku.length === 0) {
+      setForm(prev => ({...prev, submitError: 'Gagal mengirim: Minimal 1 indikator IKU harus ditambahkan dan diisi lengkap.'}));
+      return;
+    }
+
     setIsSubmitting(true);
+    setForm(prev => ({...prev, submitError: ''}));
     try {
       const toRabPayload = (items: RabItem[], kategori: string) =>
         items.filter(it => it.uraian.trim()).map(it => ({
@@ -390,7 +405,7 @@ export function EditRevisiPage() {
         ],
       });
 
-      navigate('/dashboard/pengusul/needs-work');
+      navigate('/dashboard/pengusul/usulan');
     } catch (error: any) {
       console.error(error);
       const errMsg = error?.response?.data?.message || error.message;
@@ -450,12 +465,17 @@ export function EditRevisiPage() {
       </div>
 
       {hasComments && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-          <AlertTriangle className="size-5 text-amber-600 mt-0.5 shrink-0" />
-          <div>
-            <p className="font-semibold text-amber-800">Catatan revisi dari Verifikator:</p>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 shadow-sm mb-6">
+          <div className="flex items-center gap-3 border-b border-amber-200/60 pb-3 mb-4">
+            <AlertTriangle className="size-6 text-amber-600" />
+            <h3 className="text-lg font-bold text-amber-900">Perhatian: Revisi Diperlukan</h3>
+          </div>
+          <div className="space-y-3">
             {Object.entries(revisiComments).map(([k, v]) => (
-              <p key={k} className="text-sm text-amber-700 mt-1"><span className="font-medium">[{k}]</span> {v}</p>
+              <div key={k} className="flex flex-col sm:flex-row gap-1 sm:gap-4 bg-white/60 p-3 rounded-md border border-amber-100">
+                <span className="font-bold text-amber-900 min-w-[140px] capitalize">{k.replace(/_/g, ' ')}</span>
+                <span className="text-amber-800 leading-relaxed">{v}</span>
+              </div>
             ))}
           </div>
         </div>

@@ -17,6 +17,7 @@ class StatusHistory extends Model
         'user_id',
         'user_nama',
         'user_role',
+        'payload_snapshot',
     ];
 
     public function user()

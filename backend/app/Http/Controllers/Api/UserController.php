@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -62,6 +63,7 @@ class UserController extends Controller
 
         // Clear any orphaned tokens/sessions/history if the ID was somehow reused or left over
         $user->tokens()->delete();
+        DB::table('status_history')->where('user_id', $user->id)->delete();
 
         return response()->json($user, 201);
     }
@@ -95,6 +97,7 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $user->tokens()->delete();
+        DB::table('status_history')->where('user_id', $user->id)->delete();
         $user->delete();
 
         return response()->json(['message' => 'User berhasil dihapus.']);
