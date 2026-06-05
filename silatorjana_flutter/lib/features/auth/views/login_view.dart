@@ -120,10 +120,19 @@ class _LoginViewState extends State<LoginView> {
           ),
           child: SvgPicture.asset(
             'assets/svg/app-logo.svg',
-            height: 40,
+            height: 48,
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
+        Container(
+          height: 160,
+          padding: const EdgeInsets.all(8),
+          child: SvgPicture.asset(
+            'assets/svg/login-illustration.svg',
+            fit: BoxFit.contain,
+          ),
+        ),
+        const SizedBox(height: 16),
         const Text(
           'Selamat Datang',
           style: TextStyle(

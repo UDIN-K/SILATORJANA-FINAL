@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../viewmodels/chat_viewmodel.dart';
 
 class JanaChatView extends StatefulWidget {
@@ -71,6 +72,9 @@ class _JanaChatViewState extends State<JanaChatView> {
                             bottomLeft: msg.isUser ? const Radius.circular(16) : const Radius.circular(0),
                           ),
                           border: msg.isUser ? null : Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))
+                          ],
                         ),
                         child: Text(
                           msg.text,
@@ -79,18 +83,33 @@ class _JanaChatViewState extends State<JanaChatView> {
                             fontSize: 15,
                           ),
                         ),
-                      ),
+                      ).animate().fade(duration: 300.ms).slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuad),
                     );
                   },
                 ),
               ),
               if (_chatViewModel.isTyping)
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Jana sedang mengetik...', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
-                  ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 16, bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16).copyWith(bottomLeft: const Radius.circular(0)),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircleAvatar(radius: 4, backgroundColor: Color(0xFF047857)).animate(onPlay: (controller) => controller.repeat()).fade(duration: 400.ms).then().fade(duration: 400.ms, begin: 1, end: 0.2),
+                        const SizedBox(width: 4),
+                        const CircleAvatar(radius: 4, backgroundColor: Color(0xFF047857)).animate(delay: 200.ms, onPlay: (controller) => controller.repeat()).fade(duration: 400.ms).then().fade(duration: 400.ms, begin: 1, end: 0.2),
+                        const SizedBox(width: 4),
+                        const CircleAvatar(radius: 4, backgroundColor: Color(0xFF047857)).animate(delay: 400.ms, onPlay: (controller) => controller.repeat()).fade(duration: 400.ms).then().fade(duration: 400.ms, begin: 1, end: 0.2),
+                      ],
+                    ),
+                  ).animate().fade().slideY(begin: 0.2, end: 0),
                 ),
               _buildInputArea(),
             ],

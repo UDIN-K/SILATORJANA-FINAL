@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <defs>
+    <pattern id="gridDot" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="12" r="0.7" fill="#10b981" fill-opacity="0.18"/>
+    </pattern>
+    <pattern id="gridCross" x="0" y="0" width="48" height="48" patternUnits="userSpaceOnUse">
+      <line x1="22" y1="24" x2="26" y2="24" stroke="#10b981" stroke-width="0.4" stroke-opacity="0.1"/>
+      <line x1="24" y1="22" x2="24" y2="26" stroke="#10b981" stroke-width="0.4" stroke-opacity="0.1"/>
+    </pattern>
+    <radialGradient id="centerFade" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f8fafc" stop-opacity="0"/>
+      <stop offset="85%" stop-color="#f8fafc" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#f8fafc" stop-opacity="0.6"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Dots -->
+  <rect width="600" height="600" fill="url(#gridDot)"/>
+  
+  <!-- Crosses at larger interval -->
+  <rect width="600" height="600" fill="url(#gridCross)"/>
+  
+  <!-- Fade edges so pattern blends nicely -->
+  <rect width="600" height="600" fill="url(#centerFade)"/>
+</svg>

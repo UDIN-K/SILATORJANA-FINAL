@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="400" viewBox="0 0 1440 400">
+  <defs>
+    <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857" stop-opacity="0.08"/>
+      <stop offset="50%" stop-color="#10b981" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#14b8a6" stop-opacity="0.06"/>
+    </linearGradient>
+    <linearGradient id="waveGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.05"/>
+      <stop offset="50%" stop-color="#047857" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#059669" stop-opacity="0.04"/>
+    </linearGradient>
+    <linearGradient id="waveGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" stop-opacity="0.03"/>
+      <stop offset="50%" stop-color="#34d399" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.02"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1440" height="400" fill="transparent"/>
+  
+  <!-- Wave Layer 3 (back - most subtle) -->
+  <path d="M0,320 C160,280 320,360 480,300 C640,240 800,340 960,290 C1120,240 1280,320 1440,280 L1440,400 L0,400 Z" fill="url(#waveGrad3)"/>
+  
+  <!-- Wave Layer 2 (middle) -->
+  <path d="M0,340 C120,300 240,370 400,320 C560,270 700,360 860,310 C1020,260 1180,340 1440,300 L1440,400 L0,400 Z" fill="url(#waveGrad2)"/>
+  
+  <!-- Wave Layer 1 (front - most visible) -->
+  <path d="M0,360 C180,330 360,380 540,350 C720,320 900,370 1080,340 C1260,310 1360,360 1440,340 L1440,400 L0,400 Z" fill="url(#waveGrad1)"/>
+  
+  <!-- Accent dots along the wave crests -->
+  <circle cx="480" cy="300" r="3" fill="#10b981" fill-opacity="0.1"/>
+  <circle cx="960" cy="290" r="3" fill="#10b981" fill-opacity="0.1"/>
+  <circle cx="400" cy="320" r="2" fill="#34d399" fill-opacity="0.08"/>
+  <circle cx="860" cy="310" r="2" fill="#34d399" fill-opacity="0.08"/>
+  <circle cx="540" cy="350" r="2.5" fill="#10b981" fill-opacity="0.07"/>
+  <circle cx="1080" cy="340" r="2.5" fill="#10b981" fill-opacity="0.07"/>
+</svg>

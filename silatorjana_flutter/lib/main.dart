@@ -4,14 +4,20 @@ import 'features/auth/views/login_view.dart';
 import 'features/auth/viewmodels/auth_viewmodel.dart';
 import 'features/kegiatan/viewmodels/kegiatan_viewmodel.dart';
 import 'features/chat/viewmodels/chat_viewmodel.dart';
+import 'features/profile/viewmodels/profile_viewmodel.dart';
+import 'core/utils/notification_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().init();
+  
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => KegiatanViewModel()),
         ChangeNotifierProvider(create: (_) => ChatViewModel()),
+        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
       ],
       child: const MyApp(),
     ),

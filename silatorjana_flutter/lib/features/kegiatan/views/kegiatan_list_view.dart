@@ -65,6 +65,18 @@ class _KegiatanListViewState extends State<KegiatanListView> {
         listenable: _kegiatanViewModel,
         builder: (context, _) => _buildBody(),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          // Navigasi ke halaman form pembuatan usulan (jika sudah ada)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Fitur Buat Usulan akan segera tersedia')),
+          );
+        },
+        backgroundColor: const Color(0xFF047857),
+        foregroundColor: Colors.white,
+        icon: const Icon(LucideIcons.plus),
+        label: const Text('Buat Usulan', style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
     );
   }
 
@@ -105,71 +117,138 @@ class _KegiatanListViewState extends State<KegiatanListView> {
         itemCount: _kegiatanViewModel.kegiatanList.length,
         itemBuilder: (context, index) {
           final item = _kegiatanViewModel.kegiatanList[index];
-          return Card(
+          
+          // Simple date parsing assuming ISO string like "2026-06-05T..."
+          String formattedDate = item.createdAt;
+          if (item.createdAt.length >= 10) {
+            formattedDate = item.createdAt.substring(0, 10);
+          }
+
+          final bool isEditable = item.status == 'draft' || item.status == 'revisi' || item.status == 'revision_requested';
+
+          return Container(
             margin: const EdgeInsets.only(bottom: 16),
-            color: Colors.white,
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => KegiatanDetailView(
-                      kegiatan: item,
-                      currentUser: widget.currentUser,
-                    ),
-                  ),
-                ).then((value) {
-                  if (value == true) _kegiatanViewModel.fetchKegiatanList();
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.judul,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E293B)),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.judul,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(item.status).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: _getStatusColor(item.status)),
-                          ),
-                          child: Text(
-                            _formatStatus(item.status),
-                            style: TextStyle(
-                              color: _getStatusColor(item.status),
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      formattedDate,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF64748B)),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(LucideIcons.user, size: 14, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(item.namaPengusul, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                      ],
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: CircleAvatar(radius: 2, backgroundColor: Color(0xFFCBD5E1)),
+                    ),
+                    Text(
+                      'ID: ${item.id.toString().padLeft(8, '0')}',
+                      style: const TextStyle(fontSize: 12, fontFamily: 'monospace', fontWeight: FontWeight.w500, color: Color(0xFF64748B)),
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(LucideIcons.user, size: 12, color: Color(0xFF64748B)),
+                    const SizedBox(width: 4),
+                    Text(item.namaPengusul, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(item.status).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _getStatusColor(item.status).withValues(alpha: 0.5)),
+                  ),
+                  child: Text(
+                    _formatStatus(item.status),
+                    style: TextStyle(
+                      color: _getStatusColor(item.status),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => KegiatanDetailView(
+                                kegiatan: item,
+                                currentUser: widget.currentUser,
+                              ),
+                            ),
+                          ).then((value) {
+                            if (value == true) _kegiatanViewModel.fetchKegiatanList();
+                          });
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF047857),
+                          side: const BorderSide(color: Color(0xFFA7F3D0)),
+                          backgroundColor: const Color(0xFFECFDF5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Icon(LucideIcons.eye, size: 18),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: isEditable ? () {} : null,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFD97706),
+                          side: BorderSide(color: isEditable ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0)),
+                          backgroundColor: isEditable ? const Color(0xFFFFFBEB) : const Color(0xFFF8FAFC),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Icon(LucideIcons.edit2, size: 18),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: isEditable ? () {} : null,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFDC2626),
+                          side: BorderSide(color: isEditable ? const Color(0xFFFECACA) : const Color(0xFFE2E8F0)),
+                          backgroundColor: isEditable ? const Color(0xFFFEF2F2) : const Color(0xFFF8FAFC),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Icon(LucideIcons.trash2, size: 18),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           );
         },

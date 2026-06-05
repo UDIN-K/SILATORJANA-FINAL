@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/kegiatan.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/utils/notification_service.dart';
 
 class KegiatanViewModel extends ChangeNotifier {
   final ApiService _apiService = ApiService();
+  final NotificationService _notificationService = NotificationService();
 
   List<Kegiatan> kegiatanList = [];
   bool isListLoading = false;
@@ -71,6 +73,14 @@ class KegiatanViewModel extends ChangeNotifier {
       if (response.statusCode == 200 || response.statusCode == 201) {
         isActionLoading = false;
         notifyListeners();
+        
+        final actionText = action == 'approve' ? 'Disetujui' : 'Direvisi';
+        _notificationService.showNotification(
+          id: id,
+          title: 'Status Proposal Diperbarui',
+          body: 'Proposal (ID: $id) telah berhasil $actionText.',
+        );
+
         return true;
       } else {
         isActionLoading = false;
