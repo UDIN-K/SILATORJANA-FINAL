@@ -10,6 +10,9 @@ use App\Models\Iku;
 use App\Models\IkuMaster;
 use App\Models\StatusHistory;
 use App\Models\User;
+use App\Models\Lpj;
+use App\Models\RabRealisasi;
+use App\Models\SpkPenilaian;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -353,6 +356,349 @@ class DatabaseSeeder extends Seeder
         Iku::create(['kegiatan_id' => $k2->id, 'nama_iku' => 'Peningkatan Kerjasama Industri', 'target_persen' => 60]);
         Iku::create(['kegiatan_id' => $k3->id, 'nama_iku' => 'Peningkatan Kualitas Lulusan', 'target_persen' => 85]);
         Iku::create(['kegiatan_id' => $k4->id, 'nama_iku' => 'Peningkatan Kompetensi SDM', 'target_persen' => 80]);
+
+        // ============================================================
+        // 6. SPK KRITERIA & PENILAIAN MOCK DATA
+        // ============================================================
+        $this->call(SpkKriteriaSeeder::class);
+
+        // --- Mock Lpj for completed Kegiatan 6 (Grade A) ---
+        $lpj6 = Lpj::create([
+            'kegiatan_id' => $k6->id,
+            'catatan_pengusul' => 'Laporan kompetisi robot selesai.',
+            'status_verifikasi' => 'approved',
+            'file_lpj' => 'lpj_robot.pdf',
+            'tanggal_pengajuan' => now()->subDays(30),
+            'tanggal_pelaksanaan_real' => '2026-03-15',
+        ]);
+
+        $rabsK6 = Rab::where('kegiatan_id', $k6->id)->get();
+        foreach ($rabsK6 as $r) {
+            RabRealisasi::create([
+                'kegiatan_id' => $k6->id,
+                'rab_id' => $r->id,
+                'qty1' => $r->qty1 ?? 0,
+                'satuan1' => $r->satuan1,
+                'qty2' => $r->qty2 ?? 1,
+                'satuan2' => $r->satuan2,
+                'qty3' => $r->qty3,
+                'satuan3' => $r->satuan3,
+                'harga_satuan' => $r->harga_satuan,
+            ]);
+        }
+
+        Iku::create([
+            'kegiatan_id' => $k6->id,
+            'nama_iku' => 'Peningkatan Kualitas Lulusan',
+            'target_persen' => 80,
+            'capaian_persen' => 80,
+        ]);
+
+        SpkPenilaian::create([
+            'kegiatan_id' => $k6->id,
+            'lpj_id' => $lpj6->id,
+            'skor_c1' => 100,
+            'skor_c2' => 100,
+            'skor_c3' => 100,
+            'skor_c4' => 100,
+            'norm_c1' => 0.500000,
+            'norm_c2' => 0.500000,
+            'norm_c3' => 0.500000,
+            'norm_c4' => 0.500000,
+            'skor_akhir' => 0.850000,
+            'grade' => 'A',
+            'dinilai_oleh' => 'Ratna Sari, S.E., M.Ak.',
+            'dinilai_pada' => now()->subDays(25),
+        ]);
+
+        // --- Kegiatan 9: completed (Grade B) ---
+        $k9 = Kegiatan::create([
+            'nama_kegiatan' => 'Smart Agriculture IoT Workshop',
+            'jenis_kegiatan' => 'pelatihan',
+            'status' => 'completed',
+            'pengusul_id' => $pengusul1->id,
+            'pengusul_nama' => $pengusul1->nama,
+            'nama_jurusan' => $pengusul1->jurusan,
+            'tanggal_kegiatan' => now()->subDays(45)->toDateString(),
+            'tempat' => 'Lab IoT Lt. 3',
+            'total_anggaran' => 10000000,
+        ]);
+        $rabK9 = Rab::create(['kegiatan_id' => $k9->id, 'uraian' => 'Sensor & Kit', 'kategori' => 'barang', 'harga_satuan' => 200000, 'qty1' => 50, 'satuan1' => 'unit', 'total' => 10000000]);
+        RabRealisasi::create([
+            'kegiatan_id' => $k9->id,
+            'rab_id' => $rabK9->id,
+            'qty1' => 50,
+            'satuan1' => 'unit',
+            'qty2' => 1,
+            'qty3' => null,
+            'harga_satuan' => 190000, // 9.5M (5% deviation)
+        ]);
+        Iku::create([
+            'kegiatan_id' => $k9->id,
+            'nama_iku' => 'Peningkatan Kompetensi SDM',
+            'target_persen' => 80,
+            'capaian_persen' => 82, // > 100% target
+        ]);
+        $lpj9 = Lpj::create([
+            'kegiatan_id' => $k9->id,
+            'catatan_pengusul' => 'Realisasi workshop IoT pertanian.',
+            'status_verifikasi' => 'approved',
+            'file_lpj' => 'lpj_iot_pertanian.pdf',
+            'tanggal_pengajuan' => now()->subDays(40),
+            'tanggal_pelaksanaan_real' => now()->subDays(43)->toDateString(), // 2 days deviation -> C1 = 75
+        ]);
+        SpkPenilaian::create([
+            'kegiatan_id' => $k9->id,
+            'lpj_id' => $lpj9->id,
+            'skor_c1' => 75,
+            'skor_c2' => 75,
+            'skor_c3' => 100,
+            'skor_c4' => 100,
+            'norm_c1' => 0.430000,
+            'norm_c2' => 0.430000,
+            'norm_c3' => 0.520000,
+            'norm_c4' => 0.520000,
+            'skor_akhir' => 0.680000,
+            'grade' => 'B',
+            'dinilai_oleh' => 'Ratna Sari, S.E., M.Ak.',
+            'dinilai_pada' => now()->subDays(38),
+        ]);
+
+        // --- Kegiatan 10: completed (Grade C) ---
+        $k10 = Kegiatan::create([
+            'nama_kegiatan' => 'Lokakarya Jurnalistik Mahasiswa',
+            'jenis_kegiatan' => 'pelatihan',
+            'status' => 'completed',
+            'pengusul_id' => $pengusul2->id,
+            'pengusul_nama' => $pengusul2->nama,
+            'nama_jurusan' => $pengusul2->jurusan,
+            'tanggal_kegiatan' => now()->subDays(60)->toDateString(),
+            'tempat' => 'Aula Gedung TGP',
+            'total_anggaran' => 12000000,
+        ]);
+        $rabK10 = Rab::create(['kegiatan_id' => $k10->id, 'uraian' => 'Konsumsi & Modul', 'kategori' => 'barang', 'harga_satuan' => 120000, 'qty1' => 100, 'satuan1' => 'paket', 'total' => 12000000]);
+        RabRealisasi::create([
+            'kegiatan_id' => $k10->id,
+            'rab_id' => $rabK10->id,
+            'qty1' => 100,
+            'satuan1' => 'paket',
+            'qty2' => 1,
+            'qty3' => null,
+            'harga_satuan' => 100000, // 10M (16.6% deviation -> C2 = 50)
+        ]);
+        Iku::create([
+            'kegiatan_id' => $k10->id,
+            'nama_iku' => 'Peningkatan Publikasi Ilmiah',
+            'target_persen' => 70,
+            'capaian_persen' => 70, // 100% target -> C3 = 100
+        ]);
+        $lpj10 = Lpj::create([
+            'kegiatan_id' => $k10->id,
+            'catatan_pengusul' => 'Realisasi lokakarya jurnalistik.',
+            'status_verifikasi' => 'approved',
+            'file_lpj' => 'lpj_jurnalistik.pdf',
+            'tanggal_pengajuan' => now()->subDays(50),
+            'tanggal_pelaksanaan_real' => now()->subDays(55)->toDateString(), // 5 days deviation -> C1 = 50
+        ]);
+        SpkPenilaian::create([
+            'kegiatan_id' => $k10->id,
+            'lpj_id' => $lpj10->id,
+            'skor_c1' => 50,
+            'skor_c2' => 50,
+            'skor_c3' => 100,
+            'skor_c4' => 100,
+            'norm_c1' => 0.280000,
+            'norm_c2' => 0.280000,
+            'norm_c3' => 0.520000,
+            'norm_c4' => 0.520000,
+            'skor_akhir' => 0.490000,
+            'grade' => 'C',
+            'dinilai_oleh' => 'Ratna Sari, S.E., M.Ak.',
+            'dinilai_pada' => now()->subDays(48),
+        ]);
+
+        // --- Kegiatan 11: completed (Grade D) ---
+        $k11 = Kegiatan::create([
+            'nama_kegiatan' => 'Kunjungan Museum Grafika',
+            'jenis_kegiatan' => 'lainnya',
+            'status' => 'completed',
+            'pengusul_id' => $pengusul2->id,
+            'pengusul_nama' => $pengusul2->nama,
+            'nama_jurusan' => $pengusul2->jurusan,
+            'tanggal_kegiatan' => now()->subDays(90)->toDateString(),
+            'tempat' => 'Museum Jakarta',
+            'total_anggaran' => 5000000,
+        ]);
+        $rabK11 = Rab::create(['kegiatan_id' => $k11->id, 'uraian' => 'Tiket Masuk', 'kategori' => 'barang', 'harga_satuan' => 50000, 'qty1' => 100, 'satuan1' => 'orang', 'total' => 5000000]);
+        RabRealisasi::create([
+            'kegiatan_id' => $k11->id,
+            'rab_id' => $rabK11->id,
+            'qty1' => 100,
+            'satuan1' => 'orang',
+            'qty2' => 1,
+            'qty3' => null,
+            'harga_satuan' => 40000, // 4M (20% deviation -> C2 = 50)
+        ]);
+        Iku::create([
+            'kegiatan_id' => $k11->id,
+            'nama_iku' => 'Peningkatan Kualitas Lulusan',
+            'target_persen' => 80,
+            'capaian_persen' => 60, // 75% target -> C3 = 0
+        ]);
+        $lpj11 = Lpj::create([
+            'kegiatan_id' => $k11->id,
+            'catatan_pengusul' => 'LPJ Kunjungan Museum.',
+            'status_verifikasi' => 'approved',
+            'file_lpj' => 'lpj_museum.pdf',
+            'tanggal_pengajuan' => now()->subDays(70),
+            'tanggal_pelaksanaan_real' => now()->subDays(85)->toDateString(), // 5 days deviation -> C1 = 50
+        ]);
+        SpkPenilaian::create([
+            'kegiatan_id' => $k11->id,
+            'lpj_id' => $lpj11->id,
+            'skor_c1' => 50,
+            'skor_c2' => 50,
+            'skor_c3' => 0,
+            'skor_c4' => 50,
+            'norm_c1' => 0.280000,
+            'norm_c2' => 0.280000,
+            'norm_c3' => 0.000000,
+            'norm_c4' => 0.260000,
+            'skor_akhir' => 0.210000,
+            'grade' => 'D',
+            'dinilai_oleh' => 'Ratna Sari, S.E., M.Ak.',
+            'dinilai_pada' => now()->subDays(68),
+        ]);
+
+        // --- Kegiatan 12: lpj_submitted (Awaiting Evaluation - IoT Boot Camp) ---
+        $k12 = Kegiatan::create([
+            'nama_kegiatan' => 'IoT Boot Camp 2026',
+            'jenis_kegiatan' => 'pelatihan',
+            'status' => 'lpj_submitted',
+            'pengusul_id' => $pengusul1->id,
+            'pengusul_nama' => $pengusul1->nama,
+            'nama_jurusan' => $pengusul1->jurusan,
+            'tanggal_kegiatan' => now()->subDays(10)->toDateString(),
+            'tempat' => 'Lab IoT',
+            'total_anggaran' => 20000000,
+        ]);
+        $rabK12_1 = Rab::create(['kegiatan_id' => $k12->id, 'uraian' => 'Komponen Elektronik', 'kategori' => 'barang', 'harga_satuan' => 500000, 'qty1' => 20, 'satuan1' => 'unit', 'total' => 10000000]);
+        $rabK12_2 = Rab::create(['kegiatan_id' => $k12->id, 'uraian' => 'Honor Pembicara', 'kategori' => 'jasa', 'harga_satuan' => 5000000, 'qty1' => 2, 'satuan1' => 'orang', 'total' => 10000000]);
+        
+        RabRealisasi::create([
+            'kegiatan_id' => $k12->id,
+            'rab_id' => $rabK12_1->id,
+            'qty1' => 20,
+            'satuan1' => 'unit',
+            'qty2' => 1,
+            'qty3' => null,
+            'harga_satuan' => 500000,
+        ]);
+        RabRealisasi::create([
+            'kegiatan_id' => $k12->id,
+            'rab_id' => $rabK12_2->id,
+            'qty1' => 2,
+            'satuan1' => 'orang',
+            'qty2' => 1,
+            'qty3' => null,
+            'harga_satuan' => 5000000,
+        ]);
+
+        Iku::create([
+            'kegiatan_id' => $k12->id,
+            'nama_iku' => 'Peningkatan Kompetensi SDM',
+            'target_persen' => 80,
+            'capaian_persen' => 85,
+        ]);
+
+        Lpj::create([
+            'kegiatan_id' => $k12->id,
+            'catatan_pengusul' => 'Laporan LPJ IoT Boot Camp 2026.',
+            'status_verifikasi' => 'submitted',
+            'file_lpj' => 'lpj_iot_bootcamp_2026.pdf',
+            'tanggal_pengajuan' => now()->subDay(),
+            'tanggal_pelaksanaan_real' => now()->subDays(10)->toDateString(),
+        ]);
+
+        // --- Kegiatan 13: lpj_submitted (Awaiting Evaluation - Seminar Smart Grid) ---
+        $k13 = Kegiatan::create([
+            'nama_kegiatan' => 'Seminar Smart Grid & Energi Terbarukan',
+            'jenis_kegiatan' => 'acara',
+            'status' => 'lpj_submitted',
+            'pengusul_id' => $pengusul2->id,
+            'pengusul_nama' => $pengusul2->nama,
+            'nama_jurusan' => $pengusul2->jurusan,
+            'tanggal_kegiatan' => now()->subDays(15)->toDateString(),
+            'tempat' => 'Aula PNJ',
+            'total_anggaran' => 15000000,
+        ]);
+        $rabK13 = Rab::create(['kegiatan_id' => $k13->id, 'uraian' => 'Sewa Zoom Pro & Gedung', 'kategori' => 'jasa', 'harga_satuan' => 15000000, 'qty1' => 1, 'satuan1' => 'paket', 'total' => 15000000]);
+        
+        RabRealisasi::create([
+            'kegiatan_id' => $k13->id,
+            'rab_id' => $rabK13->id,
+            'qty1' => 1,
+            'satuan1' => 'paket',
+            'qty2' => 1,
+            'qty3' => null,
+            'harga_satuan' => 14000000, // 6.67% deviation
+        ]);
+
+        Iku::create([
+            'kegiatan_id' => $k13->id,
+            'nama_iku' => 'Peningkatan Kerjasama Industri',
+            'target_persen' => 70,
+            'capaian_persen' => 75,
+        ]);
+
+        Lpj::create([
+            'kegiatan_id' => $k13->id,
+            'catatan_pengusul' => 'Laporan Seminar Smart Grid.',
+            'status_verifikasi' => 'submitted',
+            'file_lpj' => 'lpj_smart_grid_2026.pdf',
+            'tanggal_pengajuan' => now()->subDays(2),
+            'tanggal_pelaksanaan_real' => now()->subDays(12)->toDateString(), // 3 days deviation
+        ]);
+
+        // --- Kegiatan 14: lpj_revision (Awaiting Evaluation - Kunjungan Industri Mesin) ---
+        $k14 = Kegiatan::create([
+            'nama_kegiatan' => 'Kunjungan Industri Mesin CNC',
+            'jenis_kegiatan' => 'lainnya',
+            'status' => 'lpj_revision',
+            'pengusul_id' => $pengusul3->id,
+            'pengusul_nama' => $pengusul3->nama,
+            'nama_jurusan' => $pengusul3->jurusan,
+            'tanggal_kegiatan' => now()->subDays(25)->toDateString(),
+            'tempat' => 'PT CNC Indonesia',
+            'total_anggaran' => 30000000,
+        ]);
+        $rabK14 = Rab::create(['kegiatan_id' => $k14->id, 'uraian' => 'Sewa Bus Pariwisata', 'kategori' => 'perjalanan', 'harga_satuan' => 15000000, 'qty1' => 2, 'satuan1' => 'bus', 'total' => 30000000]);
+        
+        RabRealisasi::create([
+            'kegiatan_id' => $k14->id,
+            'rab_id' => $rabK14->id,
+            'qty1' => 2,
+            'satuan1' => 'bus',
+            'qty2' => 1,
+            'qty3' => null,
+            'harga_satuan' => 12500000, // 25M (16.67% deviation)
+        ]);
+
+        Iku::create([
+            'kegiatan_id' => $k14->id,
+            'nama_iku' => 'Peningkatan Kualitas Lulusan',
+            'target_persen' => 90,
+            'capaian_persen' => 80, // 0.88 deviation (C3 = 0)
+        ]);
+
+        Lpj::create([
+            'kegiatan_id' => $k14->id,
+            'catatan_pengusul' => 'Revisi LPJ Kunjungan Industri CNC.',
+            'status_verifikasi' => 'submitted',
+            'file_lpj' => 'lpj_kunjungan_cnc_revisi.pdf',
+            'tanggal_pengajuan' => now()->subDays(20), // 20 days since submit (C4 late)
+            'tanggal_pelaksanaan_real' => now()->subDays(20)->toDateString(), // 5 days deviation
+        ]);
 
         $this->command->info('✅ Database seeded successfully!');
         $this->command->info('');

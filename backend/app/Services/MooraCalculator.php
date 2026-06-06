@@ -86,7 +86,7 @@ class MooraCalculator
         $real    = Carbon::parse($tanggalReal);
         $deviasi = abs($rencana->diffInDays($real));
 
-        if ($deviasi === 0) {
+        if ($deviasi == 0) {
             $skor = 100;
             $ket  = 'Tepat waktu';
         } elseif ($deviasi <= 3) {

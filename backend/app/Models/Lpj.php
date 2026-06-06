@@ -15,6 +15,7 @@ class Lpj extends Model
         'status_verifikasi',
         'file_lpj',
         'tanggal_pengajuan',
+        'tanggal_pelaksanaan_real',
         'deadline',
         'verified_by',
         'catatan_bendahara',
@@ -25,6 +26,7 @@ class Lpj extends Model
     {
         return [
             'tanggal_pengajuan' => 'date',
+            'tanggal_pelaksanaan_real' => 'date',
             'deadline' => 'date',
         ];
     }
