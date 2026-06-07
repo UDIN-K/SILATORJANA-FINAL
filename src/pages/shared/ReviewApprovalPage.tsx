@@ -169,9 +169,9 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
               )}
             </div>
               {kegiatan.deskripsi && (
-                <div className="mt-6 pt-6 border-t border-slate-100">
+                <div className="border-b border-slate-100 pb-4 mt-6">
                   <p className="text-sm font-medium text-slate-500 mb-2">Deskripsi</p>
-                  <p className="text-sm text-slate-800 whitespace-pre-wrap">{kegiatan.deskripsi}</p>
+                  <p className="text-sm text-slate-800 whitespace-pre-wrap break-words">{kegiatan.deskripsi}</p>
                 </div>
               )}
               {kegiatan.surat_pengantar_path && (
@@ -243,8 +243,8 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
                                 <tr key={idx} className="bg-white hover:bg-slate-50/50 transition-colors">
                                   <td className="px-3 py-2 text-center font-medium text-slate-500">{idx + 1}</td>
                                   <td className="px-3 py-2 font-medium text-slate-800 capitalize">{item.bulan || '-'}</td>
-                                  <td className="px-3 py-2 text-slate-600">{item.indikator || '-'}</td>
-                                  <td className="px-3 py-2 text-center font-semibold text-emerald-600 bg-emerald-50/30">{item.target ? `${item.target}%` : '-'}</td>
+                                  <td className="px-3 py-2 text-slate-600 break-words">{item.indikator || '-'}</td>
+                                  <td className="px-3 py-2 text-center font-semibold text-emerald-600 bg-emerald-50/30">{item.target !== null && item.target !== undefined ? `${item.target}%` : '-'}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -329,8 +329,8 @@ export function ReviewApprovalPage({ role, approveStatus, backPath }: ReviewPage
                   {ikuList.map((iku, idx) => (
                     <tr key={iku.id || idx} className="border-b border-slate-100">
                       <td className="px-4 py-3 text-center">{idx + 1}</td>
-                      <td className="px-4 py-3">{iku.nama_iku || iku.indikator || '-'}</td>
-                      <td className="px-4 py-3 text-right">{iku.target_persen != null ? `${iku.target_persen}%` : '-'}</td>
+                      <td className="px-4 py-3 break-words">{iku.nama_iku || iku.indikator || '-'}</td>
+                      <td className="px-4 py-3 text-right">{iku.target_persen !== null && iku.target_persen !== undefined ? `${iku.target_persen}%` : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

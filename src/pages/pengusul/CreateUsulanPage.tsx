@@ -43,13 +43,19 @@ function emptyRab(): RabItem {
   return { uraian: '', qty1: 1, satuan1: '', qty2: 1, satuan2: '', qty3: null, satuan3: '', harga_satuan: '' };
 }
 
-function calcTotal(item: RabItem): number {
+const calcTotal = (item: RabItem) => {
   const q1 = Number(item.qty1) || 0;
-  const q2 = Number(item.qty2) || 1;
+  const q2 = Number(item.qty2) || 0;
   const q3 = Number(item.qty3) || 0;
   const h  = Number(item.harga_satuan) || 0;
   return q3 > 0 ? q1 * q2 * q3 * h : q1 * q2 * h;
 }
+
+const handlePositiveNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (['-', '+', 'e', 'E'].includes(e.key)) {
+    e.preventDefault();
+  }
+};
 
 // ──────────────── RAB Table per kategori ────────────────
 function RabTable({
@@ -105,7 +111,7 @@ function RabTable({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Jml 1 <span className="text-red-500">*</span></Label>
-                    <Input type="number" min={1} value={item.qty1} onChange={e => onUpdate(idx, 'qty1', e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))} className="h-11 rounded-xl px-3 text-sm focus:ring-emerald-500/20" />
+                    <Input type="number" min={1} value={item.qty1} onKeyDown={handlePositiveNumberKeyDown} onChange={e => onUpdate(idx, 'qty1', e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))} className="h-11 rounded-xl px-3 text-sm focus:ring-emerald-500/20" />
                   </div>
                   <div>
                     <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Satuan 1 <span className="text-red-500">*</span></Label>
@@ -118,7 +124,7 @@ function RabTable({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Jml 2 <span className="text-red-500">*</span></Label>
-                    <Input type="number" min={1} value={item.qty2} onChange={e => onUpdate(idx, 'qty2', e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))} className="h-11 rounded-xl px-3 text-sm focus:ring-emerald-500/20" />
+                    <Input type="number" min={1} value={item.qty2} onKeyDown={handlePositiveNumberKeyDown} onChange={e => onUpdate(idx, 'qty2', e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))} className="h-11 rounded-xl px-3 text-sm focus:ring-emerald-500/20" />
                   </div>
                   <div>
                     <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Satuan 2 <span className="text-red-500">*</span></Label>
@@ -131,7 +137,7 @@ function RabTable({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Jml 3 (Opsional)</Label>
-                    <Input type="number" min={0} value={item.qty3 === null ? '' : item.qty3} placeholder="0" onChange={e => onUpdate(idx, 'qty3', e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value) || 0))} className="h-11 rounded-xl px-3 text-sm focus:ring-emerald-500/20" />
+                    <Input type="number" min={0} value={item.qty3 === null ? '' : item.qty3} placeholder="0" onKeyDown={handlePositiveNumberKeyDown} onChange={e => onUpdate(idx, 'qty3', e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value) || 0))} className="h-11 rounded-xl px-3 text-sm focus:ring-emerald-500/20" />
                   </div>
                   <div>
                     <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Satuan 3</Label>
@@ -143,7 +149,7 @@ function RabTable({
 
                 <div>
                    <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Harga Satuan (Rp) <span className="text-red-500">*</span></Label>
-                   <Input type="number" min={0} value={item.harga_satuan} placeholder="0" onChange={e => onUpdate(idx, 'harga_satuan', e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value)))} className="h-11 rounded-xl text-right font-medium text-sm focus:ring-emerald-500/20" />
+                   <Input type="number" min={0} value={item.harga_satuan} placeholder="0" onKeyDown={handlePositiveNumberKeyDown} onChange={e => onUpdate(idx, 'harga_satuan', e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value)))} className="h-11 rounded-xl text-right font-medium text-sm focus:ring-emerald-500/20" />
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
@@ -201,6 +207,7 @@ function RabTable({
                     <Input
                       type="number" min={1}
                       value={item.qty1}
+                      onKeyDown={handlePositiveNumberKeyDown}
                       onChange={e => onUpdate(idx, 'qty1', e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))}
                       className="h-9 rounded-lg text-xs text-center px-1"
                     />
@@ -218,6 +225,7 @@ function RabTable({
                     <Input
                       type="number" min={1}
                       value={item.qty2}
+                      onKeyDown={handlePositiveNumberKeyDown}
                       onChange={e => onUpdate(idx, 'qty2', e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))}
                       className="h-9 rounded-lg text-xs text-center px-1"
                     />
@@ -236,6 +244,7 @@ function RabTable({
                       type="number" min={0}
                       value={item.qty3 ?? ''}
                       placeholder="Opsional"
+                      onKeyDown={handlePositiveNumberKeyDown}
                       onChange={e => onUpdate(idx, 'qty3', e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value) || 0))}
                       className="h-9 rounded-lg text-xs text-center px-1"
                     />
@@ -254,6 +263,7 @@ function RabTable({
                       type="number" min={0}
                       value={item.harga_satuan === 0 ? '' : item.harga_satuan}
                       placeholder="0"
+                      onKeyDown={handlePositiveNumberKeyDown}
                       onChange={e => onUpdate(idx, 'harga_satuan', e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value) || 0))}
                       className="h-9 rounded-lg text-xs text-right px-2"
                     />
@@ -437,7 +447,12 @@ export function CreateUsulanPage() {
   const savedDraft = (() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
-      return raw ? JSON.parse(raw) : null;
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed.draftId === id || (!parsed.draftId && !id)) {
+        return parsed;
+      }
+      return null;
     } catch { return null; }
   })();
 
@@ -537,15 +552,36 @@ export function CreateUsulanPage() {
       isInitialLoad.current = false;
       return;
     }
+    if (isLoadingDraft) return;
     const timer = setTimeout(() => {
       try {
         localStorage.setItem(DRAFT_KEY, JSON.stringify({
           step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep,
+          draftId: id || null,
         }));
       } catch {}
     }, 500);
     return () => clearTimeout(timer);
-  }, [step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep]);
+  }, [step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep, isLoadingDraft, id]);
+
+  // Flush draft on beforeunload / unmount to avoid losing draft on fast navigation/refresh
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (!isLoadingDraft) {
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({
+            step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep,
+            draftId: id || null,
+          }));
+        } catch {}
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      handleBeforeUnload(); // run on unmount
+    };
+  }, [step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep, isLoadingDraft, id]);
 
   // Restore step from draft
   useEffect(() => {
@@ -739,6 +775,24 @@ export function CreateUsulanPage() {
     if (!step2.tahapan_pelaksanaan.trim()) errs.tahapan_pelaksanaan = 'Tahapan pelaksanaan wajib diisi';
     if (!step2.kurun_waktu_dari) errs.kurun_waktu_dari = 'Kurun waktu mulai wajib diisi';
     if (!step2.kurun_waktu_sampai) errs.kurun_waktu_sampai = 'Kurun waktu selesai wajib diisi';
+
+    // Validate indikatorRows (Indikator Keberhasilan)
+    if (indikatorRows.length === 0) {
+      errs.indikator_global = 'Minimal 1 Indikator Kinerja Keberhasilan harus ditambahkan';
+    } else {
+      indikatorRows.forEach((row, idx) => {
+        if (!row.bulan) errs[`indikator_bulan_${idx}`] = 'Bulan wajib dipilih';
+        if (!row.indikator.trim()) errs[`indikator_nama_${idx}`] = 'Indikator keberhasilan wajib diisi';
+        if (row.target === null || row.target === undefined) {
+          errs[`indikator_target_${idx}`] = 'Target wajib diisi';
+        } else if (row.target < 0) {
+          errs[`indikator_target_${idx}`] = 'Target tidak boleh negatif';
+        } else if (row.target > 100) {
+          errs[`indikator_target_${idx}`] = 'Target tidak boleh lebih dari 100%';
+        }
+      });
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -751,7 +805,13 @@ export function CreateUsulanPage() {
     } else {
       ikuItems.forEach((item, idx) => {
         if (!item.nama_indikator.trim()) errs[`iku_nama_${idx}`] = 'Indikator wajib dipilih';
-        if (item.target_persen === null || item.target_persen === undefined) errs[`iku_target_${idx}`] = 'Target wajib diisi';
+        if (item.target_persen === null || item.target_persen === undefined) {
+          errs[`iku_target_${idx}`] = 'Target wajib diisi';
+        } else if (item.target_persen < 0) {
+          errs[`iku_target_${idx}`] = 'Target tidak boleh negatif';
+        } else if (item.target_persen > 100) {
+          errs[`iku_target_${idx}`] = 'Target tidak boleh lebih dari 100%';
+        }
       });
     }
     setErrors(errs);
@@ -1037,10 +1097,13 @@ export function CreateUsulanPage() {
                 {/* Indikator Kinerja Table */}
                 <div className="rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-100 p-3 sm:p-5 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <h4 className="text-sm font-bold text-amber-800 flex items-center gap-2">
-                      <CheckSquare className="size-4 shrink-0" />
-                      <span className="leading-tight">Indikator Keberhasilan</span>
-                    </h4>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-sm font-bold text-amber-800 flex items-center gap-2">
+                        <CheckSquare className="size-4 shrink-0" />
+                        <span className="leading-tight">Indikator Keberhasilan</span>
+                      </h4>
+                      {errors.indikator_global && <span className="text-xs text-red-500 font-semibold bg-red-100 px-2 py-0.5 rounded-md">{errors.indikator_global}</span>}
+                    </div>
                     <Button type="button" variant="secondary" size="sm" className="h-9 rounded-xl w-full sm:w-auto" onClick={addIndikatorRow}>
                       <Plus className="mr-1 h-3.5 w-3.5 shrink-0" /> Tambah Baris
                     </Button>
@@ -1065,32 +1128,45 @@ export function CreateUsulanPage() {
                             <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Bulan</Label>
                             <select
                                 value={row.bulan}
-                                onChange={e => updateIndikator(idx, 'bulan', e.target.value)}
-                                className="w-full h-11 rounded-xl border border-slate-200 text-sm px-3 bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                onChange={e => {
+                                  updateIndikator(idx, 'bulan', e.target.value);
+                                  setErrors(prev => { const n = {...prev}; delete n[`indikator_bulan_${idx}`]; return n; });
+                                }}
+                                className={`w-full h-11 rounded-xl border border-slate-200 text-sm px-3 bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${errors[`indikator_bulan_${idx}`] ? 'border-red-400 bg-red-50/30' : ''}`}
                               >
                                 <option value="">Pilih Bulan</option>
                                 {BULAN_INDONESIA.map(b => (
                                   <option key={b} value={b}>{b}</option>
                                 ))}
                             </select>
+                            {errors[`indikator_bulan_${idx}`] && <p className="text-xs text-red-500 font-medium mt-1">{errors[`indikator_bulan_${idx}`]}</p>}
                           </div>
                           <div>
                             <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Indikator Keberhasilan</Label>
                             <Input
                                 placeholder="Contoh: Tersusunnya dokumen RPKL"
                                 value={row.indikator}
-                                onChange={e => updateIndikator(idx, 'indikator', e.target.value)}
-                                className="h-11 rounded-xl text-sm focus:ring-indigo-500/20"
+                                onChange={e => {
+                                  updateIndikator(idx, 'indikator', e.target.value);
+                                  setErrors(prev => { const n = {...prev}; delete n[`indikator_nama_${idx}`]; return n; });
+                                }}
+                                className={`h-11 rounded-xl text-sm focus:ring-indigo-500/20 ${errors[`indikator_nama_${idx}`] ? 'border-red-400 bg-red-50/30' : ''}`}
                             />
+                            {errors[`indikator_nama_${idx}`] && <p className="text-xs text-red-500 font-medium mt-1">{errors[`indikator_nama_${idx}`]}</p>}
                           </div>
                           <div>
                             <Label className="text-xs mb-1.5 block text-slate-600 font-semibold">Target (%)</Label>
                             <Input
                                 type="number" min={0} placeholder="0"
                                 value={row.target ?? ''}
-                                onChange={e => updateIndikator(idx, 'target', e.target.value ? Math.max(0, Number(e.target.value)) : null)}
-                                className="h-11 rounded-xl text-sm focus:ring-indigo-500/20"
+                                onKeyDown={handlePositiveNumberKeyDown}
+                                onChange={e => {
+                                  updateIndikator(idx, 'target', e.target.value ? Math.max(0, Number(e.target.value)) : null);
+                                  setErrors(prev => { const n = {...prev}; delete n[`indikator_target_${idx}`]; return n; });
+                                }}
+                                className={`h-11 rounded-xl text-sm focus:ring-indigo-500/20 ${errors[`indikator_target_${idx}`] ? 'border-red-400 bg-red-50/30' : ''}`}
                             />
+                            {errors[`indikator_target_${idx}`] && <p className="text-xs text-red-500 font-medium mt-1">{errors[`indikator_target_${idx}`]}</p>}
                           </div>
                         </div>
                       ))}
@@ -1121,30 +1197,43 @@ export function CreateUsulanPage() {
                             <td className="p-1.5">
                               <select
                                 value={row.bulan}
-                                onChange={e => updateIndikator(idx, 'bulan', e.target.value)}
-                                className="w-full h-9 rounded-lg border border-slate-200 text-sm px-2 bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                onChange={e => {
+                                  updateIndikator(idx, 'bulan', e.target.value);
+                                  setErrors(prev => { const n = {...prev}; delete n[`indikator_bulan_${idx}`]; return n; });
+                                }}
+                                className={`w-full h-9 rounded-lg border border-slate-200 text-sm px-2 bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${errors[`indikator_bulan_${idx}`] ? 'border-red-400 bg-red-50/30' : ''}`}
                               >
                                 <option value="">Pilih Bulan</option>
                                 {BULAN_INDONESIA.map(b => (
                                   <option key={b} value={b}>{b}</option>
                                 ))}
                               </select>
+                              {errors[`indikator_bulan_${idx}`] && <p className="text-[10px] text-red-500 mt-0.5">{errors[`indikator_bulan_${idx}`]}</p>}
                             </td>
                             <td className="p-1.5">
                               <Input
                                 placeholder="Contoh: Tersusunnya dokumen RPKL"
                                 value={row.indikator}
-                                onChange={e => updateIndikator(idx, 'indikator', e.target.value)}
-                                className="h-9 rounded-lg text-sm"
+                                onChange={e => {
+                                  updateIndikator(idx, 'indikator', e.target.value);
+                                  setErrors(prev => { const n = {...prev}; delete n[`indikator_nama_${idx}`]; return n; });
+                                }}
+                                className={`h-9 rounded-lg text-sm ${errors[`indikator_nama_${idx}`] ? 'border-red-400 bg-red-50/30' : ''}`}
                               />
+                              {errors[`indikator_nama_${idx}`] && <p className="text-[10px] text-red-500 mt-0.5">{errors[`indikator_nama_${idx}`]}</p>}
                             </td>
                             <td className="p-1.5">
                               <Input
                                 type="number" min={0} placeholder="0"
                                 value={row.target ?? ''}
-                                onChange={e => updateIndikator(idx, 'target', e.target.value ? Math.max(0, Number(e.target.value)) : null)}
-                                className="h-9 rounded-lg text-sm text-center"
+                                onKeyDown={handlePositiveNumberKeyDown}
+                                onChange={e => {
+                                  updateIndikator(idx, 'target', e.target.value ? Math.max(0, Number(e.target.value)) : null);
+                                  setErrors(prev => { const n = {...prev}; delete n[`indikator_target_${idx}`]; return n; });
+                                }}
+                                className={`h-9 rounded-lg text-sm text-center ${errors[`indikator_target_${idx}`] ? 'border-red-400 bg-red-50/30' : ''}`}
                               />
+                              {errors[`indikator_target_${idx}`] && <p className="text-[10px] text-red-500 mt-0.5">{errors[`indikator_target_${idx}`]}</p>}
                             </td>
                             <td className="px-3 py-2 text-center text-slate-500 font-semibold text-sm">%</td>
                             <td className="p-1.5 text-center">
@@ -1268,6 +1357,7 @@ export function CreateUsulanPage() {
                               <Input
                                 type="number" min={0} max={100}
                                 value={iku.target_persen ?? ''}
+                                onKeyDown={handlePositiveNumberKeyDown}
                                 onChange={e => { updateIku(index, 'target_persen', e.target.value ? Math.max(0, Math.min(100, Number(e.target.value))) : null); setErrors(prev => { const n = {...prev}; delete n[`iku_target_${index}`]; return n; }); }}
                                 placeholder="0"
                                 className={`mt-1 h-12 rounded-xl focus-visible:ring-purple-500/20 ${errors[`iku_target_${index}`] ? 'border-red-400 bg-red-50/30' : ''}`}

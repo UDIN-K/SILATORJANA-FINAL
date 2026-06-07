@@ -14,6 +14,21 @@ const TABS = [
   { key: 'rab', label: 'RAB', icon: DollarSign },
 ];
 
+function parseIndikatorKinerja(rawValue: string | undefined | null): any[] {
+  if (!rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (Array.isArray(parsed)) {
+      return parsed.map((item: any) => ({
+        bulan: item.bulan || '',
+        indikator: item.indikator || '',
+        target: item.target !== undefined && item.target !== null ? Number(item.target) : null,
+      }));
+    }
+  } catch {}
+  return [];
+}
+
 export function RevisiFormPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -84,12 +99,13 @@ export function RevisiFormPage() {
   const renderCommentBox = (field: string) => {
     const hasValue = !!comments[field];
     return (
-      <div className={`mt-2 sm:mt-3 flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl transition-all ${hasValue ? 'bg-amber-50 border-amber-200 shadow-sm border' : 'bg-slate-50/50 border border-slate-200'}`}>
+      <div key={`comment-box-${field}`} className={`mt-2 sm:mt-3 flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl transition-all ${hasValue ? 'bg-amber-50 border-amber-200 shadow-sm border' : 'bg-slate-50/50 border border-slate-200'}`}>
         <MessageSquare className={`size-4 sm:size-5 mt-0.5 sm:mt-1 shrink-0 ${hasValue ? 'text-amber-500' : 'text-slate-400'}`} />
         <div className="w-full">
            <textarea
+             key={`textarea-${field}`}
              className="w-full bg-transparent text-xs sm:text-sm focus:outline-none resize-none placeholder:text-slate-400 font-medium text-slate-700"
-             rows={hasValue ? 3 : 2}
+             rows={3}
              placeholder={hasValue ? '' : `Tambahkan instruksi revisi di sini...`}
              value={comments[field] || ''}
              onChange={e => handleCommentChange(field, e.target.value)}
@@ -199,6 +215,40 @@ export function RevisiFormPage() {
                       {renderCommentBox("KAK - Kurun Waktu Operasional")}
                     </div>
                   )}
+                  {kak.indikator_kinerja && (() => {
+                    const indicators = parseIndikatorKinerja(kak.indikator_kinerja);
+                    if (indicators.length === 0) return null;
+                    return (
+                      <div className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3 sm:gap-4">
+                        <div>
+                          <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest block mb-2">Tahapan Indikator Kinerja</span>
+                          <div className="border border-slate-200/80 rounded-xl overflow-hidden shadow-sm max-w-2xl mt-1.5">
+                            <table className="w-full text-xs text-left">
+                              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+                                <tr>
+                                  <th className="px-3 py-2 w-12 text-center">No</th>
+                                  <th className="px-3 py-2 w-32">Bulan</th>
+                                  <th className="px-3 py-2">Indikator Keberhasilan</th>
+                                  <th className="px-3 py-2 w-28 text-center">Target Kumulatif</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 text-slate-700">
+                                {indicators.map((item: any, idx: number) => (
+                                  <tr key={idx} className="bg-white hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-3 py-2 text-center font-medium text-slate-500">{idx + 1}</td>
+                                    <td className="px-3 py-2 font-medium text-slate-800 capitalize">{item.bulan || '-'}</td>
+                                    <td className="px-3 py-2 text-slate-600 break-words">{item.indikator || '-'}</td>
+                                    <td className="px-3 py-2 text-center font-semibold text-emerald-600 bg-emerald-50/30">{item.target !== null && item.target !== undefined ? `${item.target}%` : '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        {renderCommentBox("KAK - Indikator Kinerja")}
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
                  <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl relative">

@@ -206,7 +206,7 @@ export function VerifikasiDetailPage() {
                 {data.deskripsi && (
                   <div className="pt-6 border-t border-slate-100/80">
                     <Label className="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-2 block">Deskripsi Pendek / Latar Belakang</Label>
-                    <p className="text-[14px] sm:text-[15px] text-slate-700 leading-relaxed bg-slate-50/80 p-4 rounded-xl border border-slate-100/60 shadow-sm">
+                    <p className="text-[14px] sm:text-[15px] text-slate-700 leading-relaxed bg-slate-50/80 p-4 rounded-xl border border-slate-100/60 shadow-sm whitespace-pre-wrap break-words">
                       {data.deskripsi}
                     </p>
                   </div>
@@ -283,7 +283,7 @@ export function VerifikasiDetailPage() {
                           if (indicators.length === 0) return <p className="text-sm text-slate-500">-</p>;
                           const isTabular = indicators.some(i => i.bulan || i.target);
                           if (!isTabular) {
-                            return <p className="text-xs sm:text-sm text-slate-800 leading-relaxed bg-slate-50/80 p-3.5 sm:p-4 rounded-xl border border-slate-200/60">{indicators[0]?.indikator || '-'}</p>;
+                            return <p className="text-xs sm:text-sm text-slate-800 leading-relaxed bg-slate-50/80 p-3.5 sm:p-4 rounded-xl border border-slate-200/60 break-words whitespace-pre-wrap">{indicators[0]?.indikator || '-'}</p>;
                           }
                           return (
                             <div className="border border-slate-200/85 rounded-xl overflow-hidden shadow-sm max-w-2xl mt-1.5">
@@ -303,7 +303,7 @@ export function VerifikasiDetailPage() {
                                         <td className="px-3 py-2 text-center font-medium text-slate-500">{idx + 1}</td>
                                         <td className="px-3 py-2 font-medium text-slate-800 capitalize">{item.bulan || '-'}</td>
                                         <td className="px-3 py-2 text-slate-600 break-words max-w-xs">{item.indikator || '-'}</td>
-                                        <td className="px-3 py-2 text-center font-semibold text-emerald-600 bg-emerald-50/30">{item.target ? `${item.target}%` : '-'}</td>
+                                        <td className="px-3 py-2 text-center font-semibold text-emerald-600 bg-emerald-50/30">{item.target !== null && item.target !== undefined ? `${item.target}%` : '-'}</td>
                                       </tr>
                                     ))}
                                   </tbody>

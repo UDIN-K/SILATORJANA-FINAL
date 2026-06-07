@@ -217,7 +217,7 @@ export function DetailUsulanPage() {
               </div>
             </div>
           )}
-          {kegiatan.deskripsi && <div className="md:col-span-2 pt-4 border-t border-slate-100"><p className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-widest">Deskripsi / Latar Belakang</p><p className="text-sm leading-relaxed text-slate-700 bg-slate-50/50 p-4 rounded-xl border border-slate-100/50">{kegiatan.deskripsi || kegiatan.latar_belakang}</p></div>}
+          {kegiatan.deskripsi && <div className="md:col-span-2 pt-4 border-t border-slate-100"><p className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-widest">Deskripsi / Latar Belakang</p><p className="text-sm leading-relaxed text-slate-700 bg-slate-50/50 p-4 rounded-xl border border-slate-100/50 whitespace-pre-wrap break-words">{kegiatan.deskripsi || kegiatan.latar_belakang}</p></div>}
         </CardContent>
       </Card>
 
@@ -252,8 +252,8 @@ export function DetailUsulanPage() {
                         <TableRow key={idx} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100/50">
                           <TableCell className="text-center font-medium text-slate-500">{idx + 1}</TableCell>
                           <TableCell className="font-medium text-slate-700 capitalize">{item.bulan || '-'}</TableCell>
-                          <TableCell className="text-slate-600">{item.indikator || '-'}</TableCell>
-                          <TableCell className="text-center font-semibold text-emerald-600 bg-emerald-50/30">{item.target ? `${item.target}%` : '-'}</TableCell>
+                          <TableCell className="text-slate-600 break-words">{item.indikator || '-'}</TableCell>
+                          <TableCell className="text-center font-semibold text-emerald-600 bg-emerald-50/30">{item.target !== null && item.target !== undefined ? `${item.target}%` : '-'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -275,7 +275,7 @@ export function DetailUsulanPage() {
                 <TableHeader><TableRow className="bg-slate-50/50"><TableHead className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">Nama Indikator</TableHead><TableHead className="px-6 py-4 w-32 text-right text-xs font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">Target (%)</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {ikuList.map(iku => (
-                    <TableRow key={iku.id} className="hover:bg-slate-50/50 transition-colors border-b-slate-100/60"><TableCell className="px-6 py-4 font-medium text-slate-700 min-w-[200px]">{iku.nama_iku}</TableCell><TableCell className="px-6 py-4 text-right whitespace-nowrap font-semibold text-emerald-600 bg-emerald-50/30">{iku.target_persen ?? '-'}%</TableCell></TableRow>
+                    <TableRow key={iku.id} className="hover:bg-slate-50/50 transition-colors border-b-slate-100/60"><TableCell className="px-6 py-4 font-medium text-slate-700 min-w-[200px] break-words">{iku.nama_iku}</TableCell><TableCell className="px-6 py-4 text-right whitespace-nowrap font-semibold text-emerald-600 bg-emerald-50/30">{iku.target_persen !== null && iku.target_persen !== undefined ? `${iku.target_persen}%` : '-'}</TableCell></TableRow>
                   ))}
                 </TableBody>
               </Table>
