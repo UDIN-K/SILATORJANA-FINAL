@@ -6,7 +6,7 @@ import { formatCurrency } from '@/lib/helpers';
 import {
   ArrowLeft, FileUp, Loader2, CheckCircle, AlertCircle,
   Upload, Trash2, FileText, Package, Briefcase, Plane,
-  ChevronDown, ChevronUp, Info
+  ChevronDown, ChevronUp, Info, Target
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
@@ -59,6 +59,13 @@ const CATEGORY_COLORS: Record<string, { bg: string; border: string; header: stri
   perjalanan: { bg: 'bg-amber-50/50', border: 'border-amber-200', header: 'from-amber-700 to-amber-800', badge: 'bg-amber-100 text-amber-700' },
 };
 
+interface IkuItem {
+  id: number;
+  nama_iku: string;
+  target_persen: number | null;
+  capaian_persen: number | null;
+}
+
 export function LpjPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -69,6 +76,12 @@ export function LpjPage() {
   const [kegiatan, setKegiatan] = useState<any>(null);
   const [rabGroups, setRabGroups] = useState<Record<string, RabGroup>>({});
   const [lpj, setLpj] = useState<any>(null);
+
+  // IKU list from API
+  const [ikuList, setIkuList] = useState<IkuItem[]>([]);
+
+  // IKU capaian state: { [ikuId]: capaianValue (string for input) }
+  const [ikuCapaian, setIkuCapaian] = useState<Record<number, string>>({});
 
   // Realisasi state: { [rabId]: { qty1, satuan1, qty2, satuan2, qty3, satuan3, harga_satuan } }
   const [realisasi, setRealisasi] = useState<Record<number, any>>({});
@@ -83,7 +96,7 @@ export function LpjPage() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   // File input refs
-  const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const fileRefs = useRef<Record<number, HTMLInputElement | null>>({}); 
 
   useEffect(() => {
     if (!id) return;
@@ -97,6 +110,17 @@ export function LpjPage() {
       setKegiatan(res.kegiatan);
       setRabGroups(res.rab || {});
       setLpj(res.lpj);
+
+      // Load IKU list
+      const loadedIku: IkuItem[] = res.iku || [];
+      setIkuList(loadedIku);
+
+      // Pre-fill capaian dari data yang sudah ada di DB
+      const initCapaian: Record<number, string> = {};
+      loadedIku.forEach((iku) => {
+        initCapaian[iku.id] = iku.capaian_persen != null ? String(iku.capaian_persen) : '';
+      });
+      setIkuCapaian(initCapaian);
 
       // Initialize realisasi and existing files from loaded data
       const initReal: Record<number, any> = {};
@@ -187,6 +211,17 @@ export function LpjPage() {
       return;
     }
 
+    // Validasi: semua IKU harus diisi capaian-nya
+    if (ikuList.length > 0) {
+      const missing = ikuList.some(
+        (iku) => ikuCapaian[iku.id] === '' || ikuCapaian[iku.id] == null
+      );
+      if (missing) {
+        alert('Harap isi capaian (%) untuk semua IKU sebelum submit LPJ.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       const formData = new FormData();
@@ -195,6 +230,14 @@ export function LpjPage() {
 
       // Append realisasi as JSON
       formData.append('realisasi', JSON.stringify(realisasi));
+
+      // Append IKU capaian as JSON: { [ikuId]: capaianValue }
+      const ikuCapaianPayload: Record<number, number | null> = {};
+      ikuList.forEach((iku) => {
+        const val = ikuCapaian[iku.id];
+        ikuCapaianPayload[iku.id] = val !== '' && val != null ? parseFloat(val) : null;
+      });
+      formData.append('iku_capaian', JSON.stringify(ikuCapaianPayload));
 
       // Append files grouped by RAB ID
       Object.entries(newFiles).forEach(([rabId, files]) => {
@@ -595,6 +638,120 @@ export function LpjPage() {
             </Card>
           );
         })
+      )}
+
+      {/* IKU Capaian Card */}
+      {ikuList.length > 0 && (
+        <Card className="shadow-sm overflow-hidden border-teal-200">
+          <div className="bg-gradient-to-r from-teal-700 to-teal-800 px-5 py-3.5 flex items-center gap-3 text-white">
+            <Target className="size-5" />
+            <span className="font-semibold text-[15px]">Capaian IKU (Indikator Kinerja Utama)</span>
+            <span className="bg-white/20 text-white/90 text-xs px-2.5 py-0.5 rounded-full font-medium">
+              {ikuList.length} IKU
+            </span>
+          </div>
+          <CardContent className="p-5">
+            <div className="bg-teal-50/60 border border-teal-100 rounded-xl p-4 mb-5">
+              <div className="flex items-start gap-2">
+                <Info className="size-4 text-teal-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-teal-800 leading-relaxed">
+                  Isi persentase <strong>capaian aktual</strong> untuk setiap IKU kegiatan ini.
+                  Nilai ini digunakan untuk menghitung skor <strong>C3 (Kesesuaian Output IKU)</strong> pada SPK MOORA.
+                  Capaian &ge; target akan menghasilkan skor 100, di bawah target menghasilkan skor 0.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {ikuList.map((iku, idx) => {
+                const capaianVal = ikuCapaian[iku.id] ?? '';
+                const target = iku.target_persen ?? 0;
+                const capaianNum = parseFloat(capaianVal);
+                const ratio = !isNaN(capaianNum) && target > 0 ? capaianNum / target : null;
+                const tercapai = ratio !== null && ratio >= 1;
+                const isEmpty = capaianVal === '' || capaianVal == null;
+
+                return (
+                  <div
+                    key={iku.id}
+                    className={`rounded-xl border p-4 transition-all ${
+                      isEmpty
+                        ? 'border-slate-200 bg-white'
+                        : tercapai
+                        ? 'border-emerald-200 bg-emerald-50/60'
+                        : 'border-amber-200 bg-amber-50/60'
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      {/* Label */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-widest mb-0.5">IKU {idx + 1}</p>
+                        <p className="font-semibold text-slate-800 text-sm leading-snug">{iku.nama_iku}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Target: <span className="font-bold text-teal-700">{iku.target_persen != null ? `${iku.target_persen}%` : '-'}</span>
+                        </p>
+                      </div>
+
+                      {/* Capaian Input */}
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex flex-col items-end">
+                          <label className="text-[10px] text-teal-700 font-bold uppercase tracking-wider mb-1">
+                            Capaian Aktual (%)
+                          </label>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              max="200"
+                              step="0.01"
+                              className={`w-28 border rounded-lg px-3 py-2 text-sm font-bold text-center focus:outline-none focus:ring-2 transition-all disabled:bg-slate-100 disabled:text-slate-400 ${
+                                isEmpty
+                                  ? 'border-slate-300 focus:ring-teal-400 focus:border-teal-400'
+                                  : tercapai
+                                  ? 'border-emerald-400 bg-emerald-50 text-emerald-800 focus:ring-emerald-400'
+                                  : 'border-amber-400 bg-amber-50 text-amber-800 focus:ring-amber-400'
+                              }`}
+                              placeholder="0"
+                              value={capaianVal}
+                              onChange={(e) =>
+                                setIkuCapaian((prev) => ({ ...prev, [iku.id]: e.target.value }))
+                              }
+                              disabled={!canSubmit}
+                            />
+                            <span className="text-sm font-semibold text-slate-500">%</span>
+                          </div>
+                        </div>
+
+                        {/* Status badge */}
+                        <div className="w-20 text-center">
+                          {!isEmpty && ratio !== null ? (
+                            <span
+                              className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                                tercapai
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-amber-100 text-amber-700'
+                              }`}
+                            >
+                              {tercapai ? '✓ Tercapai' : '✗ Belum'}
+                            </span>
+                          ) : (
+                            <span className="inline-block text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-400">
+                              Belum diisi
+                            </span>
+                          )}
+                          {!isEmpty && ratio !== null && (
+                            <p className="text-[10px] text-slate-500 mt-1">
+                              Rasio: <span className="font-bold">{(ratio * 100).toFixed(0)}%</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Summary Card */}

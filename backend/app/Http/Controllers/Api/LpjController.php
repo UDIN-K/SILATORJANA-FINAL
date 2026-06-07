@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Iku;
 use App\Models\Kegiatan;
 use App\Models\Lpj;
 use App\Models\LpjFile;
@@ -21,7 +22,7 @@ class LpjController extends Controller
     {
         $user = $request->user();
 
-        $kegiatan = Kegiatan::with(['kak', 'rab'])
+        $kegiatan = Kegiatan::with(['kak', 'rab', 'iku'])
             ->where('id', $kegiatanId)
             ->first();
 
@@ -92,19 +93,30 @@ class LpjController extends Controller
             ->orderBy('created_at', 'desc')
             ->first();
 
+        // Build IKU list with current capaian
+        $ikuList = $kegiatan->iku->map(function ($iku) {
+            return [
+                'id'             => $iku->id,
+                'nama_iku'       => $iku->nama_iku,
+                'target_persen'  => $iku->target_persen,
+                'capaian_persen' => $iku->capaian_persen,
+            ];
+        })->values();
+
         return response()->json([
             'kegiatan' => [
-                'id' => $kegiatan->id,
-                'nama_kegiatan' => $kegiatan->nama_kegiatan,
+                'id'             => $kegiatan->id,
+                'nama_kegiatan'  => $kegiatan->nama_kegiatan,
                 'tanggal_kegiatan' => $kegiatan->tanggal_kegiatan,
-                'tempat' => $kegiatan->tempat,
-                'nama_jurusan' => $kegiatan->nama_jurusan,
-                'status' => $kegiatan->status,
+                'tempat'         => $kegiatan->tempat,
+                'nama_jurusan'   => $kegiatan->nama_jurusan,
+                'status'         => $kegiatan->status,
                 'total_anggaran' => $kegiatan->total_anggaran,
-                'pengusul_nama' => $kegiatan->pengusul_nama,
+                'pengusul_nama'  => $kegiatan->pengusul_nama,
             ],
-            'rab' => $rabGrouped,
-            'lpj' => $lpj,
+            'rab'  => $rabGrouped,
+            'iku'  => $ikuList,
+            'lpj'  => $lpj,
         ]);
     }
 
@@ -296,6 +308,26 @@ class LpjController extends Controller
                 );
             }
 
+            // Save IKU capaian data
+            $ikuCapaianData = $request->input('iku_capaian', []);
+            if (is_string($ikuCapaianData)) {
+                $ikuCapaianData = json_decode($ikuCapaianData, true) ?? [];
+            }
+
+            foreach ($ikuCapaianData as $ikuId => $capaian) {
+                $iku = Iku::where('id', $ikuId)
+                    ->whereHas('kegiatan', function ($q) use ($kegiatanId) {
+                        $q->where('id', $kegiatanId);
+                    })
+                    ->first();
+
+                if ($iku) {
+                    $iku->update([
+                        'capaian_persen' => is_numeric($capaian) ? (float) $capaian : null,
+                    ]);
+                }
+            }
+
             // Update kegiatan status to lpj_submitted
             $kegiatan->update(['status' => 'lpj_submitted']);
 
@@ -304,9 +336,9 @@ class LpjController extends Controller
             $totalFiles = $existingFileCount + count($uploadedFiles);
 
             return response()->json([
-                'message' => "LPJ berhasil disubmit! Total bukti tersimpan: $totalFiles.",
+                'message'        => "LPJ berhasil disubmit! Total bukti tersimpan: $totalFiles.",
                 'uploaded_files' => $uploadedFiles,
-                'warnings' => $errors,
+                'warnings'       => $errors,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
