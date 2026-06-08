@@ -67,11 +67,16 @@ class MooraCalculator
     }
 
     /**
-     * C1: Ketepatan Waktu Pelaksanaan
-     * ─────────────────────────────────
-     * Tepat waktu (sesuai TOR)              = 100
-     * Meleset 1 - 3 hari                    = 75
-     * Meleset > 3 hari                      = 50
+     * C1: Ketepatan Waktu Pelaksanaan  (Proporsional Kontinu)
+     * ─────────────────────────────────────────────────────────
+     * Rumus : skor = max(0,  100 − deviasi_hari × 5)
+     *
+     * Contoh :
+     *   0  hari deviasi → skor 100  (tepat waktu)
+     *   1  hari         → skor  95
+     *   5  hari         → skor  75
+     *  10  hari         → skor  50
+     *  20+ hari         → skor   0
      */
     private function hitungC1(Kegiatan $kegiatan, ?Lpj $lpj): array
     {
@@ -79,33 +84,43 @@ class MooraCalculator
         $tanggalReal    = $lpj?->tanggal_pelaksanaan_real;
 
         if (!$tanggalRencana || !$tanggalReal) {
-            return ['skor' => 50, 'deviasi_hari' => null, 'keterangan' => 'Data tanggal tidak lengkap (default: 50)'];
+            return [
+                'skor'         => 50,
+                'deviasi_hari' => null,
+                'keterangan'   => 'Data tanggal tidak lengkap (default: 50)',
+            ];
         }
 
         $rencana = Carbon::parse($tanggalRencana);
         $real    = Carbon::parse($tanggalReal);
         $deviasi = abs($rencana->diffInDays($real));
 
-        if ($deviasi == 0) {
-            $skor = 100;
-            $ket  = 'Tepat waktu';
-        } elseif ($deviasi <= 3) {
-            $skor = 75;
-            $ket  = "Meleset {$deviasi} hari";
+        $skor = max(0.0, 100.0 - ($deviasi * 5.0));
+
+        if ($deviasi === 0) {
+            $ket = 'Tepat waktu (skor: 100)';
         } else {
-            $skor = 50;
-            $ket  = "Meleset {$deviasi} hari (> 3 hari)";
+            $ket = "Deviasi {$deviasi} hari → skor: 100 − ({$deviasi}×5) = {$skor}";
         }
 
-        return ['skor' => $skor, 'deviasi_hari' => $deviasi, 'keterangan' => $ket];
+        return [
+            'skor'         => round($skor, 2),
+            'deviasi_hari' => $deviasi,
+            'keterangan'   => $ket,
+        ];
     }
 
     /**
-     * C2: Ketepatan Anggaran
-     * ──────────────────────
-     * Selisih Rp 0 (pas)                    = 100
-     * Selisih < 10% dari total anggaran     = 75
-     * Selisih >= 10% dari total anggaran    = 50
+     * C2: Ketepatan Anggaran  (Proporsional Kontinu)
+     * ─────────────────────────────────────────────────
+     * Rumus : skor = max(0,  100 − deviasi_persen)
+     *
+     * Contoh :
+     *    0%  deviasi → skor 100  (anggaran pas)
+     *    5%  deviasi → skor  95
+     *   10%  deviasi → skor  90
+     *   50%  deviasi → skor  50
+     *  100%+ deviasi → skor   0
      */
     private function hitungC2(Kegiatan $kegiatan, int $kegiatanId): array
     {
@@ -123,25 +138,33 @@ class MooraCalculator
         }
 
         if ($totalRab <= 0) {
-            return ['skor' => 50, 'total_rab' => 0, 'total_realisasi' => $totalRealisasi, 'deviasi_persen' => null, 'keterangan' => 'Total RAB = 0 (default: 50)'];
+            return [
+                'skor'            => 50,
+                'total_rab'       => 0,
+                'total_realisasi' => $totalRealisasi,
+                'deviasi_persen'  => null,
+                'keterangan'      => 'Total RAB = 0 (default: 50)',
+            ];
         }
 
         $selisih       = abs($totalRealisasi - $totalRab);
         $deviasiPersen = ($selisih / $totalRab) * 100;
 
+        $skor = max(0.0, 100.0 - $deviasiPersen);
+
         if ($selisih == 0) {
-            $skor = 100;
-            $ket  = 'Anggaran sesuai (selisih Rp 0)';
-        } elseif ($deviasiPersen < 10) {
-            $skor = 75;
-            $ket  = sprintf('Deviasi %.1f%% (< 10%%)', $deviasiPersen);
+            $ket = 'Anggaran pas (selisih Rp 0, skor: 100)';
         } else {
-            $skor = 50;
-            $ket  = sprintf('Deviasi %.1f%% (>= 10%%)', $deviasiPersen);
+            $ket = sprintf(
+                'Deviasi %.2f%% → skor: 100 − %.2f = %.2f',
+                $deviasiPersen,
+                $deviasiPersen,
+                $skor
+            );
         }
 
         return [
-            'skor'            => $skor,
+            'skor'            => round($skor, 2),
             'total_rab'       => $totalRab,
             'total_realisasi' => $totalRealisasi,
             'deviasi_persen'  => round($deviasiPersen, 2),
@@ -150,75 +173,109 @@ class MooraCalculator
     }
 
     /**
-     * C3: Kesesuaian Output IKU
-     * ─────────────────────────
-     * Capaian >= 1  (mendukung IKU)  = 100
-     * Capaian < 1   (tidak mendukung) = 0
+     * C3: Kesesuaian Output IKU  (Proporsional Kontinu)
+     * ──────────────────────────────────────────────────
+     * Mengukur rasio capaian terhadap target persentase IKU.
+     * Skor dihitung sebagai rata-rata rasio pencapaian IKU dikali 100,
+     * dengan batas maksimum 100.
+     *
+     * Contoh:
+     *   Rasio capaian 1.0 (100% tercapai) → skor: 100
+     *   Rasio capaian 0.75 (75% tercapai) → skor: 75
+     *   Rasio capaian 0.0 (0% tercapai)   → skor: 0
+     *   Rasio capaian > 1.0 (melebihi)    → skor: max 100
      */
     private function hitungC3(Kegiatan $kegiatan): array
     {
         $ikuList = $kegiatan->iku;
 
         if ($ikuList->isEmpty()) {
-            return ['skor' => 0, 'rata_capaian' => null, 'keterangan' => 'Tidak ada IKU terdaftar (skor: 0)'];
+            return [
+                'skor'         => 0,
+                'rata_capaian' => null,
+                'keterangan'   => 'Tidak ada IKU terdaftar (skor: 0)',
+            ];
         }
 
-        // Hitung rata-rata capaian dari semua IKU
-        $totalCapaian = 0;
+        // Hitung rata-rata rasio capaian terhadap target dari semua IKU
+        $totalRasio = 0;
         $count = 0;
         foreach ($ikuList as $iku) {
             $target  = $iku->target_persen ?: 0;
             $capaian = $iku->capaian_persen;
 
             if ($target > 0 && $capaian !== null) {
-                $totalCapaian += ($capaian / $target);
+                // Rasio pencapaian (misal target 80%, capaian 60% -> 0.75)
+                $totalRasio += ($capaian / $target);
                 $count++;
             }
         }
 
         if ($count === 0) {
-            return ['skor' => 0, 'rata_capaian' => null, 'keterangan' => 'Capaian IKU belum diisi (skor: 0)'];
+            return [
+                'skor'         => 0,
+                'rata_capaian' => null,
+                'keterangan'   => 'Capaian IKU belum diisi (skor: 0)',
+            ];
         }
 
-        $rataCapaian = $totalCapaian / $count;
+        $rataRasio = $totalRasio / $count;
+        $skor = min(100.0, max(0.0, $rataRasio * 100.0));
 
-        if ($rataCapaian >= 1) {
-            $skor = 100;
-            $ket  = sprintf('Mendukung IKU (capaian: %.2f)', $rataCapaian);
-        } else {
-            $skor = 0;
-            $ket  = sprintf('Tidak mendukung IKU (capaian: %.2f < 1)', $rataCapaian);
-        }
+        $ket = sprintf(
+            'Rasio capaian IKU rata-rata %.2f%% → skor: %.2f',
+            $rataRasio * 100,
+            $skor
+        );
 
-        return ['skor' => $skor, 'rata_capaian' => round($rataCapaian, 4), 'keterangan' => $ket];
+        return [
+            'skor'         => round($skor, 2),
+            'rata_capaian' => round($rataRasio, 4),
+            'keterangan'   => $ket,
+        ];
     }
 
     /**
-     * C4: Waktu Approval LPJ (Dinamis / Real-time)
-     * ──────────────────────────────────────────────
-     * <= 14 hari                             = 100
-     * > 14 hari  =  100 - (keterlambatan x 5), min 0
+     * C4: Waktu Approval LPJ  (Proporsional Kontinu)
+     * ─────────────────────────────────────────────────
+     * Rumus : skor = max(0,  100 − durasi_hari × 3)
+     *
+     * Contoh :
+     *   0  hari sejak submit → skor 100  (langsung diproses)
+     *   7  hari              → skor  79
+     *  14  hari              → skor  58
+     *  20  hari              → skor  40
+     *  30  hari              → skor  10
+     *  34+ hari              → skor   0
      */
     private function hitungC4(?Lpj $lpj): array
     {
         if (!$lpj || !$lpj->tanggal_pengajuan) {
-            return ['skor' => 0, 'durasi_hari' => null, 'keterangan' => 'LPJ belum disubmit (skor: 0)'];
+            return [
+                'skor'        => 0,
+                'durasi_hari' => null,
+                'keterangan'  => 'LPJ belum disubmit (skor: 0)',
+            ];
         }
 
-        $submit  = Carbon::parse($lpj->tanggal_pengajuan);
+        $submit   = Carbon::parse($lpj->tanggal_pengajuan);
         $sekarang = Carbon::now();
         $durasi   = $submit->diffInDays($sekarang);
 
-        if ($durasi <= 14) {
-            $skor = 100;
-            $ket  = "Dalam batas waktu ({$durasi} hari <= 14 hari)";
-        } else {
-            $keterlambatan = $durasi - 14;
-            $skor = max(0, 100 - ($keterlambatan * 5));
-            $ket  = "Terlambat {$keterlambatan} hari (skor: 100 - {$keterlambatan}×5 = {$skor})";
-        }
+        $skor = max(0.0, 100.0 - ($durasi * 3.0));
 
-        return ['skor' => $skor, 'durasi_hari' => $durasi, 'keterangan' => $ket];
+        $ket = sprintf(
+            'LPJ disubmit %d hari lalu → skor: 100 − (%d×3) = %.2f',
+            $durasi,
+            $durasi,
+            $skor
+        );
+
+        return [
+            'skor'        => round($skor, 2),
+            'durasi_hari' => $durasi,
+            'keterangan'  => $ket,
+        ];
     }
 
     /**
@@ -332,9 +389,17 @@ class MooraCalculator
         $normResult     = $this->normalisasiMoora($matriksKeputusan);
         $matriksNorm    = $normResult['normalisasi'];
         $pembagi        = $normResult['pembagi'];
-        $preferensi     = $this->hitungPreferensi($matriksNorm, $bobot);
 
-        $skorAkhir = $preferensi[0] ?? 0;
+        // Hitung skor akhir real-time sebagai rata-rata tertimbang dari kriteria (skala 0.0 - 1.0)
+        $c1 = $rubrik['c1'];
+        $c2 = $rubrik['c2'];
+        $c3 = $rubrik['c3'];
+        $c4 = $rubrik['c4'];
+
+        $sumBobot = array_sum($bobot) ?: 1.0;
+        $weightedSum = ($c1 * ($bobot[0] ?? 0.25)) + ($c2 * ($bobot[1] ?? 0.25)) + ($c3 * ($bobot[2] ?? 0.25)) + ($c4 * ($bobot[3] ?? 0.25));
+        $skorAkhir = ($weightedSum / $sumBobot) / 100.0;
+
         $grade     = $this->tentukanGrade($skorAkhir);
 
         return [
@@ -344,7 +409,7 @@ class MooraCalculator
             'matriks_keputusan' => $matriksKeputusan,
             'pembagi'           => $pembagi,
             'matriks_normalisasi' => $matriksNorm,
-            'skor_akhir'        => $skorAkhir,
+            'skor_akhir'        => round($skorAkhir, 6),
             'grade'             => $grade,
             'detail_rubrik'     => $rubrik['detail'],
         ];
@@ -386,20 +451,28 @@ class MooraCalculator
         $matriksNorm = $normResult['normalisasi'];
         $pembagi     = $normResult['pembagi'];
 
-        // Tahap 3: Preferensi
-        $preferensi = $this->hitungPreferensi($matriksNorm, $bobot);
-
         // Susun hasil
         $hasil = [];
         $idx   = 0;
         foreach ($kegiatanIds as $id) {
-            $skorAkhir = $preferensi[$idx] ?? 0;
+            $rubrik = $rubrikList[$id];
+
+            // Hitung skor akhir real-time sebagai rata-rata tertimbang dari kriteria (skala 0.0 - 1.0)
+            $c1 = $rubrik['c1'] ?? 0;
+            $c2 = $rubrik['c2'] ?? 0;
+            $c3 = $rubrik['c3'] ?? 0;
+            $c4 = $rubrik['c4'] ?? 0;
+
+            $sumBobot = array_sum($bobot) ?: 1.0;
+            $weightedSum = ($c1 * ($bobot[0] ?? 0.25)) + ($c2 * ($bobot[1] ?? 0.25)) + ($c3 * ($bobot[2] ?? 0.25)) + ($c4 * ($bobot[3] ?? 0.25));
+            $skorAkhir = ($weightedSum / $sumBobot) / 100.0;
+
             $hasil[] = [
                 'kegiatan_id'         => $id,
                 'skor_rubrik'         => $rubrikList[$id],
                 'matriks_keputusan'   => $matriksKeputusan[$idx],
                 'normalisasi'         => $matriksNorm[$idx] ?? [0, 0, 0, 0],
-                'skor_akhir'          => $skorAkhir,
+                'skor_akhir'          => round($skorAkhir, 6),
                 'grade'               => $this->tentukanGrade($skorAkhir),
                 'detail_rubrik'       => $rubrikList[$id]['detail'] ?? [],
             ];
