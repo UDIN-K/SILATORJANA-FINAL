@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../auth/models/user.dart';
 import '../../auth/viewmodels/auth_viewmodel.dart';
 import '../../auth/views/login_view.dart';
+import '../../auth/views/logout_transition_view.dart';
 
 import 'home_tab_view.dart';
 import 'kegiatan_list_view.dart';
@@ -78,6 +79,19 @@ class _DashboardViewState extends State<DashboardView> {
     'bendahara': 'Bendahara',
     'rektorat': 'Rektorat',
   };
+
+  static String _getRoleLabel(User user) {
+    if (user.role == 'verifikator') {
+      switch (user.verifikatorUnit) {
+        case 'wadir1': return 'Verifikator Wadir I';
+        case 'wadir2': return 'Verifikator Wadir II';
+        case 'wadir3': return 'Verifikator Wadir III';
+        case 'wadir4': return 'Verifikator Wadir IV';
+        default: return 'Verifikator';
+      }
+    }
+    return _roleLabels[user.role] ?? user.role.toUpperCase();
+  }
 
   @override
   void initState() {
@@ -155,9 +169,11 @@ class _DashboardViewState extends State<DashboardView> {
   void _logout() async {
     await context.read<AuthViewModel>().logout();
     if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginView()),
-        (route) => false,
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          opaque: false,
+          pageBuilder: (context, _, __) => const LogoutTransitionView(),
+        ),
       );
     }
   }
@@ -235,7 +251,7 @@ class _DashboardViewState extends State<DashboardView> {
   // ══════════════════════════════════════════════════════════════════════════
 
   Widget _buildSidebar() {
-    final activeRoleLabel = _roleLabels[widget.user.role] ?? widget.user.role.toUpperCase();
+    final activeRoleLabel = _getRoleLabel(widget.user);
 
     return Container(
       decoration: const BoxDecoration(
@@ -404,7 +420,7 @@ class _DashboardViewState extends State<DashboardView> {
   // ══════════════════════════════════════════════════════════════════════════
 
   Widget _buildTopNavbar() {
-    final activeRoleLabel = _roleLabels[widget.user.role] ?? widget.user.role.toUpperCase();
+    final activeRoleLabel = _getRoleLabel(widget.user);
     final janaIndex = _allItems.indexWhere((item) => item.page is JanaChatView);
     final panduanIndex = _allItems.indexWhere((item) => item.page is PanduanView);
     final profileIndex = _allItems.indexWhere((item) => item.page is ProfileView);

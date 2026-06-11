@@ -13,7 +13,7 @@ class LoginView extends StatefulWidget {
   State<LoginView> createState() => _LoginViewState();
 }
 
-class _LoginViewState extends State<LoginView> {
+class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthViewModel _authViewModel = AuthViewModel();
@@ -22,6 +22,10 @@ class _LoginViewState extends State<LoginView> {
   final FocusNode _passwordFocus = FocusNode();
 
   bool _showPass = false;
+  bool _isSuccessTransitioning = false;
+
+  late final AnimationController _slideUpController;
+  late final Animation<Offset> _slideUpAnimation;
 
   @override
   void initState() {
@@ -29,6 +33,14 @@ class _LoginViewState extends State<LoginView> {
     _authViewModel.initBiometrics();
     _emailFocus.addListener(_onFocusChange);
     _passwordFocus.addListener(_onFocusChange);
+
+    _slideUpController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _slideUpAnimation = Tween<Offset>(begin: Offset.zero, end: const Offset(0, -1.0)).animate(
+      CurvedAnimation(parent: _slideUpController, curve: Curves.easeInOutCubic),
+    );
   }
 
   void _onFocusChange() {
@@ -44,125 +56,196 @@ class _LoginViewState extends State<LoginView> {
     _authViewModel.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _slideUpController.dispose();
     super.dispose();
   }
 
+  Future<void> _handleLoginSuccess() async {
+    if (!mounted) return;
+    
+    // 1. Keep showing the loading spinner on the button and render Dashboard behind
+    setState(() {
+      _isSuccessTransitioning = true;
+    });
+
+    // 2. Give the Dashboard time to "lazyload" its data while hidden behind the login screen
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // 3. Swipe the login page UP to reveal the fully loaded dashboard
+    if (mounted) {
+      await _slideUpController.forward();
+    }
+
+    // 4. Silently replace the route without any flash or blink
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          transitionDuration: Duration.zero,
+          pageBuilder: (context, _, __) => DashboardView(user: _authViewModel.currentUser!),
+        ),
+      );
+    }
+  }
+
   Future<void> _login() async {
+    if (_isSuccessTransitioning) return;
     FocusScope.of(context).unfocus();
+    
     final success = await _authViewModel.login(
       _emailController.text,
       _passwordController.text,
     );
 
-    if (success && mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => DashboardView(user: _authViewModel.currentUser!)),
-      );
+    if (success) {
+      await _handleLoginSuccess();
     }
   }
 
   Future<void> _loginWithBiometrics() async {
+    if (_isSuccessTransitioning) return;
     final success = await _authViewModel.loginWithBiometrics();
-    if (success && mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => DashboardView(user: _authViewModel.currentUser!)),
-      );
+    if (success) {
+      await _handleLoginSuccess();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // slate-100
-      body: Stack(
+    return Material(
+      color: const Color(0xFFF8FAFC),
+      child: Stack(
         children: [
-          // Subtly patterned top background
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: MediaQuery.of(context).size.height * 0.4,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF047857), // emerald-700
-                    Color(0xFF065F46), // emerald-800
-                  ],
-                ),
-              ),
+          // 1. The Dashboard rendered in the background once login succeeds
+          if (_isSuccessTransitioning && _authViewModel.currentUser != null)
+            Positioned.fill(
+              child: DashboardView(user: _authViewModel.currentUser!),
             ),
-          ),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
-                child: ListenableBuilder(
-                  listenable: _authViewModel,
-                  builder: (context, _) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildHeader(),
-                        const SizedBox(height: 32),
-                        Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0F172A).withValues(alpha: 0.08),
-                                blurRadius: 40,
-                                offset: const Offset(0, 16),
+
+          // 2. The Login UI that will slide UP out of the screen
+          SlideTransition(
+            position: _slideUpAnimation,
+            child: Scaffold(
+              backgroundColor: const Color(0xFFF8FAFC), // slate-50
+              body: Stack(
+                children: [
+                  // Elegant top background (Emerald Gradient)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: MediaQuery.of(context).size.height * 0.45,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF047857), // emerald-700
+                            Color(0xFF065F46), // emerald-800
+                          ],
+                        ),
+                      ),
+                      // Subtle abstract pattern/glow for premium feel
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: -50,
+                            right: -50,
+                            child: Container(
+                              width: 200,
+                              height: 200,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.05),
                               ),
-                            ],
+                            ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const Text(
-                                'Masuk ke Akun',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF0F172A),
-                                  letterSpacing: -0.5,
-                                ),
+                          Positioned(
+                            bottom: -100,
+                            left: -50,
+                            child: Container(
+                              width: 300,
+                              height: 300,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.03),
                               ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Silakan masukkan kredensial Anda',
-                                style: TextStyle(
-                                  color: Color(0xFF64748B),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SafeArea(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                        child: ListenableBuilder(
+                          listenable: _authViewModel,
+                          builder: (context, _) {
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildHeader(),
+                                const SizedBox(height: 32),
+                                // Premium Login Card (Zero Shadows, Clean Borders)
+                                Container(
+                                  padding: const EdgeInsets.all(32),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: const Color(0xFFE2E8F0), // slate-200 delicate border
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      const Text(
+                                        'Masuk ke Akun',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF0F172A), // slate-900
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Silakan masukkan kredensial Anda',
+                                        style: TextStyle(
+                                          color: Color(0xFF64748B), // slate-500
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 32),
+                                      if (_authViewModel.errorMessage != null && !_isSuccessTransitioning) ...[
+                                        _buildErrorMessage(_authViewModel.errorMessage!),
+                                        const SizedBox(height: 24),
+                                      ],
+                                      _buildLoginForm(),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 32),
-                              if (_authViewModel.errorMessage != null) ...[
-                                _buildErrorMessage(_authViewModel.errorMessage!),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 32),
+                                const Text(
+                                  '© 2026 Politeknik Negeri Jakarta',
+                                  style: TextStyle(
+                                    color: Color(0xFF94A3B8), // slate-400
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                               ],
-                              _buildLoginForm(),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                        const SizedBox(height: 32),
-                        const Text(
-                          '© 2026 Politeknik Negeri Jakarta',
-                          style: TextStyle(
-                            color: Color(0xFF94A3B8),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -178,11 +261,11 @@ class _LoginViewState extends State<LoginView> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
           ),
-          child: const AppLogo(size: 40),
+          child: const AppLogo(size: 40, showBackground: false),
         ),
         const SizedBox(width: 16),
         Column(
@@ -212,43 +295,46 @@ class _LoginViewState extends State<LoginView> {
   }
 
   Widget _buildLoginForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Email',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF334155),
-          ),
-        ),
-        const SizedBox(height: 8),
-        _buildEmailField(),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Password',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF334155),
-              ),
+    return IgnorePointer(
+      ignoring: _isSuccessTransitioning,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Email',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF334155),
             ),
-            _buildForgotPassword(),
+          ),
+          const SizedBox(height: 8),
+          _buildEmailField(),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Password',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF334155),
+                ),
+              ),
+              _buildForgotPassword(),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildPasswordField(),
+          const SizedBox(height: 32),
+          _buildLoginButton(),
+          if (_authViewModel.canCheckBiometrics) ...[
+            const SizedBox(height: 16),
+            _buildBiometricButton(),
           ],
-        ),
-        const SizedBox(height: 8),
-        _buildPasswordField(),
-        const SizedBox(height: 32),
-        _buildLoginButton(),
-        if (_authViewModel.canCheckBiometrics) ...[
-          const SizedBox(height: 16),
-          _buildBiometricButton(),
         ],
-      ],
+      ),
     );
   }
 
@@ -260,6 +346,7 @@ class _LoginViewState extends State<LoginView> {
         fontWeight: FontWeight.w600,
         color: Color(0xFF0F172A),
       ),
+      cursorColor: const Color(0xFF059669),
       decoration: InputDecoration(
         hintText: 'nama@domain.com',
         hintStyle: const TextStyle(
@@ -291,6 +378,7 @@ class _LoginViewState extends State<LoginView> {
         fontWeight: FontWeight.w600,
         color: Color(0xFF0F172A),
       ),
+      cursorColor: const Color(0xFF059669),
       decoration: InputDecoration(
         hintText: '••••••••',
         hintStyle: const TextStyle(
@@ -322,7 +410,7 @@ class _LoginViewState extends State<LoginView> {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: BorderSide(
-        color: color ?? Colors.transparent,
+        color: color ?? const Color(0xFFE2E8F0), // slate-200 border for input
         width: 1.5,
       ),
     );
@@ -353,11 +441,13 @@ class _LoginViewState extends State<LoginView> {
   }
 
   Widget _buildLoginButton() {
+    final bool showLoading = _authViewModel.isLoading || _isSuccessTransitioning;
+    
     return SizedBox(
       height: 52,
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _authViewModel.isLoading ? null : _login,
+        onPressed: showLoading ? null : _login,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF059669), // emerald-600
           foregroundColor: Colors.white,
@@ -367,7 +457,7 @@ class _LoginViewState extends State<LoginView> {
           ),
           disabledBackgroundColor: const Color(0x80059669),
         ),
-        child: _authViewModel.isLoading
+        child: showLoading
             ? const SizedBox(
                 width: 24,
                 height: 24,
