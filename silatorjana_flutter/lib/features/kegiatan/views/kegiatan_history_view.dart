@@ -54,18 +54,20 @@ class _KegiatanHistoryViewState extends State<KegiatanHistoryView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Row(
-          children: [
-            Icon(LucideIcons.archive, size: 20, color: Color(0xFF047857)),
-            SizedBox(width: 8),
-            Text('Riwayat Kegiatan'),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 1,
-      ),
+      appBar: MediaQuery.of(context).size.width >= 768
+          ? null
+          : AppBar(
+              title: const Row(
+                children: [
+                  Icon(LucideIcons.archive, size: 20, color: Color(0xFF047857)),
+                  SizedBox(width: 8),
+                  Text('Riwayat Kegiatan'),
+                ],
+              ),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF0F172A),
+              elevation: 1,
+            ),
       body: RefreshIndicator(
         onRefresh: _fetchHistory,
         color: const Color(0xFF047857),

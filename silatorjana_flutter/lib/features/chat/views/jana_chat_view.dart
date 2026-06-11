@@ -36,18 +36,20 @@ class _JanaChatViewState extends State<JanaChatView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Row(
-          children: [
-            Icon(LucideIcons.bot, color: Color(0xFF047857)),
-            SizedBox(width: 8),
-            Text('Jana AI Assistant'),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 1,
-      ),
+      appBar: MediaQuery.of(context).size.width >= 768
+          ? null
+          : AppBar(
+              title: const Row(
+                children: [
+                  Icon(LucideIcons.bot, color: Color(0xFF047857)),
+                  SizedBox(width: 8),
+                  Text('Jana AI Assistant'),
+                ],
+              ),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF0F172A),
+              elevation: 1,
+            ),
       body: ListenableBuilder(
         listenable: _chatViewModel,
         builder: (context, _) {

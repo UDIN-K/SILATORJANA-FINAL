@@ -50,15 +50,17 @@ class _UserListViewState extends State<UserListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text('Management Users'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 1,
-        actions: [
-          IconButton(icon: const Icon(LucideIcons.refreshCw, size: 20), onPressed: () => _viewModel.fetchUsers()),
-        ],
-      ),
+      appBar: MediaQuery.of(context).size.width >= 768
+          ? null
+          : AppBar(
+              title: const Text('Management Users'),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF0F172A),
+              elevation: 1,
+              actions: [
+                IconButton(icon: const Icon(LucideIcons.refreshCw, size: 20), onPressed: () => _viewModel.fetchUsers()),
+              ],
+            ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const UserFormView())).then((result) {

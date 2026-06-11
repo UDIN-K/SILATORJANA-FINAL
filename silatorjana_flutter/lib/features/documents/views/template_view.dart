@@ -18,12 +18,14 @@ class TemplateView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text('Template Dokumen'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 1,
-      ),
+      appBar: MediaQuery.of(context).size.width >= 768
+          ? null
+          : AppBar(
+              title: const Text('Template Dokumen'),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF0F172A),
+              elevation: 1,
+            ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: templates.length,

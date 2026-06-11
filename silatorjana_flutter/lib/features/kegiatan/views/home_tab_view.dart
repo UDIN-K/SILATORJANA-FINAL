@@ -40,19 +40,21 @@ class _HomeTabViewState extends State<HomeTabView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text('Si-LATORJANA', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFF047857),
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.logOut),
-            onPressed: _logout,
-            tooltip: 'Keluar',
-          ),
-        ],
-        elevation: 0,
-      ),
+      appBar: MediaQuery.of(context).size.width >= 768
+          ? null
+          : AppBar(
+              title: const Text('Si-LATORJANA', style: TextStyle(fontWeight: FontWeight.bold)),
+              backgroundColor: const Color(0xFF047857),
+              foregroundColor: Colors.white,
+              actions: [
+                IconButton(
+                  icon: const Icon(LucideIcons.logOut),
+                  onPressed: _logout,
+                  tooltip: 'Keluar',
+                ),
+              ],
+              elevation: 0,
+            ),
       body: Consumer<KegiatanViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isListLoading && viewModel.kegiatanList.isEmpty) {
