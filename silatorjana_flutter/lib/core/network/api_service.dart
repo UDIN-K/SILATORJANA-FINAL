@@ -37,4 +37,12 @@ class ApiService {
       body: body != null ? jsonEncode(body) : null,
     );
   }
+
+  Future<http.Response> delete(String endpoint) async {
+    final headers = await _getHeaders();
+    return await http.delete(
+      Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+      headers: headers,
+    );
+  }
 }
