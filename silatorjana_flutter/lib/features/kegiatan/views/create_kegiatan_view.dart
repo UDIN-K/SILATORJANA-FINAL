@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -31,6 +32,7 @@ class CreateKegiatanView extends StatefulWidget {
 class _CreateKegiatanViewState extends State<CreateKegiatanView> {
   final ApiService _apiService = ApiService();
   Map<String, String> _revisiComments = {};
+  File? _suratPengantarFile;
 
   Map<String, String> _parseRevisiComments(String? catatan) {
     final result = <String, String>{};

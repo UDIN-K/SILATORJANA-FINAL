@@ -98,12 +98,4 @@ class ApiService {
     final streamed = await request.send();
     return await http.Response.fromStream(streamed);
   }
-
-  Future<http.Response> delete(String endpoint) async {
-    final headers = await _getHeaders();
-    return await http.delete(
-      Uri.parse('${ApiConfig.baseUrl}$endpoint'),
-      headers: headers,
-    );
-  }
 }
