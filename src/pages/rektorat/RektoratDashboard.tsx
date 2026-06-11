@@ -4,6 +4,7 @@ import { formatCurrency } from '@/lib/helpers';
 import { BarChart3, FileText, CheckCircle, XCircle, Clock, TrendingUp, Loader2, ArrowUpRight, PieChart, Award } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SpkDashboardWidget } from '@/components/spk/SpkDashboardWidget';
 
 const STATUS_GROUPS: Record<string, string[]> = {
   approved: ['approved_wadir', 'accepted_funds', 'funds_disbursed', 'lpj_approved', 'completed', 'lpj_done', 'selesai'],
@@ -128,6 +129,11 @@ export function RektoratDashboard() {
           <div className="p-4 bg-emerald-200/50 rounded-2xl"><TrendingUp className="size-8 text-emerald-700" /></div>
         </CardContent>
       </Card>
+
+      {/* Global SPK MOORA Widget */}
+      <div className="mt-6">
+        <SpkDashboardWidget />
+      </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

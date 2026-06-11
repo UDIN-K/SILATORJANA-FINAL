@@ -243,25 +243,25 @@ export function SpkDetailModal({ result, kriteria, isOpen, onClose }: SpkDetailM
               <h3 className="font-bold text-slate-500 text-sm">Informasi Teknis (Developer)</h3>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Case/Kasus</span>
-                <span className="text-slate-700 font-medium">Approval LPJ Kegiatan Kampus</span>
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Case Yang Diambil</span>
+                <span className="text-slate-700 font-medium">Sistem Pendukung Keputusan (SPK)</span>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Case Yang Diselesaikan</span>
+                <span className="text-slate-700 font-medium">Penilaian Kualitas & Approval LPJ</span>
               </div>
               <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Metode SPK</span>
+                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Perhitungan Metode</span>
                 <span className="text-slate-700 font-medium">MOORA (Ratio System)</span>
               </div>
               <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Alternatif</span>
-                <span className="text-slate-700 font-medium">{result.matriks_keputusan.length} LPJ</span>
-              </div>
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Kriteria</span>
-                <span className="text-slate-700 font-medium">4 Kriteria (C1–C4, Benefit)</span>
+                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Alternatif Yang Diambil</span>
+                <span className="text-slate-700 font-medium">{result.matriks_keputusan.length} Dokumen LPJ</span>
               </div>
               <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 col-span-2">
-                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Bobot Kriteria</span>
-                <span className="text-slate-700 font-medium">C1: 25%, C2: 25%, C3: 25%, C4: 25% (Equal Weight)</span>
+                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Kriteria Yang Diambil (Bobot 25%)</span>
+                <span className="text-slate-700 font-medium">C1: Waktu Pelaksanaan, C2: Ketepatan Dana, C3: Kesesuaian IKU, C4: Waktu Approval</span>
               </div>
             </div>
           </section>

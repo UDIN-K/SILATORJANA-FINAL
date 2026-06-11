@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { SpkDashboardWidget } from '@/components/spk/SpkDashboardWidget';
 
 export function VerifikatorDashboard() {
   const navigate = useNavigate();
@@ -58,6 +59,11 @@ export function VerifikatorDashboard() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mt-2 mb-4">
+        <h3 className="text-lg font-bold text-slate-800 mb-4 px-1">Monitoring Kualitas Historis (SPK)</h3>
+        <SpkDashboardWidget />
       </div>
 
       <Card className="shadow-lg border-white/50 bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden">

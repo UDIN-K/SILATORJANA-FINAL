@@ -1,12 +1,15 @@
 import { Card, CardContent } from '@/components/ui/card';
-import api, { apiGetKegiatan } from '@/lib/api';
+import api, { apiGetKegiatan, apiHitungSpk, apiGetSpkKriteria } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ProgressTracker } from '@/components/ProgressTracker';
-import { ArrowLeft, Calendar, Building2, User, DollarSign, FileText, Loader2, AlertTriangle, Eye, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Calendar, Building2, User, DollarSign, FileText, Loader2, AlertTriangle, Eye, RotateCcw, Award } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { formatDate, formatCurrency, fetchKAK, fetchIKU, fetchRAB } from '@/lib/helpers';
+import { SpkScoreCard } from '@/components/spk/SpkScoreCard';
+import { SpkDetailModal } from '@/components/spk/SpkDetailModal';
+import type { MooraResult, KriteriaDef } from '@/lib/mooraCalculator';
 
 function renderCatatanRevisi(catatan: string) {
   if (!catatan) return null;
@@ -54,6 +57,12 @@ export function HistoryDetailPage() {
   const [originalData, setOriginalData] = useState<{kak: any, iku: any[], rab: any[]}>({kak: null, iku: [], rab: []});
   const [selectedSnapshotId, setSelectedSnapshotId] = useState<number | null>(null);
 
+  // SPK MOORA state
+  const [spkResult, setSpkResult] = useState<MooraResult | null>(null);
+  const [spkLoading, setSpkLoading] = useState(false);
+  const [spkDetailOpen, setSpkDetailOpen] = useState(false);
+  const [spkKriteria, setSpkKriteria] = useState<KriteriaDef[]>([]);
+
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -72,6 +81,23 @@ export function HistoryDetailPage() {
           setHistoryList(hist.data || []);
         } catch (e) {
           console.error('Failed to fetch status history', e);
+        }
+
+        // Fetch SPK if status is approved/completed
+        if (['lpj_approved', 'lpj_done', 'completed', 'selesai'].includes(doc.status?.toLowerCase() || '')) {
+          setSpkLoading(true);
+          try {
+            const [spkRes, kriteriaRes] = await Promise.all([
+              apiHitungSpk(id).catch(() => null),
+              apiGetSpkKriteria().catch(() => []),
+            ]);
+            if (spkRes?.perhitungan) setSpkResult(spkRes.perhitungan as MooraResult);
+            if (Array.isArray(kriteriaRes)) setSpkKriteria(kriteriaRes);
+          } catch (e) {
+            console.error('Failed to load SPK', e);
+          } finally {
+            setSpkLoading(false);
+          }
         }
       } catch (e) { console.error(e); } finally { setIsLoading(false); }
     })();
@@ -216,6 +242,20 @@ export function HistoryDetailPage() {
         </CardContent></Card>
       )}
 
+      {/* SPK MOORA Score Card - Show if exists */}
+      {(spkResult || spkLoading) && (
+        <div className="mt-6 mb-2">
+          <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+             <Award className="size-5 text-emerald-600" /> Rapor Kualitas LPJ (Sistem Pendukung Keputusan)
+          </h3>
+          <SpkScoreCard
+            result={spkResult}
+            isLoading={spkLoading}
+            onShowDetail={() => setSpkDetailOpen(true)}
+          />
+        </div>
+      )}
+
       {/* Status History / Timeline */}
       <Card className="shadow-sm border-slate-200 bg-white">
         <CardContent className="p-5 space-y-4">
@@ -277,6 +317,15 @@ export function HistoryDetailPage() {
           )}
         </CardContent>
       </Card>
+      {/* SPK Detail Modal */}
+      {spkResult && (
+        <SpkDetailModal
+          result={spkResult}
+          kriteria={spkKriteria}
+          isOpen={spkDetailOpen}
+          onClose={() => setSpkDetailOpen(false)}
+        />
+      )}
     </div>
   );
 }

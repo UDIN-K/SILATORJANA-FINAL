@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { apiGetKegiatan, apiGetUser, apiListUsers, apiUpdateKegiatan } from '@/lib/api';
+import { apiGetKegiatan, apiGetUser, apiListUsers, apiUpdateKegiatan, apiHitungSpk, apiGetSpkKriteria } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, X, AlertCircle, Loader2, User, FileText, DollarSign, Target, Info } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -9,6 +9,10 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { formatCurrency } from '@/lib/helpers';
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { SpkScoreCard } from '@/components/spk/SpkScoreCard';
+import { SpkDetailModal } from '@/components/spk/SpkDetailModal';
+import type { MooraResult, KriteriaDef } from '@/lib/mooraCalculator';
+
 function parseIndikatorKinerja(rawValue: string | undefined | null): any[] {
   if (!rawValue) return [];
   try {
@@ -44,6 +48,12 @@ export function VerifikasiDetailPage() {
   const [kodeMak, setKodeMak] = useState('');
   const [showMakModal, setShowMakModal] = useState(false);
 
+  // SPK MOORA state
+  const [spkResult, setSpkResult] = useState<MooraResult | null>(null);
+  const [spkLoading, setSpkLoading] = useState(false);
+  const [spkDetailOpen, setSpkDetailOpen] = useState(false);
+  const [spkKriteria, setSpkKriteria] = useState<KriteriaDef[]>([]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -70,6 +80,23 @@ export function VerifikasiDetailPage() {
             setPengusulData(userDoc);
           } catch (err) {
             console.error('Error fetching proposer details', err);
+          }
+        }
+
+        // Fetch SPK if status is approved/completed
+        if (['lpj_approved', 'lpj_done', 'completed', 'selesai'].includes(kegiatan.status?.toLowerCase() || '')) {
+          setSpkLoading(true);
+          try {
+            const [spkRes, kriteriaRes] = await Promise.all([
+              apiHitungSpk(id).catch(() => null),
+              apiGetSpkKriteria().catch(() => []),
+            ]);
+            if (spkRes?.perhitungan) setSpkResult(spkRes.perhitungan as MooraResult);
+            if (Array.isArray(kriteriaRes)) setSpkKriteria(kriteriaRes);
+          } catch (e) {
+            console.error('Failed to load SPK', e);
+          } finally {
+            setSpkLoading(false);
           }
         }
 
@@ -473,9 +500,9 @@ export function VerifikasiDetailPage() {
 
         </div>
 
-        {/* Panel Aksi */}
-        {['submitted', 'revisi_done'].includes(data?.status) && (
-          <div className="w-full space-y-6 select-none animate-in fade-in slide-in-from-bottom duration-300">
+        {/* Panel Kanan */}
+        <div className="w-full space-y-6 select-none animate-in fade-in slide-in-from-bottom duration-300">
+          {['submitted', 'revisi_done'].includes(data?.status) && (
              <Card className="shadow-lg shadow-slate-200/50 border-slate-200/60 bg-white md:sticky md:top-24 rounded-2xl overflow-hidden">
               <div className="h-1.5 w-full bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
               <CardHeader className="bg-slate-50/30 border-b border-slate-100/60 py-4 px-4 sm:p-5">
@@ -520,8 +547,22 @@ export function VerifikasiDetailPage() {
                  </div>
               </CardContent>
            </Card>
+          )}
+
+          {/* SPK MOORA Score Card - Show if exists */}
+          {(spkResult || spkLoading) && (
+            <div className="md:sticky md:top-24">
+              <h3 className="text-sm font-bold text-slate-800 mb-3 px-1 uppercase tracking-wider flex items-center gap-2">
+                 Rapor Kualitas LPJ
+              </h3>
+              <SpkScoreCard
+                result={spkResult}
+                isLoading={spkLoading}
+                onShowDetail={() => setSpkDetailOpen(true)}
+              />
+            </div>
+          )}
         </div>
-        )}
       </div>
 
       <Dialog open={showMakModal} onOpenChange={setShowMakModal}>
@@ -573,6 +614,16 @@ export function VerifikasiDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* SPK Detail Modal */}
+      {spkResult && (
+        <SpkDetailModal
+          result={spkResult}
+          kriteria={spkKriteria}
+          isOpen={spkDetailOpen}
+          onClose={() => setSpkDetailOpen(false)}
+        />
+      )}
 
     </div>
   );
