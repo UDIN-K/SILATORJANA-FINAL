@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { apiListKegiatan } from '@/lib/api';
+import { apiListKegiatan, apiDeleteKegiatan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Plus, Search, Eye, Edit, Trash2, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -102,6 +102,7 @@ export function UsulanPage() {
         pengusul_id: String(userId),
         limit: String(perPage),
         page: String(page),
+        active: 'true',
       };
       if (searchTerm.trim()) {
         params.search = searchTerm.trim();
@@ -127,6 +128,18 @@ export function UsulanPage() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDelete = async (id: number | string) => {
+    const isConfirmed = window.confirm('Apakah Anda yakin ingin menghapus proposal ini? Tindakan ini tidak dapat dibatalkan.');
+    if (!isConfirmed) return;
+
+    try {
+      await apiDeleteKegiatan(id);
+      fetchUsulan(currentPage, debouncedSearch);
+    } catch (error: any) {
+      alert('Gagal menghapus proposal: ' + error.message);
+    }
   };
 
   /* StatusBadge used instead of getStatusBadge */
@@ -204,7 +217,7 @@ export function UsulanPage() {
                         <Button disabled={!(item.status === 'draft' || item.status === 'revisi' || item.status === 'revision_requested')} variant="outline" size="sm" className="flex-1 h-8 sm:h-9 text-amber-600 border-amber-200/60 bg-amber-50/50 hover:bg-amber-100 shadow-sm transition-all disabled:opacity-40" onClick={() => navigate(item.status === 'draft' ? `/dashboard/pengusul/usulan/edit/${item.id}` : `/dashboard/pengusul/revisi/${item.id}`)} title="Edit">
                            <Edit className="size-3.5 sm:size-4" />
                         </Button>
-                        <Button disabled={!(item.status === 'draft' || item.status === 'revisi' || item.status === 'revision_requested')} variant="outline" size="sm" className="flex-1 h-8 sm:h-9 text-red-600 border-red-200/60 bg-red-50/50 hover:bg-red-100 shadow-sm transition-all disabled:opacity-40" title="Hapus">
+                        <Button disabled={!(item.status === 'draft' || item.status === 'revisi' || item.status === 'revision_requested')} variant="outline" size="sm" className="flex-1 h-8 sm:h-9 text-red-600 border-red-200/60 bg-red-50/50 hover:bg-red-100 shadow-sm transition-all disabled:opacity-40" onClick={() => handleDelete(item.id)} title="Hapus">
                            <Trash2 className="size-3.5 sm:size-4" />
                         </Button>
                       </div>

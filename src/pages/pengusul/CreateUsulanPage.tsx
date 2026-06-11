@@ -397,6 +397,7 @@ function VerifikatorModal({
 export function CreateUsulanPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [currentDraftId, setCurrentDraftId] = useState<string | number | null>(id || null);
   const [isLoadingDraft, setIsLoadingDraft] = useState(!!id);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -406,6 +407,7 @@ export function CreateUsulanPage() {
   const [draftSaving, setDraftSaving] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const isInitialLoad = useRef(true);
+  const hasSubmitted = useRef(false);
 
   // BUG-013/015: localStorage draft key
   const DRAFT_KEY = 'silatorjana_draft_usulan';
@@ -583,6 +585,88 @@ export function CreateUsulanPage() {
     };
   }, [step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep, isLoadingDraft, id]);
 
+  // State ref for unmount cleanup auto-save
+  const stateRef = useRef({
+    step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep, currentDraftId, currentUser
+  });
+
+  useEffect(() => {
+    stateRef.current = {
+      step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep, currentDraftId, currentUser
+    };
+  }, [step1, step2, indikatorRows, ikuItems, rabBarang, rabJasa, rabPerjalanan, currentStep, currentDraftId, currentUser]);
+
+  // Save draft to database when component unmounts (auto-save draft)
+  useEffect(() => {
+    return () => {
+      if (hasSubmitted.current) return;
+      const state = stateRef.current;
+      if (!state.currentUser) return;
+
+      const hasContent = state.step1.nama_kegiatan?.trim() || state.step1.jenis_kegiatan?.trim() || state.step2.gambaran_umum?.trim();
+      if (!hasContent) return;
+
+      const payload: Record<string, any> = {
+        nama_kegiatan: state.step1.nama_kegiatan || 'Draft Usulan',
+        jenis_kegiatan: state.step1.jenis_kegiatan || null,
+        tempat: state.step1.tempat || null,
+        pengusul_organisasi: state.step1.pengusul_organisasi || null,
+        status: 'draft',
+      };
+      if (state.step1.tanggal_kegiatan) payload.tanggal_kegiatan = state.step1.tanggal_kegiatan;
+
+      payload.kak = {
+        gambaran_umum: state.step2.gambaran_umum || null,
+        penerima_manfaat: state.step2.penerima_manfaat || null,
+        strategi_pencapaian: state.step2.strategi_pencapaian || null,
+        metode_pelaksanaan: state.step2.metode_pelaksanaan || null,
+        tahapan_pelaksanaan: state.step2.tahapan_pelaksanaan || null,
+        kurun_waktu_mulai: state.step2.kurun_waktu_dari || null,
+        kurun_waktu_selesai: state.step2.kurun_waktu_sampai || null,
+        indikator: state.indikatorRows.map(r => ({ bulan: r.bulan, indikator: r.indikator, target: r.target })),
+      };
+
+      payload.iku = state.ikuItems
+        .filter(i => i.nama_indikator.trim())
+        .map(i => ({ nama_iku: i.nama_indikator, target_persen: i.target_persen }));
+
+      const toRabPayload = (items: RabItem[], kategori: string) =>
+        items.filter(it => it.uraian.trim()).map(it => ({
+          kategori, uraian: it.uraian, qty1: it.qty1, satuan1: it.satuan1,
+          qty2: it.qty2, satuan2: it.satuan2, qty3: it.qty3 ?? null, satuan3: it.satuan3,
+          harga_satuan: it.harga_satuan,
+        }));
+
+      payload.rab = [
+        ...toRabPayload(state.rabBarang, 'barang'),
+        ...toRabPayload(state.rabJasa, 'jasa'),
+        ...toRabPayload(state.rabPerjalanan, 'perjalanan'),
+      ];
+
+      const token = localStorage.getItem('auth_token');
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const targetId = state.currentDraftId;
+      const url = targetId ? `/api/kegiatan/${targetId}` : '/api/kegiatan';
+      const method = targetId ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method,
+        headers,
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).catch(err => console.error('Auto-save on unmount failed:', err));
+
+      try { localStorage.removeItem('silatorjana_draft_usulan'); } catch {}
+    };
+  }, []);
+
   // Restore step from draft
   useEffect(() => {
     if (savedDraft?.currentStep) {
@@ -638,10 +722,15 @@ export function CreateUsulanPage() {
         ...toRabPayload(rabPerjalanan, 'perjalanan'),
       ];
 
-      if (id) {
-        await apiUpdateKegiatan(id, payload);
+      let result;
+      if (id || currentDraftId) {
+        result = await apiUpdateKegiatan(id || currentDraftId, payload);
       } else {
-        await apiCreateKegiatan(payload);
+        result = await apiCreateKegiatan(payload);
+        if (result && result.id) {
+          setCurrentDraftId(result.id);
+          window.history.replaceState(null, '', `/dashboard/pengusul/usulan/edit/${result.id}`);
+        }
       }
       clearDraft();
       setDraftSaved(true);
@@ -653,6 +742,11 @@ export function CreateUsulanPage() {
     } finally {
       setDraftSaving(false);
     }
+  };
+
+  const handleGoBack = async () => {
+    await saveDraft();
+    navigate('/dashboard/pengusul/usulan');
   };
 
   // ── Helpers ──
@@ -719,8 +813,9 @@ export function CreateUsulanPage() {
         ...toRabPayload(rabPerjalanan, 'perjalanan'),
       ];
 
-      if (id) {
-        await apiUpdateKegiatan(id, payload);
+      hasSubmitted.current = true;
+      if (id || currentDraftId) {
+        await apiUpdateKegiatan(id || currentDraftId, payload);
       } else {
         await apiCreateKegiatan(payload);
       }
@@ -864,7 +959,7 @@ export function CreateUsulanPage() {
       <div className="space-y-6 max-w-5xl mx-auto pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Header */}
         <div className="flex items-center gap-4 py-4 border-b border-slate-100">
-          <Button variant="outline" size="icon" onClick={() => navigate('/dashboard/pengusul/usulan')} className="h-10 w-10 sm:h-11 sm:w-11 border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 shadow-sm transition-all rounded-xl shrink-0">
+          <Button variant="outline" size="icon" onClick={handleGoBack} className="h-10 w-10 sm:h-11 sm:w-11 border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 shadow-sm transition-all rounded-xl shrink-0">
             <ArrowLeft className="size-5" />
           </Button>
           <div className="flex-1">
@@ -1463,7 +1558,7 @@ export function CreateUsulanPage() {
             {currentStep > 1 ? (
               <Button type="button" variant="outline" className="h-14 px-8 rounded-2xl font-bold text-slate-600 hover:bg-slate-100 border-slate-300 w-full sm:w-auto transition-all" onClick={() => setCurrentStep(prev => prev - 1)}>Kembali</Button>
             ) : (
-              <Button type="button" variant="outline" className="h-14 px-8 rounded-2xl font-bold text-slate-600 hover:bg-slate-100 border-slate-300 w-full sm:w-auto transition-all" onClick={() => navigate('/dashboard/pengusul/usulan')}>Batalkan</Button>
+              <Button type="button" variant="outline" className="h-14 px-8 rounded-2xl font-bold text-slate-600 hover:bg-slate-100 border-slate-300 w-full sm:w-auto transition-all" onClick={handleGoBack}>Batalkan</Button>
             )}
 
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">

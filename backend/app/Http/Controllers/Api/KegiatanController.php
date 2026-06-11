@@ -24,6 +24,11 @@ class KegiatanController extends Controller
 
             if ($user->role === 'pengusul') {
                 $query->where('pengusul_id', $user->id);
+                if ($request->get('active') === 'true') {
+                    $query->whereNotIn('status', ['completed', 'selesai', 'lpj_done', 'lpj_approved', 'lpj_verified', 'rejected', 'ditolak']);
+                } elseif ($request->get('history') === 'true') {
+                    $query->whereIn('status', ['completed', 'selesai', 'lpj_done', 'lpj_approved', 'lpj_verified', 'rejected', 'ditolak']);
+                }
             } elseif ($user->role === 'verifikator') {
                 if (!empty($user->verifikator_unit)) {
                     $query->where(function($q) use ($user) {

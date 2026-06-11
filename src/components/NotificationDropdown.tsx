@@ -92,8 +92,13 @@ export function NotificationDropdown({ role }: NotificationDropdownProps) {
     if (userRole === 'pengusul') {
       let msg = '';
       let type: 'info'|'success'|'warning' = 'info';
-      if (doc.status === 'revision_requested') { msg = 'Memerlukan revisi'; type = 'warning'; }
-      else if (doc.status === 'verified') { msg = 'Lolos verifikasi'; type = 'success'; }
+      if (doc.status === 'revision_requested' || doc.status === 'revisi') {
+        msg = `Revisi Proposal: Perlu perbaikan. ${doc.catatan_revisi ? 'Catatan: ' + doc.catatan_revisi : 'Silakan periksa catatan revisi.'}`;
+        type = 'warning';
+      } else if (doc.status === 'lpj_revision') {
+        msg = `Revisi LPJ: Perlu perbaikan. ${doc.catatan_revisi ? 'Catatan: ' + doc.catatan_revisi : 'Silakan periksa catatan revisi.'}`;
+        type = 'warning';
+      } else if (doc.status === 'verified') { msg = 'Lolos verifikasi'; type = 'success'; }
       else if (doc.status === 'approved_wadir') { msg = 'Disetujui Wadir'; type = 'success'; }
       else if (doc.status === 'rejected') { msg = 'Ditolak'; type = 'warning'; }
       else { msg = `Status diperbarui: ${doc.status}`; }
