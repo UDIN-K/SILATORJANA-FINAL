@@ -40,14 +40,6 @@ class _RekapJurusanViewState extends State<RekapJurusanView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: MediaQuery.of(context).size.width >= 768
-          ? null
-          : AppBar(
-              title: const Text('Rekap per Jurusan'),
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF0F172A),
-              elevation: 1,
-            ),
       body: ListenableBuilder(
         listenable: _viewModel,
         builder: (context, _) {

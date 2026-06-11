@@ -48,14 +48,6 @@ class _BendaharaLaporanViewState extends State<BendaharaLaporanView> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: MediaQuery.of(context).size.width >= 768
-          ? null
-          : AppBar(
-              title: const Text('Rekap Laporan LPJ'),
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF0F172A),
-              elevation: 1,
-            ),
       body: _isLoading
         ? const Center(child: CircularProgressIndicator(color: Color(0xFF047857)))
         : RefreshIndicator(

@@ -145,17 +145,6 @@ class _IkuConfigViewState extends State<IkuConfigView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: MediaQuery.of(context).size.width >= 768
-          ? null
-          : AppBar(
-              title: const Text('Konfigurasi IKU'),
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF0F172A),
-              elevation: 1,
-              actions: [
-                IconButton(icon: const Icon(LucideIcons.refreshCw, size: 20), onPressed: () => _viewModel.fetchIkuMaster()),
-              ],
-            ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDialog,
         backgroundColor: const Color(0xFF047857),

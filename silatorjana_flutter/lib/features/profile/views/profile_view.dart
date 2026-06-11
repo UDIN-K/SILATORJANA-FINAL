@@ -55,14 +55,6 @@ class _ProfileViewState extends State<ProfileView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: MediaQuery.of(context).size.width >= 768
-          ? null
-          : AppBar(
-              title: const Text('Profil Pengguna'),
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF0F172A),
-              elevation: 1,
-            ),
       body: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {
           return ListView(

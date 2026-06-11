@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../auth/models/user.dart';
-import '../../auth/viewmodels/auth_viewmodel.dart';
-import '../../auth/views/login_view.dart';
 import '../viewmodels/kegiatan_viewmodel.dart';
 import '../models/kegiatan.dart';
 import 'kegiatan_detail_view.dart';
@@ -27,34 +25,10 @@ class _HomeTabViewState extends State<HomeTabView> {
     });
   }
 
-  void _logout() async {
-    await context.read<AuthViewModel>().logout();
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const LoginView()),
-      (route) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: MediaQuery.of(context).size.width >= 768
-          ? null
-          : AppBar(
-              title: const Text('Si-LATORJANA', style: TextStyle(fontWeight: FontWeight.bold)),
-              backgroundColor: const Color(0xFF047857),
-              foregroundColor: Colors.white,
-              actions: [
-                IconButton(
-                  icon: const Icon(LucideIcons.logOut),
-                  onPressed: _logout,
-                  tooltip: 'Keluar',
-                ),
-              ],
-              elevation: 0,
-            ),
       body: Consumer<KegiatanViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isListLoading && viewModel.kegiatanList.isEmpty) {

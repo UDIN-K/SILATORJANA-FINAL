@@ -70,20 +70,6 @@ class _MonitoringDashboardViewState extends State<MonitoringDashboardView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: MediaQuery.of(context).size.width >= 768
-          ? null
-          : AppBar(
-              title: const Text('Monitoring Kegiatan'),
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF0F172A),
-              elevation: 1,
-              actions: [
-                IconButton(
-                  icon: const Icon(LucideIcons.refreshCw, size: 20),
-                  onPressed: () => _viewModel.fetchMonitoringData(),
-                ),
-              ],
-            ),
       body: ListenableBuilder(
         listenable: _viewModel,
         builder: (context, _) {

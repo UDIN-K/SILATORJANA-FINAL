@@ -51,20 +51,6 @@ class _KegiatanListViewState extends State<KegiatanListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: MediaQuery.of(context).size.width >= 768
-          ? null
-          : AppBar(
-              title: const Text('Daftar Pengajuan'),
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF0F172A),
-              elevation: 1,
-              actions: [
-                IconButton(
-                  icon: const Icon(LucideIcons.refreshCw),
-                  onPressed: () => _kegiatanViewModel.fetchKegiatanList(),
-                ),
-              ],
-            ),
       body: ListenableBuilder(
         listenable: _kegiatanViewModel,
         builder: (context, _) => _buildBody(),

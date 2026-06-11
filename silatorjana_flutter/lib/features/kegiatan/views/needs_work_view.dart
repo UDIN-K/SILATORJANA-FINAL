@@ -15,14 +15,6 @@ class NeedsWorkView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: MediaQuery.of(context).size.width >= 768
-          ? null
-          : AppBar(
-              title: const Text('Perlu Revisi'),
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF0F172A),
-              elevation: 1,
-            ),
       body: Consumer<KegiatanViewModel>(
         builder: (context, vm, _) {
           if (vm.isListLoading && vm.kegiatanList.isEmpty) {
