@@ -108,11 +108,88 @@ class KegiatanViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> deleteKegiatan(int id) async {
+  /// Submit action with custom body (for Kode MAK, etc.)
+  Future<bool> submitActionWithBody(int id, Map<String, dynamic> body) async {
+    isActionLoading = true;
+    notifyListeners();
+
     try {
-      final response = await _apiService.delete('/kegiatan/$id');
-      return response.statusCode == 200 || response.statusCode == 204;
-    } catch (_) {}
-    return false;
+      final response = await _apiService.put(
+        '/kegiatan/$id',
+        body: body,
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        isActionLoading = false;
+        notifyListeners();
+        
+        final isApprove = !(body['status']?.toString().contains('revision') ?? false) && body['status'] != 'rejected';
+        final actionText = isApprove ? 'Disetujui' : 'Diminta Revisi';
+        _notificationService.showNotification(
+          id: id,
+          title: 'Status Proposal Diperbarui',
+          body: 'Proposal (ID: $id) telah berhasil $actionText.',
+        );
+
+        return true;
+      } else {
+        isActionLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      isActionLoading = false;
+      notifyListeners();
+      return false;
+  }
+
+  /// Tambah pencairan dana (Bendahara)
+  Future<bool> tambahPencairan(int id, double persentase, String catatan) async {
+    isActionLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.post(
+        '/kegiatan/$id/pencairan',
+        body: {'persentase': persentase, 'catatan': catatan},
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Refresh detail
+        await fetchKegiatanDetail(id);
+        isActionLoading = false;
+        notifyListeners();
+        return true;
+      }
+      isActionLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      isActionLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Tandai dana sudah diambil (Bendahara)
+  Future<bool> ambilUangMuka(int id) async {
+    isActionLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.post('/kegiatan/$id/ambil-uang-muka');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Refresh detail
+        await fetchKegiatanDetail(id);
+        isActionLoading = false;
+        notifyListeners();
+        return true;
+      }
+      isActionLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      isActionLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 }

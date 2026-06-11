@@ -1224,7 +1224,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
                         const SizedBox(height: 8),
                         _buildTextField(row['indikator']!, 'Indikator Keberhasilan *', null),
                         const SizedBox(height: 8),
-                        _buildTextField(row['target']!, 'Target Kumulatif (%) *', null, isNumber: true),
+                        _buildTextField(row['target']!, 'Target Kumulatif (%) *', null, isNumber: true, allowDecimal: true, maxLength: 5),
                       ],
                     ),
                   );
@@ -1306,7 +1306,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
                       },
                     ),
                     const SizedBox(height: 8),
-                    _buildTextField(row['target_persen']!, 'Target (%) *', null, isNumber: true),
+                    _buildTextField(row['target_persen']!, 'Target (%) *', null, isNumber: true, allowDecimal: true, maxLength: 5),
                   ],
                 ),
               );
@@ -1407,7 +1407,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Expanded(child: _buildTextField(item['qty1']!, 'Jumlah 1 *', null, isNumber: true, onChanged: (_) => setState(() {}))),
+                            Expanded(child: _buildTextField(item['qty1']!, 'Jumlah 1 *', null, isNumber: true, onChanged: (_) => setState(() {}), maxLength: 6)),
                             const SizedBox(width: 8),
                             Expanded(
                               child: DropdownButtonFormField<String>(
@@ -1428,7 +1428,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Expanded(child: _buildTextField(item['qty2']!, 'Jumlah 2 *', null, isNumber: true, onChanged: (_) => setState(() {}))),
+                            Expanded(child: _buildTextField(item['qty2']!, 'Jumlah 2 *', null, isNumber: true, onChanged: (_) => setState(() {}), maxLength: 6)),
                             const SizedBox(width: 8),
                             Expanded(
                               child: DropdownButtonFormField<String>(
@@ -1449,7 +1449,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Expanded(child: _buildTextField(item['qty3']!, 'Jumlah 3 (Opsional)', null, isNumber: true, onChanged: (_) => setState(() {}))),
+                            Expanded(child: _buildTextField(item['qty3']!, 'Jumlah 3 (Opsional)', null, isNumber: true, onChanged: (_) => setState(() {}), maxLength: 6)),
                             const SizedBox(width: 8),
                             Expanded(
                               child: DropdownButtonFormField<String>(
@@ -1468,7 +1468,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        _buildTextField(item['harga_satuan']!, 'Harga Satuan (Rp) *', null, isNumber: true, onChanged: (_) => setState(() {})),
+                        _buildTextField(item['harga_satuan']!, 'Harga Satuan (Rp) *', null, isNumber: true, onChanged: (_) => setState(() {}), allowDecimal: true, maxLength: 15),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1530,16 +1530,13 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
     );
   }
 
-  Widget _buildTextField(TextEditingController ctrl, String label, IconData? icon, {bool isNumber = false, String? hint, ValueChanged<String>? onChanged, List<String>? commentFields}) {
+  Widget _buildTextField(TextEditingController ctrl, String label, IconData? icon, {bool isNumber = false, String? hint, ValueChanged<String>? onChanged, List<String>? commentFields, bool allowDecimal = false, int? maxLength}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
           controller: ctrl,
-          keyboardType: isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
-          inputFormatters: isNumber
-              ? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))]
-              : null,
+          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           onChanged: onChanged,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF0F172A)),
           decoration: _inputDecoration(label, icon, hint: hint, commentFields: commentFields),

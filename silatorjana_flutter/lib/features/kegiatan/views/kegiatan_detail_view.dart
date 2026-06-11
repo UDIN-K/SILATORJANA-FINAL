@@ -8,6 +8,7 @@ import 'kegiatan_print_view.dart';
 import 'kode_mak_input_view.dart';
 import 'submit_ppk_view.dart';
 import '../../lpj/views/lpj_upload_view.dart';
+import '../../bendahara/views/pencairan_view.dart';
 
 /// Detail view for a single Kegiatan/Usulan proposal.
 /// Mirrors the web's DetailUsulanPage.tsx layout: header, progress tracker,
@@ -78,72 +79,100 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
   /// Uses exact target status strings for the backend PUT /kegiatan/{id}.
   Future<void> _submitAction(String action) async {
     final catatanCtrl = TextEditingController();
+    final kodeMakCtrl = TextEditingController();
     final isApprove = action == 'approve';
+    final role = widget.currentUser.role;
+    final isVerifikator = role == 'verifikator';
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(children: [
-          Icon(
-            isApprove ? LucideIcons.checkCircle : LucideIcons.alertTriangle,
-            color: isApprove ? _emerald700 : Colors.red,
-            size: 22,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(isApprove ? 'Setujui Proposal' : 'Minta Revisi',
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-          ),
-        ]),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isApprove
-                  ? 'Apakah Anda yakin menyetujui proposal ini?'
-                  : 'Berikan catatan revisi untuk pengusul:',
-              style: const TextStyle(fontSize: 14, color: _slate500),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(children: [
+            Icon(
+              isApprove ? LucideIcons.checkCircle : LucideIcons.alertTriangle,
+              color: isApprove ? _emerald700 : Colors.red,
+              size: 22,
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: catatanCtrl,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: isApprove ? 'Catatan (opsional)' : 'Catatan revisi *',
-                hintStyle: const TextStyle(color: _slate400),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _emerald600, width: 2),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(isApprove ? 'Setujui Proposal' : 'Minta Revisi',
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            ),
+          ]),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                isApprove
+                    ? 'Apakah Anda yakin menyetujui proposal ini?'
+                    : 'Berikan catatan revisi untuk pengusul:',
+                style: const TextStyle(fontSize: 14, color: _slate500),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: catatanCtrl,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: isApprove ? 'Catatan (opsional)' : 'Catatan revisi *',
+                  hintStyle: const TextStyle(color: _slate400),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: _emerald600, width: 2),
+                  ),
                 ),
               ),
+              if (isApprove && isVerifikator) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: kodeMakCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Kode MAK *',
+                    hintText: 'Contoh: 1234.567.890',
+                    hintStyle: const TextStyle(color: _slate400),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _emerald600, width: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Batal', style: TextStyle(color: _slate500)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (!isApprove && catatanCtrl.text.isEmpty) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(content: Text('Catatan wajib diisi'), backgroundColor: Colors.orange),
+                  );
+                  return;
+                }
+                if (isApprove && isVerifikator && kodeMakCtrl.text.isEmpty) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(content: Text('Kode MAK wajib diisi'), backgroundColor: Colors.orange),
+                  );
+                  return;
+                }
+                Navigator.pop(ctx, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isApprove ? _emerald700 : Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: Text(isApprove ? 'Setujui' : 'Minta Revisi',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal', style: TextStyle(color: _slate500)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (!isApprove && catatanCtrl.text.isEmpty) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('Catatan wajib diisi'), backgroundColor: Colors.orange),
-                );
-                return;
-              }
-              Navigator.pop(ctx, true);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isApprove ? _emerald700 : Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text(isApprove ? 'Setujui' : 'Minta Revisi',
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
       ),
     );
 
@@ -161,7 +190,17 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
         ? catatanCtrl.text
         : 'Disetujui oleh ${widget.currentUser.nama} (${widget.currentUser.role})';
 
-    final success = await _vm.submitAction(widget.kegiatan.id, targetStatus, catatan);
+    final body = <String, dynamic>{
+      'status': targetStatus,
+      'catatan_revisi': catatan,
+    };
+
+    // Add Kode MAK for verifikator approval
+    if (isApprove && isVerifikator && kodeMakCtrl.text.isNotEmpty) {
+      body['kode_mak'] = kodeMakCtrl.text.trim();
+    }
+
+    final success = await _vm.submitActionWithBody(widget.kegiatan.id, body);
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Status berhasil diperbarui!'), backgroundColor: _emerald700),
@@ -334,6 +373,24 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
           ],
 
           // ═══════════════════════════════════════════
+          // PENGUSUL: Upload Surat Pengantar & Penanggung Jawab (for PPK)
+          // ═══════════════════════════════════════════
+          if (widget.currentUser.role == 'pengusul' && 
+              ['verified', 'diverifikasi', 'waiting_surat_pengantar'].contains(k.status.toLowerCase())) ...[
+            _buildPengusulPpkSubmissionCard(k, d),
+            const SizedBox(height: 16),
+          ],
+
+          // ═══════════════════════════════════════════
+          // PENGUSUL: Upload LPJ
+          // ═══════════════════════════════════════════
+          if (widget.currentUser.role == 'pengusul' && 
+              ['approved_wadir', 'accepted_funds', 'funds_disbursed', 'lpj_revision', 'lpj_submitted'].contains(k.status.toLowerCase())) ...[
+            _buildPengusulLpjCard(k, d),
+            const SizedBox(height: 16),
+          ],
+
+          // ═══════════════════════════════════════════
           // HISTORY Timeline
           // ═══════════════════════════════════════════
           if (historyList.isNotEmpty) ...[
@@ -392,6 +449,19 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
                   Text(k.formattedDate, style: const TextStyle(fontSize: 13, color: _slate500, fontWeight: FontWeight.w500)),
                 ],
               ),
+              if (_vm.detailData?['kode_mak'] != null && _vm.detailData!['kode_mak'].toString().isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: _emerald50, borderRadius: BorderRadius.circular(6), border: Border.all(color: _emerald100)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(LucideIcons.hash, size: 12, color: _emerald700),
+                      const SizedBox(width: 4),
+                      Text('MAK: ${_vm.detailData!['kode_mak']}', style: const TextStyle(fontSize: 12, color: _emerald700, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
             ],
           ),
         ],
@@ -976,6 +1046,39 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
       );
     }
 
+    // ── BENDAHARA ──────────────────────────────────────────────────────
+    if (role == 'bendahara') {
+      if (['approved_wadir', 'accepted_funds', 'funds_disbursed', 'lpj_submitted', 'lpj_revision', 'lpj_approved', 'lpj_verified'].contains(status)) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, -2))],
+          ),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => PencairanView(kegiatan: widget.kegiatan)))
+                    .then((_) => _vm.fetchKegiatanDetail(widget.kegiatan.id));
+                },
+                icon: const Icon(LucideIcons.dollarSign, size: 16),
+                label: const Text('Proses Pencairan Dana', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
     // ── OTHER APPROVER ROLES (PPK, Wadir, Rektorat) ────────────────────
     if (role == 'admin' || role == 'bendahara' || role.isEmpty) return null;
     if (!_canActOnStatus()) return null;
@@ -1065,6 +1168,66 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
     );
   }
 
+
+  Widget _buildPengusulPpkSubmissionCard(Kegiatan k, Map<String, dynamic> d) {
+    return _buildCard(
+      title: 'Tindakan Pengusul: Teruskan ke PPK',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Usulan telah diverifikasi. Anda perlu meneruskan usulan ke PPK beserta Surat Pengantar dan KAK.',
+            style: TextStyle(fontSize: 13, color: _slate600),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => SubmitPpkView(kegiatan: k)))
+                .then((_) => _vm.fetchKegiatanDetail(widget.kegiatan.id));
+            },
+            icon: const Icon(LucideIcons.send, size: 16),
+            label: const Text('Teruskan ke PPK', style: TextStyle(fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          )
+        ],
+      )
+    );
+  }
+
+  Widget _buildPengusulLpjCard(Kegiatan k, Map<String, dynamic> d) {
+    return _buildCard(
+      title: 'Laporan Pertanggungjawaban (LPJ)',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Silakan isi realisasi dana, realisasi IKU, dan unggah bukti kuitansi.',
+            style: TextStyle(fontSize: 13, color: _slate600),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => LpjUploadView(kegiatan: k)))
+                .then((_) => _vm.fetchKegiatanDetail(widget.kegiatan.id));
+            },
+            icon: const Icon(LucideIcons.fileText, size: 16),
+            label: const Text('Isi & Upload LPJ', style: TextStyle(fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _emerald700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          )
+        ],
+      )
+    );
+  }
 
   String _formatCurrency(dynamic amount) {
     final n = amount is num ? amount : num.tryParse(amount.toString()) ?? 0;

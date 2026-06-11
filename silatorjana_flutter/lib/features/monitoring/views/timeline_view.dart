@@ -145,8 +145,15 @@ class _TimelineViewState extends State<TimelineView> {
                     children: [
                       const Icon(LucideIcons.user, size: 12, color: Color(0xFF94A3B8)),
                       const SizedBox(width: 4),
-                      Text('$userNama ($userRole)', style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
-                      const Spacer(),
+                      Expanded(
+                        child: Text(
+                          '$userNama ($userRole)', 
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       const Icon(LucideIcons.clock, size: 12, color: Color(0xFF94A3B8)),
                       const SizedBox(width: 4),
                       Text(

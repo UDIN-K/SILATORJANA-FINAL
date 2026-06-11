@@ -21,6 +21,7 @@ import '../../master_data/views/iku_config_view.dart';
 import '../../documents/views/panduan_view.dart';
 import '../../documents/views/template_view.dart';
 import '../../lpj/views/bendahara_laporan_view.dart';
+import '../../lpj/views/bendahara_dashboard_view.dart';
 import '../../monitoring/views/rektorat_laporan_view.dart';
 import 'needs_work_view.dart';
 
@@ -124,7 +125,7 @@ class _DashboardViewState extends State<DashboardView> {
         ];
       case 'bendahara':
         return [
-          _NavItem(icon: LucideIcons.home, label: 'Dashboard', page: HomeTabView(user: widget.user)),
+          _NavItem(icon: LucideIcons.home, label: 'Dashboard', page: BendaharaDashboardView(user: widget.user)),
           _NavItem(icon: LucideIcons.dollarSign, label: 'Pencairan & LPJ', page: LpjListView(currentUser: widget.user)),
           _NavItem(icon: LucideIcons.checkCircle, label: 'Laporan LPJ', page: const BendaharaLaporanView()),
           _NavItem(icon: LucideIcons.activity, label: 'Monitoring', page: const MonitoringDashboardView()),
