@@ -14,6 +14,10 @@ class LpjViewModel extends ChangeNotifier {
   Map<String, dynamic>? lpjDetail;
   bool isDetailLoading = false;
 
+  // Pencairan data
+  Map<String, dynamic>? pencairanData;
+  bool isPencairanLoading = false;
+
   /// Fetch kegiatan that are in LPJ-related statuses
   Future<void> fetchLpjList() async {
     isLoading = true;
@@ -62,7 +66,46 @@ class LpjViewModel extends ChangeNotifier {
     }
   }
 
-  /// Submit LPJ
+  /// Fetch pencairan data (progress, nominal, is_taken)
+  Future<void> fetchPencairanData(int kegiatanId) async {
+    isPencairanLoading = true;
+    pencairanData = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.get('/kegiatan/$kegiatanId/pencairan');
+      if (response.statusCode == 200) {
+        pencairanData = jsonDecode(response.body);
+      }
+    } catch (e) {
+      // handle silently
+    } finally {
+      isPencairanLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Mark dana as taken by pengusul
+  Future<bool> tandaiDanaDiambil(int kegiatanId) async {
+    isSubmitting = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.post('/kegiatan/$kegiatanId/ambil-uang-muka');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await fetchPencairanData(kegiatanId);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    } finally {
+      isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  /// Submit LPJ (basic - tanpa file)
   Future<bool> submitLpj(int kegiatanId, String catatan) async {
     isSubmitting = true;
     notifyListeners();
@@ -75,6 +118,38 @@ class LpjViewModel extends ChangeNotifier {
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       return false;
+    } finally {
+      isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  /// Submit LPJ dengan data realisasi dan IKU capaian
+  Future<Map<String, dynamic>> submitLpjRealisasi({
+    required int kegiatanId,
+    required String catatan,
+    required Map<String, Map<String, dynamic>> realisasi, // rabId -> {qty, harga_satuan}
+    required Map<String, double> ikuCapaian, // ikuId -> capaian
+  }) async {
+    isSubmitting = true;
+    notifyListeners();
+
+    try {
+      final body = {
+        'kegiatan_id': kegiatanId,
+        'catatan_pengusul': catatan,
+        'realisasi': realisasi.map((k, v) => MapEntry(k, v)),
+        'iku_capaian': ikuCapaian.map((k, v) => MapEntry(k, v)),
+      };
+      final response = await _apiService.post('/lpj/submit', body: body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'message': 'LPJ berhasil disubmit!'};
+      } else {
+        final data = jsonDecode(response.body);
+        return {'success': false, 'message': data['message'] ?? 'Gagal submit LPJ'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Kesalahan jaringan: $e'};
     } finally {
       isSubmitting = false;
       notifyListeners();
@@ -101,7 +176,7 @@ class LpjViewModel extends ChangeNotifier {
   }
 
   /// Perform pencairan (disbursement)
-  Future<bool> pencairan(int kegiatanId, double persentase, String catatan) async {
+  Future<Map<String, dynamic>> pencairan(int kegiatanId, double persentase, String catatan) async {
     isSubmitting = true;
     notifyListeners();
 
@@ -110,9 +185,15 @@ class LpjViewModel extends ChangeNotifier {
         'persentase': persentase,
         'catatan': catatan,
       });
-      return response.statusCode == 200 || response.statusCode == 201;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await fetchPencairanData(kegiatanId);
+        return {'success': true};
+      } else {
+        final data = jsonDecode(response.body);
+        return {'success': false, 'message': data['message'] ?? 'Gagal mencairkan dana'};
+      }
     } catch (e) {
-      return false;
+      return {'success': false, 'message': 'Kesalahan jaringan: $e'};
     } finally {
       isSubmitting = false;
       notifyListeners();

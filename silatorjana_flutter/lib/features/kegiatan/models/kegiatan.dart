@@ -19,6 +19,9 @@ class Kegiatan {
   final String? kodeMak;
   final String? suratPengantarFilename;
   final bool uangMukaDiambil;
+  final List<Map<String, dynamic>> pencairanDana;
+  final String? deadlineLpj;
+  final List<dynamic> penanggungJawab;
 
   Kegiatan({
     required this.id,
@@ -41,6 +44,9 @@ class Kegiatan {
     this.kodeMak,
     this.suratPengantarFilename,
     this.uangMukaDiambil = false,
+    this.pencairanDana = const [],
+    this.deadlineLpj,
+    this.penanggungJawab = const [],
   });
 
   /// Safe int parser
@@ -122,6 +128,9 @@ class Kegiatan {
       kodeMak: json['kode_mak']?.toString(),
       suratPengantarFilename: json['surat_pengantar_filename']?.toString(),
       uangMukaDiambil: json['uang_muka_diambil'] == true || json['uang_muka_diambil'] == 1,
+      pencairanDana: (json['pencairan_dana'] as List?)?.cast<Map<String, dynamic>>() ?? [],
+      deadlineLpj: json['deadline_lpj']?.toString(),
+      penanggungJawab: (json['penanggung_jawab'] as List?) ?? [],
     );
   }
 }

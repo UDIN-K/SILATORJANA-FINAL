@@ -5,6 +5,9 @@ import '../../auth/models/user.dart';
 import '../viewmodels/kegiatan_viewmodel.dart';
 import '../../monitoring/views/timeline_view.dart';
 import 'kegiatan_print_view.dart';
+import 'kode_mak_input_view.dart';
+import 'submit_ppk_view.dart';
+import '../../lpj/views/lpj_upload_view.dart';
 
 /// Detail view for a single Kegiatan/Usulan proposal.
 /// Mirrors the web's DetailUsulanPage.tsx layout: header, progress tracker,

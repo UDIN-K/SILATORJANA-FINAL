@@ -111,8 +111,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('kegiatan/{kegiatan}/submit-ppk', [KegiatanController::class, 'submitPpk']);
+    Route::get('kegiatan/{kegiatan}/pencairan', [KegiatanController::class, 'getPencairan']);
     Route::post('kegiatan/{kegiatan}/pencairan', [KegiatanController::class, 'tambahPencairan']);
     Route::post('kegiatan/{kegiatan}/ambil-uang-muka', [KegiatanController::class, 'ambilUangMuka']);
+    Route::patch('kegiatan/{kegiatan}/kode-mak', [KegiatanController::class, 'updateKodeMak']);
 
     // SPK (Sistem Pendukung Keputusan) — MOORA
     Route::prefix('spk')->group(function () {

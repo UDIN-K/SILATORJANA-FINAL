@@ -382,10 +382,19 @@ class KegiatanController extends Controller
         ]);
 
         $totalDisbursed = $kegiatan->pencairanDana()->sum('persentase');
+        $maxPencairan = 70; // maks 70% uang muka
 
-        if ($totalDisbursed + $validated['persentase'] > 100) {
+        // Enforce 70% max for initial disbursement
+        if ($totalDisbursed + $validated['persentase'] > $maxPencairan) {
+            $sisa = max(0, $maxPencairan - $totalDisbursed);
             return response()->json([
-                'message' => 'Total pencairan tidak boleh melebihi 100%. Sisa yang tersedia: ' . (100 - $totalDisbursed) . '%',
+                'message' => "Pencairan uang muka tidak boleh melebihi {$maxPencairan}%. Sisa yang tersedia: {$sisa}%",
+            ], 422);
+        }
+
+        if ($totalDisbursed >= $maxPencairan) {
+            return response()->json([
+                'message' => 'Batas pencairan uang muka (70%) sudah tercapai.',
             ], 422);
         }
 
@@ -400,7 +409,8 @@ class KegiatanController extends Controller
         ]);
 
         // Update status and deadline_lpj if reaching 100%
-        if ($totalDisbursed + $validated['persentase'] >= 100) {
+        $newTotal = $totalDisbursed + $validated['persentase'];
+        if ($newTotal >= 100) {
             $kegiatan->update([
                 'status' => 'funds_disbursed',
                 'deadline_lpj' => $this->calculateDeadlineLPJ(),
@@ -412,6 +422,48 @@ class KegiatanController extends Controller
         }
 
         return response()->json($kegiatan->fresh()->load(['kak', 'iku', 'rab', 'pencairanDana']));
+    }
+
+    /**
+     * Get pencairan dana list for a kegiatan
+     */
+    public function getPencairan(string $id)
+    {
+        $kegiatan = Kegiatan::with('pencairanDana')->findOrFail($id);
+        $totalDisbursed = $kegiatan->pencairanDana()->sum('persentase');
+        $nominalDisbursed = $kegiatan->pencairanDana()->sum('nominal');
+        $maxPencairan = 70; // maks 70% untuk uang muka
+        $sisaYangBisaDicairkan = max(0, $maxPencairan - $totalDisbursed);
+
+        return response()->json([
+            'pencairan_list' => $kegiatan->pencairanDana,
+            'total_persen'   => (float) $totalDisbursed,
+            'total_nominal'  => (float) $nominalDisbursed,
+            'sisa_persen'    => (float) $sisaYangBisaDicairkan,
+            'max_persen'     => $maxPencairan,
+            'is_taken'       => (bool) $kegiatan->uang_muka_diambil,
+            'total_anggaran' => (float) $kegiatan->total_anggaran,
+        ]);
+    }
+
+    /**
+     * Update kode MAK (verifikator only)
+     */
+    public function updateKodeMak(Request $request, string $id)
+    {
+        $kegiatan = Kegiatan::findOrFail($id);
+
+        $validated = $request->validate([
+            'kode_mak' => 'required|string|max:100',
+        ]);
+
+        $kegiatan->update(['kode_mak' => $validated['kode_mak']]);
+
+        return response()->json([
+            'message'  => 'Kode MAK berhasil disimpan.',
+            'kode_mak' => $kegiatan->fresh()->kode_mak,
+            'kegiatan' => $kegiatan->fresh()->load(['kak', 'iku', 'rab']),
+        ]);
     }
 
     /**

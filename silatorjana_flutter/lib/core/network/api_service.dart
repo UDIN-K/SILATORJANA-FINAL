@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../constants/api_config.dart';
 import '../../features/auth/services/auth_service.dart';
@@ -44,5 +45,47 @@ class ApiService {
       Uri.parse('${ApiConfig.baseUrl}$endpoint'),
       headers: headers,
     );
+  }
+
+  Future<http.Response> patch(String endpoint, {Map<String, dynamic>? body}) async {
+    final headers = await _getHeaders();
+    return await http.patch(
+      Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+      headers: headers,
+      body: body != null ? jsonEncode(body) : null,
+    );
+  }
+
+  /// Upload file(s) via multipart/form-data
+  /// [fields] — text fields to include
+  /// [files] — map of field_name -> File path
+  Future<http.Response> postMultipart(
+    String endpoint, {
+    Map<String, String>? fields,
+    Map<String, String>? files, // fieldName -> filePath
+  }) async {
+    final token = await AuthService().getToken();
+    final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+    final request = http.MultipartRequest('POST', uri);
+
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = 'application/json';
+    }
+
+    if (fields != null) request.fields.addAll(fields);
+
+    if (files != null) {
+      for (final entry in files.entries) {
+        final file = File(entry.value);
+        if (await file.exists()) {
+          final mf = await http.MultipartFile.fromPath(entry.key, entry.value);
+          request.files.add(mf);
+        }
+      }
+    }
+
+    final streamed = await request.send();
+    return await http.Response.fromStream(streamed);
   }
 }
