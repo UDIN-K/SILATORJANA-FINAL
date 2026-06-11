@@ -55,10 +55,15 @@ class _HomeTabViewState extends State<HomeTabView> {
             }
           }
 
-          // Filter alerts (mirroring web)
+          // Filter alerts per role (mirroring web)
+          final role = widget.user.role;
           final revisiItems = list.where((i) => i.status.toLowerCase() == 'revision_requested').toList();
           final needLpjItems = list.where((i) => i.status.toLowerCase() == 'approved_wadir').toList();
           final verifiedItems = list.where((i) => ['verified', 'diverifikasi'].contains(i.status.toLowerCase())).toList();
+          final menungguVerifikasiItems = list.where((i) => ['submitted', 'revisi_done'].contains(i.status.toLowerCase())).toList();
+          final menungguPpkItems = list.where((i) => ['pending_ppk', 'verified'].contains(i.status.toLowerCase())).toList();
+          final menungguWadirItems = list.where((i) => i.status.toLowerCase() == 'approved_ppk').toList();
+          final menungguBendaharaItems = list.where((i) => ['approved_wadir', 'accepted_funds', 'funds_disbursed', 'lpj_submitted'].contains(i.status.toLowerCase())).toList();
           final recentActivity = list.take(5).toList();
 
           return RefreshIndicator(
@@ -128,68 +133,212 @@ class _HomeTabViewState extends State<HomeTabView> {
                   ),
                   const SizedBox(height: 20),
 
-                  // ALERT: Perlu Revisi (red/rose)
-                  if (revisiItems.isNotEmpty) ...[
-                    _buildAlertCard(
-                      title: 'Usulan Perlu Direvisi (${revisiItems.length})',
-                      icon: LucideIcons.alertTriangle,
-                      borderColor: const Color(0xFFFECDD3),
-                      bgColor: const Color(0xFFFFF1F2),
-                      headerBgColor: const Color(0xFFFFE4E6),
-                      titleColor: const Color(0xFF9F1239),
-                      items: revisiItems,
-                      actionLabel: 'Perbaiki',
-                      actionColor: const Color(0xFFE11D48),
-                      onAction: (item) {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => EditKegiatanView(kegiatanId: item.id)));
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // ALERT: Perlu Upload LPJ (blue)
-                  if (needLpjItems.isNotEmpty) ...[
-                    _buildAlertCard(
-                      title: 'Perlu Upload LPJ (${needLpjItems.length})',
-                      icon: LucideIcons.fileText,
-                      borderColor: const Color(0xFFBFDBFE),
-                      bgColor: const Color(0xFFEFF6FF),
-                      headerBgColor: const Color(0xFFDBEAFE),
-                      titleColor: const Color(0xFF1E40AF),
-                      items: needLpjItems,
-                      actionLabel: 'Upload',
-                      actionColor: const Color(0xFF2563EB),
-                      subtitle: 'Telah disetujui Wadir. Silakan unggah LPJ.',
-                      onAction: (item) {
-                        Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
-                        ));
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // ALERT: Terverifikasi (emerald)
-                  if (verifiedItems.isNotEmpty) ...[
-                    _buildAlertCard(
-                      title: 'Terverifikasi – Siap ke PPK (${verifiedItems.length})',
-                      icon: LucideIcons.checkCircle2,
-                      borderColor: const Color(0xFFA7F3D0),
-                      bgColor: const Color(0xFFECFDF5),
-                      headerBgColor: const Color(0xFFD1FAE5),
-                      titleColor: const Color(0xFF065F46),
-                      items: verifiedItems,
-                      actionLabel: 'Teruskan',
-                      actionColor: const Color(0xFF047857),
-                      subtitle: 'Diverifikasi · Klik untuk teruskan ke PPK',
-                      isOutlined: true,
-                      onAction: (item) {
-                        Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
-                        ));
-                      },
-                    ),
-                    const SizedBox(height: 16),
+                  // ALERT CARDS - Role specific (mirroring web)
+                  if (role == 'pengusul') ...[
+                    // Pengusul: Perlu Revisi
+                    if (revisiItems.isNotEmpty) ...[
+                      _buildAlertCard(
+                        title: 'Usulan Perlu Direvisi (${revisiItems.length})',
+                        icon: LucideIcons.alertTriangle,
+                        borderColor: const Color(0xFFFECDD3),
+                        bgColor: const Color(0xFFFFF1F2),
+                        headerBgColor: const Color(0xFFFFE4E6),
+                        titleColor: const Color(0xFF9F1239),
+                        items: revisiItems,
+                        actionLabel: 'Perbaiki',
+                        actionColor: const Color(0xFFE11D48),
+                        onAction: (item) {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => EditKegiatanView(kegiatanId: item.id)));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    // Pengusul: Perlu Upload LPJ
+                    if (needLpjItems.isNotEmpty) ...[
+                      _buildAlertCard(
+                        title: 'Perlu Upload LPJ (${needLpjItems.length})',
+                        icon: LucideIcons.fileText,
+                        borderColor: const Color(0xFFBFDBFE),
+                        bgColor: const Color(0xFFEFF6FF),
+                        headerBgColor: const Color(0xFFDBEAFE),
+                        titleColor: const Color(0xFF1E40AF),
+                        items: needLpjItems,
+                        actionLabel: 'Upload',
+                        actionColor: const Color(0xFF2563EB),
+                        subtitle: 'Telah disetujui Wadir. Silakan unggah LPJ.',
+                        onAction: (item) {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
+                          ));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ] else if (role == 'verifikator') ...[
+                    // Verifikator: Menunggu Verifikasi
+                    if (menungguVerifikasiItems.isNotEmpty) ...[
+                      _buildAlertCard(
+                        title: 'Menunggu Verifikasi (${menungguVerifikasiItems.length})',
+                        icon: LucideIcons.clipboardList,
+                        borderColor: const Color(0xFFBFDBFE),
+                        bgColor: const Color(0xFFEFF6FF),
+                        headerBgColor: const Color(0xFFDBEAFE),
+                        titleColor: const Color(0xFF1E40AF),
+                        items: menungguVerifikasiItems,
+                        actionLabel: 'Verifikasi',
+                        actionColor: const Color(0xFF2563EB),
+                        onAction: (item) {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
+                          ));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    // Verifikator: Telah Diverifikasi
+                    if (verifiedItems.isNotEmpty) ...[
+                      _buildAlertCard(
+                        title: 'Telah Diverifikasi (${verifiedItems.length})',
+                        icon: LucideIcons.checkCircle2,
+                        borderColor: const Color(0xFFA7F3D0),
+                        bgColor: const Color(0xFFECFDF5),
+                        headerBgColor: const Color(0xFFD1FAE5),
+                        titleColor: const Color(0xFF065F46),
+                        items: verifiedItems,
+                        actionLabel: 'Lihat',
+                        actionColor: const Color(0xFF047857),
+                        isOutlined: true,
+                        onAction: (item) {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
+                          ));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ] else if (role == 'ppk') ...[
+                    // PPK: Menunggu PPK
+                    if (menungguPpkItems.isNotEmpty) ...[
+                      _buildAlertCard(
+                        title: 'Menunggu PPK (${menungguPpkItems.length})',
+                        icon: LucideIcons.clipboardList,
+                        borderColor: const Color(0xFFBFDBFE),
+                        bgColor: const Color(0xFFEFF6FF),
+                        headerBgColor: const Color(0xFFDBEAFE),
+                        titleColor: const Color(0xFF1E40AF),
+                        items: menungguPpkItems,
+                        actionLabel: 'Review',
+                        actionColor: const Color(0xFF2563EB),
+                        onAction: (item) {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
+                          ));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ] else if (role.startsWith('wadir')) ...[
+                    // Wadir: Menunggu Wadir
+                    if (menungguWadirItems.isNotEmpty) ...[
+                      _buildAlertCard(
+                        title: 'Menunggu Persetujuan Wadir (${menungguWadirItems.length})',
+                        icon: LucideIcons.clipboardList,
+                        borderColor: const Color(0xFFBFDBFE),
+                        bgColor: const Color(0xFFEFF6FF),
+                        headerBgColor: const Color(0xFFDBEAFE),
+                        titleColor: const Color(0xFF1E40AF),
+                        items: menungguWadirItems,
+                        actionLabel: 'Review',
+                        actionColor: const Color(0xFF2563EB),
+                        onAction: (item) {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
+                          ));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ] else if (role == 'bendahara') ...[
+                    // Bendahara: Pencairan & LPJ
+                    if (menungguBendaharaItems.isNotEmpty) ...[
+                      _buildAlertCard(
+                        title: 'Perlu Tindakan Bendahara (${menungguBendaharaItems.length})',
+                        icon: LucideIcons.dollarSign,
+                        borderColor: const Color(0xFFBFDBFE),
+                        bgColor: const Color(0xFFEFF6FF),
+                        headerBgColor: const Color(0xFFDBEAFE),
+                        titleColor: const Color(0xFF1E40AF),
+                        items: menungguBendaharaItems,
+                        actionLabel: 'Proses',
+                        actionColor: const Color(0xFF2563EB),
+                        onAction: (item) {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
+                          ));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ] else ...[
+                    // Default/fallback: show all for admin/rektorat
+                    if (revisiItems.isNotEmpty) ...[
+                      _buildAlertCard(
+                        title: 'Usulan Perlu Direvisi (${revisiItems.length})',
+                        icon: LucideIcons.alertTriangle,
+                        borderColor: const Color(0xFFFECDD3),
+                        bgColor: const Color(0xFFFFF1F2),
+                        headerBgColor: const Color(0xFFFFE4E6),
+                        titleColor: const Color(0xFF9F1239),
+                        items: revisiItems,
+                        actionLabel: 'Perbaiki',
+                        actionColor: const Color(0xFFE11D48),
+                        onAction: (item) {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => EditKegiatanView(kegiatanId: item.id)));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (needLpjItems.isNotEmpty) ...[
+                      _buildAlertCard(
+                        title: 'Perlu Upload LPJ (${needLpjItems.length})',
+                        icon: LucideIcons.fileText,
+                        borderColor: const Color(0xFFBFDBFE),
+                        bgColor: const Color(0xFFEFF6FF),
+                        headerBgColor: const Color(0xFFDBEAFE),
+                        titleColor: const Color(0xFF1E40AF),
+                        items: needLpjItems,
+                        actionLabel: 'Upload',
+                        actionColor: const Color(0xFF2563EB),
+                        subtitle: 'Telah disetujui Wadir. Silakan unggah LPJ.',
+                        onAction: (item) {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
+                          ));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (verifiedItems.isNotEmpty) ...[
+                      _buildAlertCard(
+                        title: 'Terverifikasi – Siap ke PPK (${verifiedItems.length})',
+                        icon: LucideIcons.checkCircle2,
+                        borderColor: const Color(0xFFA7F3D0),
+                        bgColor: const Color(0xFFECFDF5),
+                        headerBgColor: const Color(0xFFD1FAE5),
+                        titleColor: const Color(0xFF065F46),
+                        items: verifiedItems,
+                        actionLabel: 'Teruskan',
+                        actionColor: const Color(0xFF047857),
+                        subtitle: 'Diverifikasi · Klik untuk teruskan ke PPK',
+                        isOutlined: true,
+                        onAction: (item) {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
+                          ));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                   ],
 
                   // Aktivitas Terakhir
