@@ -15,11 +15,11 @@ web/.env.*
 !web/.env.example
 
 # Flutter & Dart
-flutter/.dart_tool/
-flutter/.flutter-plugins
-flutter/.flutter-plugins-dependencies
-flutter/.packages
-flutter/build/
+silatorjana_flutter/.dart_tool/
+silatorjana_flutter/.flutter-plugins
+silatorjana_flutter/.flutter-plugins-dependencies
+silatorjana_flutter/.packages
+silatorjana_flutter/build/
 
 # Temporary / Legacy / Backup Folders
 web(lama)/
@@ -45,6 +45,8 @@ backend/bootstrap/cache/*
 .DS_Store
 Thumbs.db
 *.log
+.vscode/
+.idea/
 
 # component
 # test_sqa_anggota1.sh
