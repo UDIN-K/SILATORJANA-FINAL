@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../../core/models/kegiatan.dart';
+import '../../kegiatan/models/kegiatan.dart';
 import '../../kegiatan/viewmodels/kegiatan_viewmodel.dart';
-import '../../../core/utils/status_badge.dart';
 
 class PencairanView extends StatefulWidget {
   final Kegiatan kegiatan;
@@ -20,6 +19,44 @@ class _PencairanViewState extends State<PencairanView> {
 
   static const _emerald700 = Color(0xFF047857);
   static const _emerald600 = Color(0xFF059669);
+  static const _emerald100 = Color(0xFFD1FAE5);
+  static const _emerald50 = Color(0xFFECFDF5);
+  static const _slate500 = Color(0xFF64748B);
+
+  Widget _buildStatusBadge(String status) {
+    final s = status.toLowerCase();
+    Color bg, fg;
+    String label = status.replaceAll('_', ' ').toUpperCase();
+
+    if (s == 'draft') {
+      bg = const Color(0xFFF1F5F9); fg = _slate500;
+    } else if (s.contains('revisi') || s == 'revision_requested' || s == 'lpj_revision') {
+      bg = const Color(0xFFFEF3C7); fg = const Color(0xFF92400E);
+    } else if (s == 'submitted' || s == 'diajukan') {
+      bg = const Color(0xFFDBEAFE); fg = const Color(0xFF1E40AF);
+    } else if (s.contains('approved') || s.contains('disetujui') || s.contains('verified') || s == 'diverifikasi') {
+      bg = _emerald50; fg = const Color(0xFF065F46);
+    } else if (s == 'rejected' || s == 'ditolak') {
+      bg = const Color(0xFFFEE2E2); fg = const Color(0xFF991B1B);
+    } else if (s.contains('pending')) {
+      bg = const Color(0xFFFEF3C7); fg = const Color(0xFF92400E);
+    } else if (s == 'completed' || s == 'selesai' || s == 'lpj_done' || s == 'lpj_approved') {
+      bg = _emerald50; fg = const Color(0xFF065F46);
+    } else if (s.contains('funds') || s.contains('pencairan')) {
+      bg = const Color(0xFFDBEAFE); fg = const Color(0xFF1E40AF);
+    } else {
+      bg = const Color(0xFFF1F5F9); fg = _slate500;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: fg, letterSpacing: 0.5)),
+    );
+  }
 
   String _formatCurrency(dynamic amount) {
     if (amount == null) return 'Rp 0';
@@ -159,7 +196,7 @@ class _PencairanViewState extends State<PencairanView> {
                     children: [
                       const Text('Informasi Usulan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 12),
-                      Text('Nama Kegiatan', style: TextStyle(color: Colors.slate.shade500, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('Nama Kegiatan', style: const TextStyle(color: _slate500, fontSize: 12, fontWeight: FontWeight.bold)),
                       Text(detail['nama_kegiatan'] ?? '-', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                       const SizedBox(height: 12),
                       Row(
@@ -168,16 +205,16 @@ class _PencairanViewState extends State<PencairanView> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Total Anggaran', style: TextStyle(color: Colors.slate.shade500, fontSize: 12, fontWeight: FontWeight.bold)),
+                              Text('Total Anggaran', style: const TextStyle(color: _slate500, fontSize: 12, fontWeight: FontWeight.bold)),
                               Text(_formatCurrency(detail['total_anggaran']), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: _emerald700)),
                             ],
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text('Status', style: TextStyle(color: Colors.slate.shade500, fontSize: 12, fontWeight: FontWeight.bold)),
+                              Text('Status', style: const TextStyle(color: _slate500, fontSize: 12, fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
-                              StatusBadge(status: detail['status'] ?? ''),
+                              _buildStatusBadge(detail['status'] ?? ''),
                             ],
                           )
                         ],
@@ -234,7 +271,7 @@ class _PencairanViewState extends State<PencairanView> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Text('Nominal yang Dicairkan', style: TextStyle(color: Colors.slate.shade500, fontSize: 12)),
+                        Text('Nominal yang Dicairkan', style: const TextStyle(color: _slate500, fontSize: 12)),
                         Text(_formatCurrency(calculatedNominal), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: _emerald700)),
                         const SizedBox(height: 16),
                         TextField(
