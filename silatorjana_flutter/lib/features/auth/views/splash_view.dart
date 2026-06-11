@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../services/auth_service.dart';
 import 'login_view.dart';
+import '../../kegiatan/views/dashboard_view.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -10,6 +12,8 @@ class SplashView extends StatefulWidget {
 }
 
 class _SplashViewState extends State<SplashView> {
+  final AuthService _authService = AuthService();
+
   @override
   void initState() {
     super.initState();
@@ -17,21 +21,46 @@ class _SplashViewState extends State<SplashView> {
   }
 
   Future<void> _navigateToNext() async {
-    // Memberikan durasi tayang splash screen selama 2.5 detik
+    // Tampilkan splash minimal 2.5 detik
     await Future.delayed(const Duration(milliseconds: 2500));
-    
+
     if (!mounted) return;
-    
-    // Lanjut ke LoginView
+
+    // Cek apakah ada session yang tersimpan
+    final hasSession = await _authService.hasValidSession();
+
+    if (!mounted) return;
+
+    if (hasSession) {
+      // Ada token tersimpan — coba ambil data user
+      final user = await _authService.getMe();
+
+      if (!mounted) return;
+
+      if (user != null) {
+        // Session valid → langsung ke Dashboard
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 600),
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                DashboardView(user: user),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+          ),
+        );
+        return;
+      }
+    }
+
+    // Tidak ada session / session expired → ke Login
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 800),
-        pageBuilder: (context, animation, secondaryAnimation) => const LoginView(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const LoginView(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
       ),
     );
@@ -40,10 +69,10 @@ class _SplashViewState extends State<SplashView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF022C22), // emerald-950 (Sesuai tema web)
+      backgroundColor: const Color(0xFF022C22), // emerald-950
       body: Stack(
         children: [
-          // Efek pattern latar belakang (opsional, jika ingin tambah estetika)
+          // Efek pattern latar belakang
           Positioned.fill(
             child: Opacity(
               opacity: 0.05,
@@ -57,7 +86,6 @@ class _SplashViewState extends State<SplashView> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo Svg yang baru saja diperbaiki
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -96,6 +124,16 @@ class _SplashViewState extends State<SplashView> {
                     color: Color(0xFFA7F3D0), // emerald-200
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
+                  ),
+                ),
+                const SizedBox(height: 48),
+                // Loading indicator selama cek session
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF6EE7B7),
+                    strokeWidth: 2,
                   ),
                 ),
               ],

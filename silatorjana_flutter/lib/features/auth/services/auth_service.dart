@@ -1,15 +1,65 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user.dart';
 import '../../../core/constants/api_config.dart';
 
 class AuthService {
+  // flutter_secure_storage — works on Android, iOS, Windows, macOS
+  // On Web & Linux desktop, fallback to in-memory (secure storage not supported)
+  static const _storage = FlutterSecureStorage();
+  static const _tokenKey = 'auth_token';
 
-  // Use in-memory token storage — works reliably on all platforms
-  // (flutter_secure_storage has issues on Linux desktop and Web)
-  static String? _token;
+  // In-memory fallback for Web & Linux (no secure storage support)
+  static String? _memoryToken;
+
+  // Cached user in memory (always)
   static User? _cachedUser;
+
+  // ──────────────────────────────────────────
+  // Token helpers
+  // ──────────────────────────────────────────
+
+  static bool get _useMemory {
+    if (kIsWeb) return true;
+    try {
+      return Platform.isLinux;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _saveToken(String token) async {
+    if (_useMemory) {
+      _memoryToken = token;
+    } else {
+      await _storage.write(key: _tokenKey, value: token);
+    }
+  }
+
+  Future<void> _deleteToken() async {
+    if (_useMemory) {
+      _memoryToken = null;
+    } else {
+      await _storage.delete(key: _tokenKey);
+    }
+  }
+
+  Future<String?> getToken() async {
+    if (_useMemory) return _memoryToken;
+    try {
+      return await _storage.read(key: _tokenKey);
+    } catch (e) {
+      debugPrint('AUTH: getToken error (fallback to memory): $e');
+      return _memoryToken;
+    }
+  }
+
+  // ──────────────────────────────────────────
+  // Auth operations
+  // ──────────────────────────────────────────
 
   Future<bool> login(String email, String password) async {
     try {
@@ -33,10 +83,10 @@ class AuthService {
         final token = data['token'];
 
         if (token != null && token.toString().isNotEmpty) {
-          _token = token.toString();
-          debugPrint('AUTH: Token saved: ${_token!.substring(0, 10)}...');
+          await _saveToken(token.toString());
+          debugPrint('AUTH: Token saved (${_useMemory ? "memory" : "secure_storage"})');
         } else {
-          _token = 'no-token';
+          await _saveToken('no-token');
           debugPrint('AUTH: No token from server');
         }
 
@@ -58,11 +108,12 @@ class AuthService {
 
   Future<void> logout() async {
     try {
-      if (_token != null && _token != 'no-token') {
+      final token = await getToken();
+      if (token != null && token != 'no-token') {
         await http.post(
           Uri.parse('${ApiConfig.baseUrl}/logout'),
           headers: <String, String>{
-            'Authorization': 'Bearer $_token',
+            'Authorization': 'Bearer $token',
             'Accept': 'application/json',
           },
         );
@@ -70,12 +121,14 @@ class AuthService {
     } catch (e) {
       debugPrint('AUTH ERROR logout: $e');
     }
-    _token = null;
+    await _deleteToken();
     _cachedUser = null;
   }
 
-  Future<String?> getToken() async {
-    return _token;
+  /// Check if user has a valid saved session (token exists and is not 'no-token')
+  Future<bool> hasValidSession() async {
+    final token = await getToken();
+    return token != null && token != 'no-token';
   }
 
   Future<User?> getMe() async {
@@ -86,12 +139,13 @@ class AuthService {
     }
 
     try {
-      if (_token == null || _token == 'no-token') return null;
+      final token = await getToken();
+      if (token == null || token == 'no-token') return null;
 
       final response = await http.get(
         Uri.parse('${ApiConfig.baseUrl}/me'),
         headers: <String, String>{
-          'Authorization': 'Bearer $_token',
+          'Authorization': 'Bearer $token',
           'Accept': 'application/json',
         },
       );

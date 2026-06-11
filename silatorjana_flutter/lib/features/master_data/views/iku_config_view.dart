@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import '../viewmodels/master_data_viewmodel.dart';
 
 /// IKU Configuration — admin only.
@@ -12,18 +13,23 @@ class IkuConfigView extends StatefulWidget {
 }
 
 class _IkuConfigViewState extends State<IkuConfigView> {
-  final MasterDataViewModel _viewModel = MasterDataViewModel();
+  late MasterDataViewModel _viewModel;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _viewModel = Provider.of<MasterDataViewModel>(context);
+  }
 
   @override
   void initState() {
     super.initState();
-    _viewModel.fetchIkuMaster();
-  }
-
-  @override
-  void dispose() {
-    _viewModel.dispose();
-    super.dispose();
+    // Fetch data setelah frame pertama (Provider sudah tersedia)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_viewModel.ikuList.isEmpty) {
+        _viewModel.fetchIkuMaster();
+      }
+    });
   }
 
   void _showAddDialog() {
