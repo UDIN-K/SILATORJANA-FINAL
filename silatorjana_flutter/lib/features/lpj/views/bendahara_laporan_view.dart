@@ -44,7 +44,7 @@ class _BendaharaLaporanViewState extends State<BendaharaLaporanView> {
   @override
   Widget build(BuildContext context) {
     final menungguReview = _laporan.where((k) => ['lpj_submitted', 'lpj_revision'].contains(k.status.toLowerCase())).length;
-    final selesai = _laporan.where((k) => ['lpj_done', 'completed', 'lpj_approved'].contains(k.status.toLowerCase())).length;
+    final selesai = _laporan.where((k) => ['lpj_done', 'completed'].contains(k.status.toLowerCase())).length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -182,10 +182,16 @@ class _BendaharaLaporanViewState extends State<BendaharaLaporanView> {
     } else {
       bg = const Color(0xFFDBEAFE); fg = const Color(0xFF1E40AF);
     }
+    String label = status.replaceAll('_', ' ').toUpperCase();
+    if (s == 'lpj_submitted') label = 'LPJ DISUBMIT';
+    else if (s == 'lpj_revision') label = 'PERLU REVISI';
+    else if (s == 'lpj_approved') label = 'DISETUJUI';
+    else if (s == 'lpj_done' || s == 'completed') label = 'SELESAI';
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8), border: Border.all(color: fg.withValues(alpha: 0.2))),
-      child: Text(status.replaceAll('_', ' ').toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: fg)),
+      child: Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: fg)),
     );
   }
 }
