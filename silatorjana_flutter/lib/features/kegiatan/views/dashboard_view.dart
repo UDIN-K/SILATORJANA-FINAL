@@ -15,6 +15,9 @@ import '../../user_management/views/user_list_view.dart';
 import '../../master_data/views/iku_config_view.dart';
 import '../../documents/views/panduan_view.dart';
 import '../../documents/views/template_view.dart';
+import '../../lpj/views/bendahara_laporan_view.dart';
+import '../../monitoring/views/rektorat_laporan_view.dart';
+import 'needs_work_view.dart';
 
 /// Role-adaptive dashboard that mirrors the web's ROLE_MENUS pattern exactly.
 /// Uses a Drawer for overflow menu items since mobile bottom nav is limited to 5 items.
@@ -59,6 +62,7 @@ class _DashboardViewState extends State<DashboardView> {
         return [
           _NavItem(icon: LucideIcons.home, label: 'Dashboard', page: HomeTabView(user: widget.user)),
           _NavItem(icon: LucideIcons.fileText, label: 'Usulan Saya', page: KegiatanListView(currentUser: widget.user)),
+          _NavItem(icon: LucideIcons.alertTriangle, label: 'Perlu Revisi', page: NeedsWorkView(currentUser: widget.user)),
           _NavItem(icon: LucideIcons.archive, label: 'Riwayat', page: const KegiatanHistoryView()),
           _NavItem(icon: LucideIcons.activity, label: 'Monitoring', page: const MonitoringDashboardView()),
           _NavItem(icon: LucideIcons.settings, label: 'Panduan', page: const PanduanView()),
@@ -98,15 +102,15 @@ class _DashboardViewState extends State<DashboardView> {
         return [
           _NavItem(icon: LucideIcons.home, label: 'Dashboard', page: HomeTabView(user: widget.user)),
           _NavItem(icon: LucideIcons.dollarSign, label: 'Pencairan & LPJ', page: const LpjListView()),
+          _NavItem(icon: LucideIcons.checkCircle, label: 'Laporan LPJ', page: const BendaharaLaporanView()),
           _NavItem(icon: LucideIcons.activity, label: 'Monitoring', page: const MonitoringDashboardView()),
-          _NavItem(icon: LucideIcons.bot, label: 'Jana AI', page: const JanaChatView()),
           _NavItem(icon: LucideIcons.userCircle, label: 'Profil', page: ProfileView(user: widget.user)),
         ];
 
       case 'rektorat':
         return [
           _NavItem(icon: LucideIcons.home, label: 'Dashboard', page: HomeTabView(user: widget.user)),
-          _NavItem(icon: LucideIcons.barChart3, label: 'Laporan', page: const MonitoringDashboardView()),
+          _NavItem(icon: LucideIcons.barChart3, label: 'Laporan', page: const RektoratLaporanView()),
           _NavItem(icon: LucideIcons.building2, label: 'Rekap Jurusan', page: const RekapJurusanView()),
           _NavItem(icon: LucideIcons.activity, label: 'Monitoring', page: const MonitoringDashboardView()),
           _NavItem(icon: LucideIcons.userCircle, label: 'Profil', page: ProfileView(user: widget.user)),

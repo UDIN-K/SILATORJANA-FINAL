@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../viewmodels/user_management_viewmodel.dart';
 import 'user_form_view.dart';
+import 'user_detail_view.dart';
 
 /// User list — admin only. Mirrors web's UserManagementPage.tsx.
 class UserListView extends StatefulWidget {
@@ -108,45 +109,58 @@ class _UserListViewState extends State<UserListView> {
                       final role = (user['role'] ?? '').toString();
                       final roleColor = _roleColors[role.startsWith('wadir') ? 'ppk' : role] ?? const Color(0xFF64748B);
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: roleColor.withValues(alpha: 0.1),
-                              child: Icon(LucideIcons.user, color: roleColor, size: 20),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(user['nama'] ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                  Text(user['email'] ?? '-', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-                                ],
+                      return InkWell(
+                        onTap: () {
+                          final userId = user['id'];
+                          if (userId != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => UserDetailView(userId: userId is int ? userId : int.parse(userId.toString())),
                               ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(color: roleColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                              child: Text(role.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: roleColor)),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(LucideIcons.edit, size: 16, color: Color(0xFF64748B)),
-                              onPressed: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => UserFormView(editUser: user))).then((result) {
-                                  if (result == true) _viewModel.fetchUsers();
-                                });
-                              },
-                            ),
-                          ],
+                            );
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: roleColor.withValues(alpha: 0.1),
+                                child: Icon(LucideIcons.user, color: roleColor, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(user['nama'] ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                    Text(user['email'] ?? '-', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(color: roleColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                                child: Text(role.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: roleColor)),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(LucideIcons.edit, size: 16, color: Color(0xFF64748B)),
+                                onPressed: () {
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => UserFormView(editUser: user))).then((result) {
+                                    if (result == true) _viewModel.fetchUsers();
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },

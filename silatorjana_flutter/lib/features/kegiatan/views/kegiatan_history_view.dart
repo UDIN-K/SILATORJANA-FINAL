@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/kegiatan.dart';
 import '../../../core/network/api_service.dart';
-import 'kegiatan_detail_view.dart';
-import '../../auth/models/user.dart';
+import 'history_detail_view.dart';
 
 /// History view — mirrors web's HistoryPage.tsx
 /// Shows completed/finished kegiatan for the pengusul.
@@ -181,7 +180,7 @@ class _KegiatanHistoryViewState extends State<KegiatanHistoryView> {
             child: OutlinedButton.icon(
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(
-                  builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: User(id: 0, nama: '', email: '', role: 'pengusul')),
+                  builder: (_) => HistoryDetailView(kegiatan: item),
                 ));
               },
               icon: const Icon(LucideIcons.eye, size: 16),
