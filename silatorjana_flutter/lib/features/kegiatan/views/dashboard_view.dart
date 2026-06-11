@@ -169,7 +169,7 @@ class _DashboardViewState extends State<DashboardView> {
   void _logout() async {
     await context.read<AuthViewModel>().logout();
     if (mounted) {
-      Navigator.of(context).pushReplacement(
+      Navigator.of(context).push(
         PageRouteBuilder(
           opaque: false,
           pageBuilder: (context, _, __) => const LogoutTransitionView(),
