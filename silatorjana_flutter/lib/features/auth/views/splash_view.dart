@@ -21,6 +21,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
   late final Animation<double> _sDrawAnimation;
   late final Animation<double> _textOpacity;
   late final Animation<Offset> _textSlide;
+  late final Animation<double> _textRevealAnimation;
   late final Animation<double> _logoBgOpacity;
 
   bool _showWelcome = false;
@@ -69,6 +70,14 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
     );
 
     _textSlide = Tween<Offset>(begin: const Offset(0.2, 0), end: Offset.zero).animate(
+      CurvedAnimation(
+        parent: _drawController,
+        curve: const Interval(0.5, 1.0, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // This smooths the row expansion to eliminate layout jumping
+    _textRevealAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _drawController,
         curve: const Interval(0.5, 1.0, curve: Curves.easeOutCubic),
@@ -212,39 +221,46 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                                           ),
                                       ],
                                     ),
-                                    if (_textOpacity.value > 0) ...[
-                                      const SizedBox(width: 16),
-                                      SlideTransition(
-                                        position: _textSlide,
-                                        child: Opacity(
-                                          opacity: _textOpacity.value,
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: const [
-                                              Text(
-                                                'Si-LATORJANA',
-                                                style: TextStyle(
-                                                  fontSize: 28,
-                                                  fontWeight: FontWeight.w900,
-                                                  color: Colors.white,
-                                                  letterSpacing: 1.0,
-                                                ),
+                                    // Smoothly animate the width to avoid jumping!
+                                    ClipRect(
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        widthFactor: _textRevealAnimation.value,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(left: 16),
+                                          child: SlideTransition(
+                                            position: _textSlide,
+                                            child: Opacity(
+                                              opacity: _textOpacity.value,
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: const [
+                                                  Text(
+                                                    'Si-LATORJANA',
+                                                    style: TextStyle(
+                                                      fontSize: 28,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: Colors.white,
+                                                      letterSpacing: 1.0,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    'Politeknik Negeri Jakarta',
+                                                    style: TextStyle(
+                                                      color: Color(0xFF10B981),
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w500,
+                                                      letterSpacing: 0.5,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                              Text(
-                                                'Politeknik Negeri Jakarta',
-                                                style: TextStyle(
-                                                  color: Color(0xFF10B981),
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                  letterSpacing: 0.5,
-                                                ),
-                                              ),
-                                            ],
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ],
+                                    ),
                                   ],
                                 );
                               },
