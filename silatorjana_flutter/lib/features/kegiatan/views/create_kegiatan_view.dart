@@ -29,6 +29,23 @@ class CreateKegiatanView extends StatefulWidget {
 
 class _CreateKegiatanViewState extends State<CreateKegiatanView> {
   final ApiService _apiService = ApiService();
+  Map<String, String> _revisiComments = {};
+
+  Map<String, String> _parseRevisiComments(String? catatan) {
+    final result = <String, String>{};
+    if (catatan == null || catatan.isEmpty) return result;
+    final lines = catatan.split('\n');
+    for (final line in lines) {
+      final match = RegExp(r'^\[(.+?)\]:\s*(.+)$').firstMatch(line);
+      if (match != null) {
+        result[match.group(1)!] = match.group(2)!;
+      } else if (line.trim().isNotEmpty) {
+        result['Umum'] = (result['Umum'] != null ? '${result['Umum']}\n' : '') + line.trim();
+      }
+    }
+    return result;
+  }
+
   int _currentStep = 0; // 0: Info Kegiatan, 1: KAK, 2: IKU, 3: Anggaran (RAB)
   bool _isSubmitting = false;
   bool _isLoading = false;
@@ -121,6 +138,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
             _namaKegiatanCtrl.text = data['nama_kegiatan'] ?? '';
             _jenisKegiatanCtrl.text = data['jenis_kegiatan'] ?? '';
             _pengusulOrganisasiCtrl.text = data['pengusul_organisasi'] ?? '';
+            _revisiComments = _parseRevisiComments(data['catatan_revisi']?.toString());
             _tempatCtrl.text = data['tempat'] ?? '';
             _tanggalKegiatanCtrl.text = data['tanggal_kegiatan'] ?? '';
 
@@ -648,6 +666,143 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
     }
   }
 
+  List<MapEntry<String, String>> _getMatchedComments(List<String> fields) {
+    final matched = <MapEntry<String, String>>[];
+    for (final entry in _revisiComments.entries) {
+      for (final field in fields) {
+        if (entry.key.toLowerCase().contains(field.toLowerCase())) {
+          matched.add(entry);
+          break;
+        }
+      }
+    }
+    final seenKeys = <String>{};
+    final unique = <MapEntry<String, String>>[];
+    for (final m in matched) {
+      if (!seenKeys.contains(m.key)) {
+        seenKeys.add(m.key);
+        unique.add(m);
+      }
+    }
+    return unique;
+  }
+
+  bool _hasRevisiComment(List<String> fields) {
+    return _getMatchedComments(fields).isNotEmpty;
+  }
+
+  Widget _buildRevisiNote(List<String> fields) {
+    final matched = _getMatchedComments(fields);
+    if (matched.isEmpty) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB), // bg-amber-50
+        border: Border.all(color: const Color(0xFFFDE68A)), // border-amber-200
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(LucideIcons.messageSquare, color: Color(0xFFD97706), size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Catatan Revisi Verifikator:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Color(0xFF92400E),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                ...matched.map((e) => Text(
+                  e.value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 12,
+                    color: Color(0xFFB45309),
+                  ),
+                )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlobalRevisiAlert() {
+    if (_revisiComments.isEmpty) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB), // bg-amber-50
+        border: Border.all(color: const Color(0xFFFDE68A)), // border-amber-200
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.alertTriangle, color: Color(0xFFD97706), size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Perhatian: Revisi Diperlukan',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: Color(0xFF78350F),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Divider(color: Color(0xFFFDE68A)),
+          const SizedBox(height: 8),
+          ..._revisiComments.entries.map((entry) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0x99FFFFFF),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFEF3C7)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.key.replaceAll('_', ' ').toUpperCase(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                      color: Color(0xFF78350F),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    entry.value,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF92400E),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), backgroundColor: Colors.red),
@@ -694,7 +849,13 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(16),
-                      child: _buildCurrentStepContent(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildGlobalRevisiAlert(),
+                          _buildCurrentStepContent(),
+                        ],
+                      ),
                     ),
                   ),
 
@@ -810,7 +971,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
               const SizedBox(width: 4),
               GestureDetector(
                 onTap: () {
-                  if (idx < _currentStep || _validateStep(_currentStep)) {
+                  if (idx < _currentStep) {
                     setState(() {
                       _currentStep = idx;
                     });
@@ -888,18 +1049,18 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
             ),
             const SizedBox(height: 16),
-            _buildTextField(_namaKegiatanCtrl, 'Nama Kegiatan *', LucideIcons.fileText),
+            _buildTextField(_namaKegiatanCtrl, 'Nama Kegiatan *', LucideIcons.fileText, commentFields: ['nama', 'info - nama']),
             const SizedBox(height: 16),
-            _buildTextField(_jenisKegiatanCtrl, 'Jenis Kegiatan *', LucideIcons.tag, hint: 'Seminar / Workshop'),
+            _buildTextField(_jenisKegiatanCtrl, 'Jenis Kegiatan *', LucideIcons.tag, hint: 'Seminar / Workshop', commentFields: ['jenis']),
             const SizedBox(height: 16),
-            _buildTextField(_pengusulOrganisasiCtrl, 'Organisasi Pengusul *', LucideIcons.users, hint: 'Himpunan Mahasiswa'),
+            _buildTextField(_pengusulOrganisasiCtrl, 'Organisasi Pengusul *', LucideIcons.users, hint: 'Himpunan Mahasiswa', commentFields: ['pengusul', 'organisasi']),
             const SizedBox(height: 16),
-            _buildTextField(_tempatCtrl, 'Tempat / Lokasi Kegiatan *', LucideIcons.mapPin, hint: 'Aula Gedung Utama'),
+            _buildTextField(_tempatCtrl, 'Tempat / Lokasi Kegiatan *', LucideIcons.mapPin, hint: 'Aula Gedung Utama', commentFields: ['tempat']),
             const SizedBox(height: 16),
             GestureDetector(
               onTap: () => _selectDate(_tanggalKegiatanCtrl),
               child: AbsorbPointer(
-                child: _buildTextField(_tanggalKegiatanCtrl, 'Tanggal Kegiatan *', LucideIcons.calendar),
+                child: _buildTextField(_tanggalKegiatanCtrl, 'Tanggal Kegiatan *', LucideIcons.calendar, commentFields: ['tanggal']),
               ),
             ),
           ],
@@ -926,27 +1087,27 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
               children: [
                 const Text('Kerangka Acuan Kerja (KAK)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
-                _buildTextArea(_gambaranUmumCtrl, 'Gambaran Umum Acara *'),
+                _buildTextArea(_gambaranUmumCtrl, 'Gambaran Umum Acara *', commentFields: ['gambaran', 'umum']),
                 const SizedBox(height: 16),
-                _buildTextArea(_penerimaManfaatCtrl, 'Penerima Manfaat *'),
+                _buildTextArea(_penerimaManfaatCtrl, 'Penerima Manfaat *', commentFields: ['penerima', 'manfaat']),
                 const SizedBox(height: 16),
-                _buildTextArea(_metodePelaksanaanCtrl, 'Metode Pelaksanaan *'),
+                _buildTextArea(_metodePelaksanaanCtrl, 'Metode Pelaksanaan *', commentFields: ['metode']),
                 const SizedBox(height: 16),
-                _buildTextArea(_tahapanPelaksanaanCtrl, 'Tahapan Pelaksanaan *'),
+                _buildTextArea(_tahapanPelaksanaanCtrl, 'Tahapan Pelaksanaan *', commentFields: ['tahapan']),
                 const SizedBox(height: 16),
-                _buildTextArea(_strategiPencapaianCtrl, 'Strategi Pencapaian Keluaran *'),
+                _buildTextArea(_strategiPencapaianCtrl, 'Strategi Pencapaian Keluaran *', commentFields: ['strategi']),
                 const SizedBox(height: 16),
                 GestureDetector(
                   onTap: () => _selectDate(_kurunWaktuDariCtrl),
                   child: AbsorbPointer(
-                    child: _buildTextField(_kurunWaktuDariCtrl, 'Kurun Waktu Pelaksanaan (Dari) *', LucideIcons.calendar),
+                    child: _buildTextField(_kurunWaktuDariCtrl, 'Kurun Waktu Pelaksanaan (Dari) *', LucideIcons.calendar, commentFields: ['waktu', 'kurun']),
                   ),
                 ),
                 const SizedBox(height: 16),
                 GestureDetector(
                   onTap: () => _selectDate(_kurunWaktuSampaiCtrl, firstDate: _kurunWaktuDariCtrl.text.isNotEmpty ? DateTime.tryParse(_kurunWaktuDariCtrl.text) : null),
                   child: AbsorbPointer(
-                    child: _buildTextField(_kurunWaktuSampaiCtrl, 'Kurun Waktu Pelaksanaan (Sampai) *', LucideIcons.calendarCheck),
+                    child: _buildTextField(_kurunWaktuSampaiCtrl, 'Kurun Waktu Pelaksanaan (Sampai) *', LucideIcons.calendarCheck, commentFields: ['waktu', 'kurun']),
                   ),
                 ),
               ],
@@ -978,6 +1139,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
                     ),
                   ],
                 ),
+                _buildRevisiNote(['indikator']),
                 const SizedBox(height: 12),
                 ..._indikatorRows.asMap().entries.map((entry) {
                   final index = entry.key;
@@ -1060,6 +1222,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
                 ),
               ],
             ),
+            _buildRevisiNote(['iku']),
             const SizedBox(height: 16),
             ..._ikuItems.asMap().entries.map((entry) {
               final index = entry.key;
@@ -1141,6 +1304,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
+        _buildRevisiNote(['rab']),
         const SizedBox(height: 16),
 
         // Items list for category
@@ -1326,36 +1490,56 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
     );
   }
 
-  Widget _buildTextField(TextEditingController ctrl, String label, IconData? icon, {bool isNumber = false, String? hint, ValueChanged<String>? onChanged}) {
-    return TextField(
-      controller: ctrl,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      onChanged: onChanged,
-      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF0F172A)),
-      decoration: _inputDecoration(label, icon, hint: hint),
+  Widget _buildTextField(TextEditingController ctrl, String label, IconData? icon, {bool isNumber = false, String? hint, ValueChanged<String>? onChanged, List<String>? commentFields}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: ctrl,
+          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+          onChanged: onChanged,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF0F172A)),
+          decoration: _inputDecoration(label, icon, hint: hint, commentFields: commentFields),
+        ),
+        if (commentFields != null) _buildRevisiNote(commentFields),
+      ],
     );
   }
 
-  Widget _buildTextArea(TextEditingController ctrl, String label) {
-    return TextField(
-      controller: ctrl,
-      maxLines: 4,
-      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF0F172A)),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF475569)),
-        alignLabelWithHint: true,
-        filled: true,
-        fillColor: Colors.white,
-        border: _inputBorder(),
-        enabledBorder: _inputBorder(),
-        focusedBorder: _inputBorder(color: const Color(0xFF059669)),
-        contentPadding: const EdgeInsets.all(12),
-      ),
+  Widget _buildTextArea(TextEditingController ctrl, String label, {List<String>? commentFields}) {
+    final hasComment = commentFields != null && _hasRevisiComment(commentFields);
+    final borderColor = hasComment ? const Color(0xFFF59E0B) : const Color(0xFFE2E8F0);
+    final fillColor = hasComment ? const Color(0xFFFEF3C7) : Colors.white;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: ctrl,
+          maxLines: 4,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF0F172A)),
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF475569)),
+            alignLabelWithHint: true,
+            filled: true,
+            fillColor: fillColor,
+            border: _inputBorder(color: borderColor),
+            enabledBorder: _inputBorder(color: borderColor),
+            focusedBorder: _inputBorder(color: hasComment ? const Color(0xFFD97706) : const Color(0xFF059669)),
+            contentPadding: const EdgeInsets.all(12),
+          ),
+        ),
+        if (commentFields != null) _buildRevisiNote(commentFields),
+      ],
     );
   }
 
-  InputDecoration _inputDecoration(String label, IconData? icon, {String? hint}) {
+  InputDecoration _inputDecoration(String label, IconData? icon, {String? hint, List<String>? commentFields}) {
+    final hasComment = commentFields != null && _hasRevisiComment(commentFields);
+    final borderColor = hasComment ? const Color(0xFFF59E0B) : const Color(0xFFE2E8F0);
+    final fillColor = hasComment ? const Color(0xFFFEF3C7) : Colors.white;
+
     return InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF475569)),
@@ -1363,10 +1547,10 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
       hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8), fontWeight: FontWeight.normal),
       prefixIcon: icon != null ? Icon(icon, size: 18, color: const Color(0xFF94A3B8)) : null,
       filled: true,
-      fillColor: Colors.white,
-      border: _inputBorder(),
-      enabledBorder: _inputBorder(),
-      focusedBorder: _inputBorder(color: const Color(0xFF059669)),
+      fillColor: fillColor,
+      border: _inputBorder(color: borderColor),
+      enabledBorder: _inputBorder(color: borderColor),
+      focusedBorder: _inputBorder(color: hasComment ? const Color(0xFFD97706) : const Color(0xFF059669)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     );
   }
