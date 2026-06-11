@@ -25,7 +25,7 @@ android {
         applicationId = "com.example.silatorjana_flutter"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 21 // Enable modern minSdk or at least 21 for desugaring support
+        minSdk = flutter.minSdkVersion // Enable modern minSdk or at least 21 for desugaring support
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
