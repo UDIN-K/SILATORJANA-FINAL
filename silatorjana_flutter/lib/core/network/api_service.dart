@@ -62,7 +62,7 @@ class ApiService {
   Future<http.Response> postMultipart(
     String endpoint, {
     Map<String, String>? fields,
-    Map<String, String>? files, // fieldName -> filePath
+    Map<String, dynamic>? files, // fieldName -> filePath or List<filePath>
   }) async {
     final token = await AuthService().getToken();
     final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
@@ -77,15 +77,33 @@ class ApiService {
 
     if (files != null) {
       for (final entry in files.entries) {
-        final file = File(entry.value);
-        if (await file.exists()) {
-          final mf = await http.MultipartFile.fromPath(entry.key, entry.value);
-          request.files.add(mf);
+        if (entry.value is List) {
+          for (final path in entry.value) {
+            final file = File(path.toString());
+            if (await file.exists()) {
+              final mf = await http.MultipartFile.fromPath(entry.key, path.toString());
+              request.files.add(mf);
+            }
+          }
+        } else {
+          final file = File(entry.value.toString());
+          if (await file.exists()) {
+            final mf = await http.MultipartFile.fromPath(entry.key, entry.value.toString());
+            request.files.add(mf);
+          }
         }
       }
     }
 
     final streamed = await request.send();
     return await http.Response.fromStream(streamed);
+  }
+
+  Future<http.Response> delete(String endpoint) async {
+    final headers = await _getHeaders();
+    return await http.delete(
+      Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+      headers: headers,
+    );
   }
 }

@@ -177,11 +177,9 @@ class LpjViewModel extends ChangeNotifier {
         'iku_capaian': jsonEncode(ikuCapaian),
       };
 
-      final filesMap = <String, String>{};
+      final filesMap = <String, dynamic>{};
       files.forEach((rabId, filePaths) {
-        for (int i = 0; i < filePaths.length; i++) {
-          filesMap['item_files[$rabId][$i]'] = filePaths[i];
-        }
+        filesMap['item_files[$rabId][]'] = filePaths;
       });
 
       final response = await _apiService.postMultipart(

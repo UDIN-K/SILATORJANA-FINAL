@@ -8,6 +8,7 @@ import 'kegiatan_print_view.dart';
 import 'kode_mak_input_view.dart';
 import 'submit_ppk_view.dart';
 import '../../lpj/views/lpj_upload_view.dart';
+import '../../lpj/viewmodels/lpj_viewmodel.dart';
 import '../../bendahara/views/pencairan_view.dart';
 
 /// Detail view for a single Kegiatan/Usulan proposal.
@@ -37,6 +38,7 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
   static const _slate400 = Color(0xFF94A3B8);
   static const _slate100 = Color(0xFFF1F5F9);
   static const _slate50 = Color(0xFFF8FAFC);
+  static const _amber600 = Color(0xFFD97706);
 
   @override
   void initState() {
@@ -942,6 +944,36 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
 
     // ── PENGUSUL ──────────────────────────────────────────────────────
     if (role == 'pengusul') {
+      if (status == 'draft') {
+        return _buildSingleActionBar(
+          icon: LucideIcons.trash2,
+          label: 'Hapus Draft',
+          color: Colors.red,
+          onPressed: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Hapus Draft'),
+                content: const Text('Apakah Anda yakin ingin menghapus draft ini?'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true), 
+                    child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
+            );
+            if (confirm == true) {
+              final success = await _vm.deleteKegiatan(k.id);
+              if (success && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Draft dihapus'), backgroundColor: Colors.red));
+                Navigator.pop(context, true);
+              }
+            }
+          },
+        );
+      }
       // Submit ke PPK setelah diverifikasi
       if (status == 'verified' || status == 'diverifikasi') {
         return _buildSingleActionBar(
@@ -956,9 +988,42 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
           },
         );
       }
-      // Input LPJ setelah dana dicairkan
+      // Konfirmasi Uang Muka / Input LPJ
       if (status == 'funds_disbursed' || status == 'accepted_funds' ||
           status == 'lpj_revision' || status == 'lpj_pending') {
+        if (!k.uangMukaDiambil && status == 'funds_disbursed') {
+          return _buildSingleActionBar(
+            icon: LucideIcons.wallet,
+            label: 'Konfirmasi Penarikan Uang Muka',
+            color: _amber600,
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Penarikan Uang Muka'),
+                  content: const Text('Apakah Anda yakin ingin melakukan konfirmasi penarikan uang muka?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      style: ElevatedButton.styleFrom(backgroundColor: _amber600, foregroundColor: Colors.white),
+                      child: const Text('Konfirmasi'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                final lpjVm = LpjViewModel();
+                final success = await lpjVm.tandaiDanaDiambil(k.id, true);
+                if (success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Penarikan uang muka berhasil dicatat!')));
+                  _vm.fetchKegiatanDetail(k.id);
+                }
+              }
+            },
+          );
+        }
+
         return _buildSingleActionBar(
           icon: LucideIcons.clipboardList,
           label: 'Input LPJ & Realisasi',
@@ -1093,20 +1158,22 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
         top: false,
         child: Row(
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _vm.isActionLoading ? null : () => _submitAction('reject'),
-                icon: const Icon(LucideIcons.alertTriangle, size: 16),
-                label: const Text('Minta Revisi', style: TextStyle(fontWeight: FontWeight.bold)),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Color(0xFFFCA5A5)),
-                  foregroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            if (role != 'ppk' && role != 'wadir') ...[
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _vm.isActionLoading ? null : () => _submitAction('reject'),
+                  icon: const Icon(LucideIcons.alertTriangle, size: 16),
+                  label: const Text('Minta Revisi', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Color(0xFFFCA5A5)),
+                    foregroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
+              const SizedBox(width: 12),
+            ],
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: _vm.isActionLoading ? null : () => _submitAction('approve'),

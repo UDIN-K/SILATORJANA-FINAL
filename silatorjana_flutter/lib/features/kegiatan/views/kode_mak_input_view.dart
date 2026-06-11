@@ -61,8 +61,8 @@ class _KodeMakInputSheetState extends State<_KodeMakInputSheet> {
     setState(() { _isSubmitting = true; _error = null; });
 
     try {
-      final response = await _api.patch(
-        '/kegiatan/${widget.kegiatanId}/kode-mak',
+      final response = await _api.put(
+        '/kegiatan/${widget.kegiatanId}',
         body: {'kode_mak': kode},
       );
 

@@ -192,4 +192,26 @@ class KegiatanViewModel extends ChangeNotifier {
       return false;
     }
   }
+
+  /// Hapus draft
+  Future<bool> deleteKegiatan(int id) async {
+    isActionLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.delete('/kegiatan/$id');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        isActionLoading = false;
+        notifyListeners();
+        return true;
+      }
+      isActionLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      isActionLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }

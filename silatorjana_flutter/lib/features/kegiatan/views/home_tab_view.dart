@@ -35,7 +35,15 @@ class _HomeTabViewState extends State<HomeTabView> {
             return const Center(child: CircularProgressIndicator(color: Color(0xFF047857)));
           }
 
-          final list = viewModel.kegiatanList;
+          final list = viewModel.kegiatanList.where((item) {
+            if (widget.user.role == 'verifikator') {
+              return item.verifikatorTarget == null || item.verifikatorTarget == widget.user.wadirTarget;
+            } else if (widget.user.role.startsWith('wadir')) {
+              if (widget.user.wadirTarget == 'wadir2' && item.verifikatorTarget == null) return true;
+              return item.verifikatorTarget == widget.user.wadirTarget;
+            }
+            return true;
+          }).toList();
 
           // Calculate stats (mirroring web logic)
           int total = list.length;

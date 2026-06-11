@@ -466,7 +466,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
     setState(() => _isSubmitting = true);
 
     try {
-      final Map<String, dynamic> body = {
+      final fields = <String, String>{
         'nama_kegiatan': _namaKegiatanCtrl.text.trim(),
         'jenis_kegiatan': _jenisKegiatanCtrl.text.trim(),
         'tanggal_kegiatan': _tanggalKegiatanCtrl.text,
@@ -476,7 +476,7 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
         if (verifikatorTarget != null) 'verifikator_target': verifikatorTarget,
       };
 
-      body['kak'] = {
+      final kak = {
         'gambaran_umum': _gambaranUmumCtrl.text.trim(),
         'penerima_manfaat': _penerimaManfaatCtrl.text.trim(),
         'metode_pelaksanaan': _metodePelaksanaanCtrl.text.trim(),
@@ -490,11 +490,13 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
           'target': double.tryParse(row['target']!.text) ?? 0.0,
         }).toList(),
       };
+      fields['kak'] = jsonEncode(kak);
 
-      body['iku'] = _ikuItems.where((item) => item['nama_indikator'].toString().isNotEmpty).map((item) => {
+      final iku = _ikuItems.where((item) => item['nama_indikator'].toString().isNotEmpty).map((item) => {
         'nama_iku': item['nama_indikator'],
         'target_persen': double.tryParse(item['target_persen']!.text) ?? 0.0,
       }).toList();
+      fields['iku'] = jsonEncode(iku);
 
       List<Map<String, dynamic>> mapRabItems(List<Map<String, dynamic>> list, String category) {
         return list.where((it) => it['uraian']!.text.trim().isNotEmpty).map((it) => {
@@ -510,15 +512,29 @@ class _CreateKegiatanViewState extends State<CreateKegiatanView> {
         }).toList();
       }
 
-      body['rab'] = [
+      final rab = [
         ...mapRabItems(_rabBarang, 'barang'),
         ...mapRabItems(_rabJasa, 'jasa'),
         ...mapRabItems(_rabPerjalanan, 'perjalanan'),
       ];
+      fields['rab'] = jsonEncode(rab);
 
-      final response = _isEditMode
-          ? await _apiService.put('/kegiatan/${widget.editId}', body: body)
-          : await _apiService.post('/kegiatan', body: body);
+      final files = <String, String>{};
+      if (_suratPengantarFile != null) {
+        files['surat_pengantar'] = _suratPengantarFile!.path;
+      }
+
+      String endpoint = '/kegiatan';
+      if (_isEditMode) {
+        endpoint = '/kegiatan/${widget.editId}';
+        fields['_method'] = 'PUT';
+      }
+
+      final response = await _apiService.postMultipart(
+        endpoint,
+        fields: fields,
+        files: files.isNotEmpty ? files : null,
+      );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (mounted) {
