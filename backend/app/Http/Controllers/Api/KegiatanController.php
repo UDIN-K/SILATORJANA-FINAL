@@ -185,11 +185,11 @@ class KegiatanController extends Controller
             'rab.*.uraian'         => 'required|string',
             'rab.*.kategori'       => 'nullable|string',
             'rab.*.harga_satuan'   => 'required|numeric',
-            'rab.*.qty1'           => 'nullable|integer',
+            'rab.*.qty1'           => 'nullable|numeric',
             'rab.*.satuan1'        => 'nullable|string',
-            'rab.*.qty2'           => 'nullable|integer',
+            'rab.*.qty2'           => 'nullable|numeric',
             'rab.*.satuan2'        => 'nullable|string',
-            'rab.*.qty3'           => 'nullable|integer',
+            'rab.*.qty3'           => 'nullable|numeric',
             'rab.*.satuan3'        => 'nullable|string',
         ]);
 

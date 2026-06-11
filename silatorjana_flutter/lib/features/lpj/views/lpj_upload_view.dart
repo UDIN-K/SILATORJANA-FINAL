@@ -191,7 +191,7 @@ class _LpjUploadViewState extends State<LpjUploadView> {
     // Validate realisasi values
     for (final entry in _qtyControllers.entries) {
       final rabId = entry.key;
-      final q1 = int.tryParse(entry.value.text);
+      final q1 = double.tryParse(entry.value.text);
       if (q1 == null || q1 <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Kuantitas realisasi 1 harus lebih dari 0'),
@@ -200,7 +200,7 @@ class _LpjUploadViewState extends State<LpjUploadView> {
         return;
       }
 
-      final q2 = int.tryParse(_qty2Controllers[rabId]?.text ?? '');
+      final q2 = double.tryParse(_qty2Controllers[rabId]?.text ?? '');
       if (q2 == null || q2 <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Kuantitas realisasi 2 harus lebih dari 0'),
@@ -211,7 +211,7 @@ class _LpjUploadViewState extends State<LpjUploadView> {
 
       final q3Text = _qty3Controllers[rabId]?.text ?? '';
       if (q3Text.isNotEmpty) {
-        final q3 = int.tryParse(q3Text);
+        final q3 = double.tryParse(q3Text);
         if (q3 == null || q3 <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Kuantitas realisasi 3 harus lebih dari 0'),
@@ -248,11 +248,11 @@ class _LpjUploadViewState extends State<LpjUploadView> {
     for (final entry in _qtyControllers.entries) {
       final rabId = entry.key;
       final q3Text = _qty3Controllers[rabId]?.text ?? '';
-      final q3Val = q3Text.isNotEmpty ? (int.tryParse(q3Text) ?? 1) : null;
+      final q3Val = q3Text.isNotEmpty ? (double.tryParse(q3Text) ?? 1) : null;
       realisasi[rabId] = {
-        'qty1': int.tryParse(entry.value.text) ?? 1,
+        'qty1': double.tryParse(entry.value.text) ?? 1,
         'satuan1': _satuan1Controllers[rabId]?.text ?? '',
-        'qty2': int.tryParse(_qty2Controllers[rabId]?.text ?? '1') ?? 1,
+        'qty2': double.tryParse(_qty2Controllers[rabId]?.text ?? '1') ?? 1,
         'satuan2': _satuan2Controllers[rabId]?.text ?? '',
         'qty3': q3Val,
         'satuan3': _satuan3Controllers[rabId]?.text ?? '',
@@ -505,10 +505,10 @@ class _LpjUploadViewState extends State<LpjUploadView> {
     final hasQty3 = item['qty3'] != null && item['qty3'] != 0;
 
     // Calculate real total for display
-    final q1 = int.tryParse(qty1Ctrl.text) ?? 0;
-    final q2 = int.tryParse(qty2Ctrl.text) ?? 1;
+    final q1 = double.tryParse(qty1Ctrl.text) ?? 0;
+    final q2 = double.tryParse(qty2Ctrl.text) ?? 1;
     final q3Text = qty3Ctrl.text;
-    final q3 = hasQty3 && q3Text.isNotEmpty ? (int.tryParse(q3Text) ?? 1) : 1;
+    final q3 = hasQty3 && q3Text.isNotEmpty ? (double.tryParse(q3Text) ?? 1) : 1;
     final h = double.tryParse(hargaCtrl.text) ?? 0.0;
     final realTotal = q1 * q2 * q3 * h;
 
