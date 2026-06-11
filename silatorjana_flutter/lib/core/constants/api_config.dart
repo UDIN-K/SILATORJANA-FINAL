@@ -14,7 +14,7 @@ class ApiConfig {
   // Untuk emulator Android → sudah otomatis pakai 10.0.2.2
   // Untuk Web/Desktop → sudah otomatis pakai localhost
   // ──────────────────────────────────────────
-  static const String _physicalDeviceIp = '10.0.2.2'; // ← Ganti jika pakai HP fisik
+  static const String _physicalDeviceIp = '192.168.1.19'; // ← Ganti jika pakai HP fisik (di set otomatis ke IP wlan0 saat ini)
   static const int _port = 8000;
 
   static String get baseUrl {

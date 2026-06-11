@@ -158,7 +158,7 @@ class _HomeTabViewState extends State<HomeTabView> {
                         onAction: (item) async {
                           await Navigator.push(context, MaterialPageRoute(builder: (_) => EditKegiatanView(kegiatanId: item.id)));
                           if (context.mounted) {
-                            context.read<KegiatanViewModel>().fetchKegiatan();
+                            context.read<KegiatanViewModel>().fetchKegiatanList();
                           }
                         },
                       ),
@@ -182,7 +182,7 @@ class _HomeTabViewState extends State<HomeTabView> {
                             builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
                           ));
                           if (context.mounted) {
-                            context.read<KegiatanViewModel>().fetchKegiatan();
+                            context.read<KegiatanViewModel>().fetchKegiatanList();
                           }
                         },
                       ),
@@ -206,7 +206,7 @@ class _HomeTabViewState extends State<HomeTabView> {
                             builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
                           ));
                           if (context.mounted) {
-                            context.read<KegiatanViewModel>().fetchKegiatan();
+                            context.read<KegiatanViewModel>().fetchKegiatanList();
                           }
                         },
                       ),
@@ -230,7 +230,7 @@ class _HomeTabViewState extends State<HomeTabView> {
                             builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
                           ));
                           if (context.mounted) {
-                            context.read<KegiatanViewModel>().fetchKegiatan();
+                            context.read<KegiatanViewModel>().fetchKegiatanList();
                           }
                         },
                       ),
@@ -254,7 +254,7 @@ class _HomeTabViewState extends State<HomeTabView> {
                             builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
                           ));
                           if (context.mounted) {
-                            context.read<KegiatanViewModel>().fetchKegiatan();
+                            context.read<KegiatanViewModel>().fetchKegiatanList();
                           }
                         },
                       ),
@@ -278,7 +278,7 @@ class _HomeTabViewState extends State<HomeTabView> {
                             builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
                           ));
                           if (context.mounted) {
-                            context.read<KegiatanViewModel>().fetchKegiatan();
+                            context.read<KegiatanViewModel>().fetchKegiatanList();
                           }
                         },
                       ),
@@ -302,7 +302,7 @@ class _HomeTabViewState extends State<HomeTabView> {
                             builder: (_) => KegiatanDetailView(kegiatan: item, currentUser: widget.user),
                           ));
                           if (context.mounted) {
-                            context.read<KegiatanViewModel>().fetchKegiatan();
+                            context.read<KegiatanViewModel>().fetchKegiatanList();
                           }
                         },
                       ),
