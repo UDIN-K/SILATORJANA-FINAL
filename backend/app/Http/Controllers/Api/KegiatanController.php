@@ -111,15 +111,36 @@ class KegiatanController extends Controller
         return response()->json($kegiatan);
     }
 
+    private function checkAuthorization($kegiatan, $user)
+    {
+        if (!$user) return;
+        
+        if ($user->role === 'pengusul' && $kegiatan->pengusul_id !== $user->id) {
+            abort(403, 'Unauthorized access: Not the owner');
+        }
+        
+        if ($user->role === 'verifikator' && !empty($user->verifikator_unit)) {
+            if ($kegiatan->verifikator_target && $kegiatan->verifikator_target !== $user->verifikator_unit) {
+                abort(403, 'Unauthorized access: Verifikator target mismatch');
+            }
+        }
+        
+        if (str_starts_with($user->role, 'wadir')) {
+            if ($user->role === 'wadir2' && empty($kegiatan->verifikator_target)) {
+                // allowed
+            } elseif ($kegiatan->verifikator_target !== $user->role) {
+                abort(403, 'Unauthorized access: Wadir target mismatch');
+            }
+        }
+    }
+
     /**
      * Get single kegiatan with all relations
      */
     public function show(Request $request, string $id)
     {
         $kegiatan = Kegiatan::with(['pengusul', 'kak', 'iku', 'rab', 'pencairanDana'])->findOrFail($id);
-        if (!$this->authorizeKegiatan($request, $kegiatan)) {
-            return response()->json(['message' => 'Akses ditolak. Proposal ini ditujukan untuk unit/Wadir lain.'], 403);
-        }
+        $this->checkAuthorization($kegiatan, $request->user());
         return response()->json($kegiatan);
     }
 
@@ -244,9 +265,6 @@ class KegiatanController extends Controller
     public function update(Request $request, string $id)
     {
         $kegiatan = Kegiatan::findOrFail($id);
-        if (!$this->authorizeKegiatan($request, $kegiatan)) {
-            return response()->json(['message' => 'Akses ditolak. Anda tidak berwenang mengedit proposal ini.'], 403);
-        }
 
         $validated = $request->validate([
             'nama_kegiatan' => 'sometimes|string|max:255',
@@ -363,9 +381,6 @@ class KegiatanController extends Controller
     public function submitPpk(Request $request, string $id)
     {
         $kegiatan = Kegiatan::findOrFail($id);
-        if ($kegiatan->pengusul_id !== $request->user()->id && $request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Akses ditolak. Anda bukan pengusul usulan ini.'], 403);
-        }
 
         $validated = $request->validate([
             'surat_pengantar_path' => 'nullable|string',
@@ -400,6 +415,7 @@ class KegiatanController extends Controller
     public function tambahPencairan(Request $request, string $id)
     {
         $kegiatan = Kegiatan::findOrFail($id);
+        $this->checkAuthorization($kegiatan, $request->user());
 
         $validated = $request->validate([
             'persentase' => 'required|numeric|min:0.01|max:100',
@@ -455,6 +471,7 @@ class KegiatanController extends Controller
     public function getPencairan(string $id)
     {
         $kegiatan = Kegiatan::with('pencairanDana')->findOrFail($id);
+        $this->checkAuthorization($kegiatan, request()->user());
         $totalDisbursed = $kegiatan->pencairanDana()->sum('persentase');
         $nominalDisbursed = $kegiatan->pencairanDana()->sum('nominal');
         $maxPencairan = 70; // maks 70% untuk uang muka
@@ -477,9 +494,6 @@ class KegiatanController extends Controller
     public function updateKodeMak(Request $request, string $id)
     {
         $kegiatan = Kegiatan::findOrFail($id);
-        if (!$this->authorizeKegiatan($request, $kegiatan) || ($request->user()->role !== 'verifikator' && $request->user()->role !== 'admin')) {
-            return response()->json(['message' => 'Akses ditolak. Hanya verifikator yang berwenang mengisi Kode MAK.'], 403);
-        }
 
         $validated = $request->validate([
             'kode_mak' => 'required|string|max:100',
