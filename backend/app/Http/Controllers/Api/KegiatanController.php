@@ -149,6 +149,12 @@ class KegiatanController extends Controller
      */
     public function store(Request $request)
     {
+        foreach (['kak', 'iku', 'rab'] as $field) {
+            if ($request->has($field) && is_string($request->$field)) {
+                $request->merge([$field => json_decode($request->$field, true)]);
+            }
+        }
+
         $validated = $request->validate([
             'nama_kegiatan'          => 'required|string|max:255',
             'jenis_kegiatan'         => 'nullable|string',
@@ -265,6 +271,12 @@ class KegiatanController extends Controller
     public function update(Request $request, string $id)
     {
         $kegiatan = Kegiatan::findOrFail($id);
+
+        foreach (['kak', 'iku', 'rab'] as $field) {
+            if ($request->has($field) && is_string($request->$field)) {
+                $request->merge([$field => json_decode($request->$field, true)]);
+            }
+        }
 
         $validated = $request->validate([
             'nama_kegiatan' => 'sometimes|string|max:255',
