@@ -37,7 +37,7 @@ class DashboardView extends StatefulWidget {
   State<DashboardView> createState() => _DashboardViewState();
 }
 
-class _DashboardViewState extends State<DashboardView> {
+class _DashboardViewState extends State<DashboardView> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   bool _sidebarCollapsed = false;
 
@@ -93,11 +93,40 @@ class _DashboardViewState extends State<DashboardView> {
     return _roleLabels[user.role] ?? user.role.toUpperCase();
   }
 
+  late final AnimationController _entryController;
+  late final Animation<Offset> _sidebarSlide;
+  late final Animation<Offset> _navbarSlide;
+  late final Animation<Offset> _contentSlide;
+  late final Animation<double> _fade;
+
   @override
   void initState() {
     super.initState();
     _allItems = _getNavItemsForRole(widget.user.role);
     _allPages = _allItems.map((item) => item.page).toList();
+
+    _entryController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _fade = CurvedAnimation(parent: _entryController, curve: Curves.easeInCubic);
+    
+    _sidebarSlide = Tween<Offset>(begin: const Offset(-0.2, 0), end: Offset.zero).animate(
+      CurvedAnimation(parent: _entryController, curve: const Interval(0.0, 0.7, curve: Curves.easeOutQuint))
+    );
+    
+    _navbarSlide = Tween<Offset>(begin: const Offset(0, -0.5), end: Offset.zero).animate(
+      CurvedAnimation(parent: _entryController, curve: const Interval(0.1, 0.8, curve: Curves.easeOutQuint))
+    );
+    
+    _contentSlide = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(
+      CurvedAnimation(parent: _entryController, curve: const Interval(0.2, 1.0, curve: Curves.easeOutQuint))
+    );
+
+    _entryController.forward();
+  }
+
+  @override
+  void dispose() {
+    _entryController.dispose();
+    super.dispose();
   }
 
   /// Mirrors web's ROLE_MENUS exactly
@@ -199,11 +228,23 @@ class _DashboardViewState extends State<DashboardView> {
               padding: EdgeInsets.only(left: sidebarWidth),
               child: Column(
                 children: [
-                  _buildTopNavbar(),
+                  SlideTransition(
+                    position: _navbarSlide,
+                    child: FadeTransition(
+                      opacity: _fade,
+                      child: _buildTopNavbar()
+                    )
+                  ),
                   Expanded(
-                    child: IndexedStack(
-                      index: _currentIndex < _allPages.length ? _currentIndex : 0,
-                      children: _allPages,
+                    child: SlideTransition(
+                      position: _contentSlide,
+                      child: FadeTransition(
+                        opacity: _fade,
+                        child: IndexedStack(
+                          index: _currentIndex < _allPages.length ? _currentIndex : 0,
+                          children: _allPages,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -214,7 +255,15 @@ class _DashboardViewState extends State<DashboardView> {
               curve: Curves.easeInOut,
               left: 0, top: 0, bottom: 0,
               width: sidebarWidth,
-              child: _buildSidebar(),
+              child: SlideTransition(
+                position: _sidebarSlide,
+                child: FadeTransition(
+                  opacity: _fade,
+                  child: Drawer(
+                    child: _buildSidebar(),
+                  ),
+                )
+              ),
             ),
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
@@ -233,11 +282,23 @@ class _DashboardViewState extends State<DashboardView> {
       backgroundColor: const Color(0xFFF8FAFC),
       body: Column(
         children: [
-          _buildMobileTopNavbar(),
+          SlideTransition(
+            position: _navbarSlide,
+            child: FadeTransition(
+              opacity: _fade,
+              child: _buildMobileTopNavbar()
+            )
+          ),
           Expanded(
-            child: IndexedStack(
-              index: _currentIndex < _allPages.length ? _currentIndex : 0,
-              children: _allPages,
+            child: SlideTransition(
+              position: _contentSlide,
+              child: FadeTransition(
+                opacity: _fade,
+                child: IndexedStack(
+                  index: _currentIndex < _allPages.length ? _currentIndex : 0,
+                  children: _allPages,
+                ),
+              ),
             ),
           ),
         ],

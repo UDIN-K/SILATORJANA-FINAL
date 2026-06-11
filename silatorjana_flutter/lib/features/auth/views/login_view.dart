@@ -63,25 +63,27 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
   Future<void> _handleLoginSuccess() async {
     if (!mounted) return;
     
-    // 1. Keep showing the loading spinner on the button and render Dashboard behind
+    // 1. Keep showing the loading spinner on the button
     setState(() {
       _isSuccessTransitioning = true;
     });
 
-    // 2. Give the Dashboard time to "lazyload" its data while hidden behind the login screen
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 300));
 
-    // 3. Swipe the login page UP to reveal the fully loaded dashboard
+    // 2. Swipe the login page UP out of the screen, revealing the slate-50 background
     if (mounted) {
       await _slideUpController.forward();
     }
 
-    // 4. Silently replace the route without any flash or blink
+    // 3. Mount the DashboardView, which will now elegantly trigger its entry animations
     if (mounted) {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          transitionDuration: Duration.zero,
+          transitionDuration: const Duration(milliseconds: 400),
           pageBuilder: (context, _, __) => DashboardView(user: _authViewModel.currentUser!),
+          transitionsBuilder: (context, animation, _, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
         ),
       );
     }
@@ -115,12 +117,6 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
       color: const Color(0xFFF8FAFC),
       child: Stack(
         children: [
-          // 1. The Dashboard rendered in the background once login succeeds
-          if (_isSuccessTransitioning && _authViewModel.currentUser != null)
-            Positioned.fill(
-              child: DashboardView(user: _authViewModel.currentUser!),
-            ),
-
           // 2. The Login UI that will slide UP out of the screen
           SlideTransition(
             position: _slideUpAnimation,
