@@ -14,10 +14,16 @@ class ApiConfig {
   // Untuk emulator Android → sudah otomatis pakai 10.0.2.2
   // Untuk Web/Desktop → sudah otomatis pakai localhost
   // ──────────────────────────────────────────
+  static const String _customBaseUrl = 'https://luckless-flogging-stimulate.ngrok-free.dev'; // ← Diisi otomatis oleh run_auto_ip.sh jika pakai Ngrok
   static const String _physicalDeviceIp = '192.168.1.19'; // ← Ganti jika pakai HP fisik (di set otomatis ke IP wlan0 saat ini)
   static const int _port = 8000;
 
   static String get baseUrl {
+    // 1. Jika ada Custom URL (misal: Ngrok), prioritaskan ini!
+    if (_customBaseUrl.isNotEmpty) {
+      return '$_customBaseUrl/api';
+    }
+
     // Web atau Desktop → localhost
     if (kIsWeb) {
       return 'http://localhost:$_port/api';

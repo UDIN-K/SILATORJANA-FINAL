@@ -84,7 +84,8 @@ class AuthService {
 
         if (token != null && token.toString().isNotEmpty) {
           await _saveToken(token.toString());
-          debugPrint('AUTH: Token saved (${_useMemory ? "memory" : "secure_storage"})');
+          debugPrint(
+              'AUTH: Token saved (${_useMemory ? "memory" : "secure_storage"})');
         } else {
           await _saveToken('no-token');
           debugPrint('AUTH: No token from server');

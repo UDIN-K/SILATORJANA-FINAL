@@ -15,6 +15,7 @@ class ApiService {
     return {
       'Content-Type': 'application/json; charset=UTF-8',
       'Accept': 'application/json',
+      'ngrok-skip-browser-warning': 'true',
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
