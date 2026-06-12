@@ -7,6 +7,7 @@ class User {
   final String? verifikatorUnit; // from users.verifikator_unit (e.g. 'wadir1')
   final String? jurusan;
   final String? nip;
+  final bool allowBiometric;
 
   User({
     required this.id,
@@ -16,6 +17,7 @@ class User {
     this.verifikatorUnit,
     this.jurusan,
     this.nip,
+    this.allowBiometric = true,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,7 @@ class User {
       verifikatorUnit: json['verifikator_unit']?.toString(),
       jurusan: json['jurusan']?.toString(),
       nip: json['nip']?.toString(),
+      allowBiometric: json['allow_biometric'] == 1 || json['allow_biometric'] == true,
     );
   }
 

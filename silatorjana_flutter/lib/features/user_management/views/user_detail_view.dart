@@ -135,6 +135,7 @@ class _UserDetailViewState extends State<UserDetailView> {
                               _detailField(LucideIcons.shield, 'Role', _roleLabels[_user!['role']] ?? _user!['role']?.toString() ?? '-'),
                               _detailField(LucideIcons.building2, 'Jurusan', _user!['jurusan']?.toString() ?? '-'),
                               _detailField(LucideIcons.hash, 'NIP', _user!['nip']?.toString() ?? '-'),
+                              _detailField(LucideIcons.fingerprint, 'Biometrik', (_user!['allow_biometric'] == 1 || _user!['allow_biometric'] == true) ? 'Diizinkan' : 'Dinonaktifkan'),
                               _detailField(LucideIcons.calendar, 'Dibuat', _fmtDate(_user!['created_at']?.toString())),
                             ],
                           ),

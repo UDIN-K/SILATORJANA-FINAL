@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../services/auth_service.dart';
 import 'forgot_password_view.dart';
 import '../../kegiatan/views/dashboard_view.dart';
 import '../../../core/widgets/app_logo.dart';
@@ -105,10 +106,93 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
 
   Future<void> _loginWithBiometrics() async {
     if (_isSuccessTransitioning) return;
-    final success = await _authViewModel.loginWithBiometrics();
-    if (success) {
-      await _handleLoginSuccess();
+    
+    // Fetch latest directly to avoid stale state if user just logged out
+    final authService = AuthService();
+    final accounts = await authService.getAllAccounts();
+    
+    if (accounts.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak ada akun terdaftar untuk biometrik.')),
+        );
+      }
+      return;
     }
+
+    // 1. Scan fingerprint first
+    final authenticated = await _authViewModel.authenticateBiometricOnly();
+    if (!authenticated) return;
+
+    // 2. Decide based on accounts count
+    if (accounts.length == 1) {
+      // Only 1 account, use pre-authenticated login
+      final success = await _authViewModel.loginWithPreAuthenticatedAccount(accounts.first);
+      if (success) {
+        await _handleLoginSuccess();
+      }
+    } else {
+      // Multiple accounts, show picker bottom sheet
+      _showBiometricAccountPicker(accounts);
+    }
+  }
+
+  void _showBiometricAccountPicker(List<Map<String, String>> accounts) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Pilih Akun',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Pilih akun untuk masuk',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: accounts.map((account) {
+                      final initial = account['nama']?.isNotEmpty == true ? account['nama']![0].toUpperCase() : 'U';
+                      final role = account['role']?.toUpperCase() ?? 'USER';
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: const Color(0xFFECFDF5),
+                          child: Text(initial, style: const TextStyle(color: Color(0xFF047857), fontWeight: FontWeight.bold)),
+                        ),
+                        title: Text(account['nama'] ?? account['email']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(role, style: const TextStyle(fontSize: 12)),
+                        onTap: () async {
+                          Navigator.pop(ctx);
+                          if (_isSuccessTransitioning) return;
+                          // Already scanned fingerprint, login immediately
+                          final success = await _authViewModel.loginWithPreAuthenticatedAccount(account);
+                          if (success) {
+                            await _handleLoginSuccess();
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -471,22 +555,30 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
     return SizedBox(
       height: 52,
       width: double.infinity,
-      child: OutlinedButton.icon(
+      child: OutlinedButton(
         onPressed: _loginWithBiometrics,
-        icon: const Icon(LucideIcons.fingerprint, color: Color(0xFF059669)),
-        label: const Text(
-          'Gunakan Sidik Jari',
-          style: TextStyle(
-            color: Color(0xFF059669),
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: Color(0xFFD1FAE5), width: 1.5), // emerald-100
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(LucideIcons.fingerprint, color: Color(0xFF059669), size: 20),
+            SizedBox(width: 6),
+            Icon(LucideIcons.scanFace, color: Color(0xFF059669), size: 20),
+            SizedBox(width: 8),
+            Text(
+              'Biometrik / Face ID',
+              style: TextStyle(
+                color: Color(0xFF059669),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ),
     );

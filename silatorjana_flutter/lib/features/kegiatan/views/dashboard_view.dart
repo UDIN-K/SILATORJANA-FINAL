@@ -18,6 +18,7 @@ import '../../monitoring/views/monitoring_dashboard_view.dart';
 import '../../monitoring/views/rekap_jurusan_view.dart';
 import '../../lpj/views/lpj_list_view.dart';
 import '../../user_management/views/user_list_view.dart';
+import '../../user_management/views/biometric_management_view.dart';
 import '../../master_data/views/iku_config_view.dart';
 import '../../documents/views/panduan_view.dart';
 import '../../documents/views/template_view.dart';
@@ -184,6 +185,7 @@ class _DashboardViewState extends State<DashboardView> with SingleTickerProvider
         return [
           _NavItem(icon: LucideIcons.home, label: 'Dashboard', page: HomeTabView(user: widget.user)),
           _NavItem(icon: LucideIcons.users, label: 'Users', page: const UserListView()),
+          _NavItem(icon: LucideIcons.fingerprint, label: 'Biometrik', page: const BiometricManagementView()),
           _NavItem(icon: LucideIcons.database, label: 'Config', page: const IkuConfigView()),
           _NavItem(icon: LucideIcons.activity, label: 'Monitoring', page: const MonitoringDashboardView()),
         ];

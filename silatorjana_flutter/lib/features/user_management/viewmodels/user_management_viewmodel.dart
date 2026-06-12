@@ -60,4 +60,25 @@ class UserManagementViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Toggle allow_biometric for a specific user
+  Future<bool> toggleBiometric(int userId, bool allow) async {
+    try {
+      final response = await _apiService.put('/users/$userId', body: {
+        'allow_biometric': allow,
+      });
+      if (response.statusCode == 200) {
+        // Update local state
+        final idx = users.indexWhere((u) => u['id'] == userId);
+        if (idx != -1) {
+          users[idx]['allow_biometric'] = allow;
+          notifyListeners();
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 }

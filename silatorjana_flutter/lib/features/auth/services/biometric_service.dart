@@ -18,20 +18,38 @@ class BiometricService {
     }
   }
 
-  Future<bool> authenticate() async {
-    if (kIsWeb) return false;
-    
+  /// Returns: 'success', 'no_biometrics_enrolled', 'cancelled', or 'error:...'
+  Future<String> authenticateWithStatus() async {
+    if (kIsWeb) return 'error:Web not supported';
+
     final bool isAvailable = await hasBiometrics();
-    if (!isAvailable) return false;
+    if (!isAvailable) return 'error:Device not supported';
 
     try {
-      return await _auth.authenticate(
+      final result = await _auth.authenticate(
         localizedReason: 'Gunakan sidik jari atau wajah Anda untuk login ke Si-LATORJANA',
         biometricOnly: true,
       );
+      return result ? 'success' : 'cancelled';
     } on PlatformException catch (e) {
-      debugPrint('Error during authentication: $e');
-      return false;
+      debugPrint('Biometric PlatformException: ${e.code} ${e.message}');
+      if (e.code == 'NotEnrolled' || e.code == 'notEnrolled' || e.code == 'noBiometricsEnrolled' || (e.message?.toLowerCase().contains('enroll') ?? false)) {
+        return 'no_biometrics_enrolled';
+      }
+      return 'error:${e.message}';
+    } catch (e) {
+      debugPrint('Biometric error: $e');
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('nobiometricsenrolled') || errStr.contains('notenrolled') || errStr.contains('enroll')) {
+        return 'no_biometrics_enrolled';
+      }
+      return 'error:$e';
     }
+  }
+
+  /// Legacy method for login page
+  Future<bool> authenticate() async {
+    final result = await authenticateWithStatus();
+    return result == 'success';
   }
 }

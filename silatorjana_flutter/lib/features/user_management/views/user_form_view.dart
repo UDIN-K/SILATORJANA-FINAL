@@ -18,6 +18,7 @@ class _UserFormViewState extends State<UserFormView> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   String _selectedRole = 'pengusul';
+  bool _allowBiometric = true;
 
   bool get _isEdit => widget.editUser != null;
 
@@ -30,6 +31,7 @@ class _UserFormViewState extends State<UserFormView> {
       _namaCtrl.text = widget.editUser!['nama'] ?? '';
       _emailCtrl.text = widget.editUser!['email'] ?? '';
       _selectedRole = widget.editUser!['role'] ?? 'pengusul';
+      _allowBiometric = widget.editUser!['allow_biometric'] == 1 || widget.editUser!['allow_biometric'] == true;
     }
   }
 
@@ -57,6 +59,7 @@ class _UserFormViewState extends State<UserFormView> {
       'nama': _namaCtrl.text,
       'email': _emailCtrl.text,
       'role': _selectedRole,
+      'allow_biometric': _allowBiometric,
       if (_passwordCtrl.text.isNotEmpty) 'password': _passwordCtrl.text,
     };
 
@@ -113,6 +116,21 @@ class _UserFormViewState extends State<UserFormView> {
                       items: _roles.map((r) => DropdownMenuItem(value: r, child: Text(r.toUpperCase()))).toList(),
                       onChanged: (v) => setState(() => _selectedRole = v!),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: SwitchListTile(
+                    title: const Text('Izinkan Login Biometrik', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    subtitle: const Text('Bisa login pakai Wajah / Sidik Jari', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                    value: _allowBiometric,
+                    activeColor: const Color(0xFF047857),
+                    onChanged: (val) => setState(() => _allowBiometric = val),
                   ),
                 ),
                 const SizedBox(height: 32),

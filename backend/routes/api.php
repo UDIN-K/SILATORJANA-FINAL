@@ -18,6 +18,30 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
 
+// Biometric login (public — no auth needed, uses biometric_token)
+Route::post('/biometric-login', function (Request $request) {
+    $request->validate([
+        'email' => 'required|email',
+        'biometric_token' => 'required|string',
+    ]);
+
+    $user = \App\Models\User::where('email', $request->email)
+        ->where('biometric_token', $request->biometric_token)
+        ->where('allow_biometric', true)
+        ->first();
+
+    if (!$user) {
+        return response()->json(['message' => 'Biometric token tidak valid atau akses dinonaktifkan.'], 401);
+    }
+
+    $token = $user->createToken('biometric-auth')->plainTextToken;
+
+    return response()->json([
+        'token' => $token,
+        'user' => $user,
+    ]);
+});
+
 Route::get('/health', function () {
     return response()->json(['status' => 'ok', 'app' => 'Si-LATORJANA Backend']);
 });
@@ -46,6 +70,51 @@ Route::middleware('auth:sanctum')->group(function () {
     // Users — admin only (except show)
     Route::middleware('role:admin')->group(function () {
         Route::apiResource('users', UserController::class)->except(['show']);
+
+        // Admin: generate biometric tokens for selected users
+        Route::post('/biometric-assign', function (Request $request) {
+            $request->validate([
+                'user_ids' => 'required|array|min:1',
+                'user_ids.*' => 'integer|exists:users,id',
+            ]);
+
+            $results = [];
+            foreach ($request->user_ids as $userId) {
+                $user = \App\Models\User::find($userId);
+                if ($user) {
+                    // Generate a unique biometric token
+                    $token = bin2hex(random_bytes(32));
+                    $user->update([
+                        'biometric_token' => $token,
+                        'allow_biometric' => true,
+                    ]);
+                    $results[] = [
+                        'id' => $user->id,
+                        'email' => $user->email,
+                        'nama' => $user->nama,
+                        'role' => $user->role,
+                        'biometric_token' => $token,
+                    ];
+                }
+            }
+
+            return response()->json(['assigned' => $results]);
+        });
+
+        // Admin: revoke biometric for selected users
+        Route::post('/biometric-revoke', function (Request $request) {
+            $request->validate([
+                'user_ids' => 'required|array|min:1',
+                'user_ids.*' => 'integer|exists:users,id',
+            ]);
+
+            \App\Models\User::whereIn('id', $request->user_ids)->update([
+                'biometric_token' => null,
+                'allow_biometric' => false,
+            ]);
+
+            return response()->json(['message' => 'Biometric access revoked.']);
+        });
     });
 
     // Users show — all authenticated users can view a user profile

@@ -19,11 +19,14 @@ class User extends Authenticatable
         'jurusan',
         'nip',
         'verifikator_unit',
+        'allow_biometric',
+        'biometric_token',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'biometric_token',
     ];
 
     protected function casts(): array
@@ -31,6 +34,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'allow_biometric' => 'boolean',
         ];
     }
 

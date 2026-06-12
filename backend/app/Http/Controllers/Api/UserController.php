@@ -57,6 +57,7 @@ class UserController extends Controller
             'jurusan' => 'nullable|string',
             'nip' => 'nullable|string',
             'verifikator_unit' => 'nullable|string|in:wadir1,wadir2,wadir3,wadir4',
+            'allow_biometric' => 'boolean',
         ]);
 
         $user = User::create($validated);
@@ -84,6 +85,7 @@ class UserController extends Controller
             'jurusan' => 'nullable|string',
             'nip' => 'nullable|string',
             'verifikator_unit' => 'nullable|string|in:wadir1,wadir2,wadir3,wadir4',
+            'allow_biometric' => 'sometimes|boolean',
         ]);
 
         $user->update($validated);
