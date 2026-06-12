@@ -206,6 +206,21 @@ class _LpjVerificationViewState extends State<LpjVerificationView> {
     return 'Rp ${buffer.toString().split('').reversed.join()}';
   }
 
+  num _parseNum(dynamic value, [num defaultValue = 0]) {
+    if (value == null) return defaultValue;
+    if (value is num) return value;
+    return num.tryParse(value.toString()) ?? defaultValue;
+  }
+
+  String _formatQty(dynamic value) {
+    if (value == null) return '';
+    final n = value is num ? value : num.tryParse(value.toString()) ?? 0;
+    if (n == n.toInt()) {
+      return n.toInt().toString();
+    }
+    return n.toString();
+  }
+
   Widget _buildLpjDetails(Map<String, dynamic> detail) {
     final rabGroups = detail['rab'] as Map<String, dynamic>? ?? {};
     if (rabGroups.isEmpty) {
@@ -243,24 +258,24 @@ class _LpjVerificationViewState extends State<LpjVerificationView> {
                     final files = (item['existing_files'] as List?) ?? [];
                     final isImageReg = RegExp(r'\.(jpeg|jpg|gif|png|webp)$', caseSensitive: false);
 
-                    final qty1 = item['qty1'] ?? 1;
-                    final qty2 = item['qty2'];
-                    final qty3 = item['qty3'];
-                    final harga = item['harga_satuan'] ?? 0;
-                    final total = item['total'] ?? 0;
+                    final qty1 = _parseNum(item['qty1'], 1);
+                    final qty2 = item['qty2'] != null ? _parseNum(item['qty2']) : null;
+                    final qty3 = item['qty3'] != null ? _parseNum(item['qty3']) : null;
+                    final harga = _parseNum(item['harga_satuan'], 0);
+                    final total = _parseNum(item['total'], 0);
 
-                    final realQty1 = item['real_qty1'];
-                    final realQty2 = item['real_qty2'];
-                    final realQty3 = item['real_qty3'];
-                    final realHarga = item['real_harga_satuan'];
+                    final realQty1 = item['real_qty1'] != null ? _parseNum(item['real_qty1']) : null;
+                    final realQty2 = item['real_qty2'] != null ? _parseNum(item['real_qty2']) : null;
+                    final realQty3 = item['real_qty3'] != null ? _parseNum(item['real_qty3']) : null;
+                    final realHarga = item['real_harga_satuan'] != null ? _parseNum(item['real_harga_satuan']) : null;
 
                     // Calculate real total
                     num realTotal = 0;
                     if (realQty1 != null && realHarga != null) {
-                      final q1 = realQty1 as num;
-                      final q2 = (realQty2 ?? 1) as num;
-                      final q3 = (realQty3 ?? 1) as num;
-                      final h = realHarga as num;
+                      final q1 = realQty1;
+                      final q2 = realQty2 ?? 1;
+                      final q3 = realQty3 ?? 1;
+                      final h = realHarga;
                       realTotal = q1 * q2 * q3 * h;
                     }
 
@@ -286,7 +301,7 @@ class _LpjVerificationViewState extends State<LpjVerificationView> {
                                   const Text('Target Anggaran', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${qty1}${qty2 != null && qty2 != 1 ? ' x $qty2' : ''}${qty3 != null && qty3 != 0 ? ' x $qty3' : ''} @ ${_formatCurrency(harga)}',
+                                    '${_formatQty(qty1)}${qty2 != null && qty2 != 1 ? ' x ${_formatQty(qty2)}' : ''}${qty3 != null && qty3 != 0 ? ' x ${_formatQty(qty3)}' : ''} @ ${_formatCurrency(harga)}',
                                     style: const TextStyle(fontSize: 12, color: Color(0xFF334155)),
                                   ),
                                   Text('Total: ${_formatCurrency(total)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
@@ -299,7 +314,7 @@ class _LpjVerificationViewState extends State<LpjVerificationView> {
                                   const SizedBox(height: 2),
                                   if (realQty1 != null) ...[
                                     Text(
-                                      '${realQty1}${realQty2 != null && realQty2 != 1 ? ' x $realQty2' : ''}${realQty3 != null && realQty3 != 0 ? ' x $realQty3' : ''} @ ${_formatCurrency(realHarga)}',
+                                      '${_formatQty(realQty1)}${realQty2 != null && realQty2 != 1 ? ' x ${_formatQty(realQty2)}' : ''}${realQty3 != null && realQty3 != 0 ? ' x ${_formatQty(realQty3)}' : ''} @ ${_formatCurrency(realHarga)}',
                                       style: const TextStyle(fontSize: 12, color: Color(0xFF047857)),
                                     ),
                                     Text('Total: ${_formatCurrency(realTotal)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF047857))),

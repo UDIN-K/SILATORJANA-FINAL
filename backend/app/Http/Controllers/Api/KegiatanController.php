@@ -434,20 +434,25 @@ class KegiatanController extends Controller
             'catatan' => 'nullable|string',
         ]);
 
-        $totalDisbursed = $kegiatan->pencairanDana()->sum('persentase');
-        $maxPencairan = 70; // maks 70% uang muka
+        $status = strtolower($kegiatan->status);
+        $hasSubmittedLpj = in_array($status, ['lpj_submitted', 'lpj_revision', 'lpj_approved', 'lpj_verified', 'lpj_done', 'completed'], true);
+        $maxPencairan = $hasSubmittedLpj ? 100 : 70;
 
-        // Enforce 70% max for initial disbursement
+        $totalDisbursed = $kegiatan->pencairanDana()->sum('persentase');
+
+        // Enforce max for disbursement
         if ($totalDisbursed + $validated['persentase'] > $maxPencairan) {
             $sisa = max(0, $maxPencairan - $totalDisbursed);
+            $limitType = $hasSubmittedLpj ? 'total' : 'uang muka';
             return response()->json([
-                'message' => "Pencairan uang muka tidak boleh melebihi {$maxPencairan}%. Sisa yang tersedia: {$sisa}%",
+                'message' => "Pencairan {$limitType} tidak boleh melebihi {$maxPencairan}%. Sisa yang tersedia: {$sisa}%",
             ], 422);
         }
 
         if ($totalDisbursed >= $maxPencairan) {
+            $limitType = $hasSubmittedLpj ? 'total (100%)' : 'uang muka (70%)';
             return response()->json([
-                'message' => 'Batas pencairan uang muka (70%) sudah tercapai.',
+                'message' => "Batas pencairan {$limitType} sudah tercapai.",
             ], 422);
         }
 
@@ -461,17 +466,26 @@ class KegiatanController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
-        // Update status and deadline_lpj if reaching maxPencairan (70%)
+        // Update status of the kegiatan based on the new total and the current status
         $newTotal = $totalDisbursed + $validated['persentase'];
-        if ($newTotal >= $maxPencairan) {
-            $kegiatan->update([
-                'status' => 'funds_disbursed',
-                'deadline_lpj' => $this->calculateDeadlineLPJ(),
-            ]);
+
+        if (!$hasSubmittedLpj) {
+            if ($newTotal >= 70) {
+                $kegiatan->update([
+                    'status' => 'funds_disbursed',
+                    'deadline_lpj' => $this->calculateDeadlineLPJ(),
+                ]);
+            } else {
+                $kegiatan->update([
+                    'status' => 'accepted_funds',
+                ]);
+            }
         } else {
-            $kegiatan->update([
-                'status' => 'accepted_funds',
-            ]);
+            if ($newTotal >= 100 && in_array($status, ['lpj_approved', 'lpj_verified', 'lpj_done', 'completed'])) {
+                $kegiatan->update([
+                    'status' => 'lpj_done',
+                ]);
+            }
         }
 
         return response()->json($kegiatan->fresh()->load(['kak', 'iku', 'rab', 'pencairanDana']));
@@ -486,7 +500,11 @@ class KegiatanController extends Controller
         $this->checkAuthorization($kegiatan, request()->user());
         $totalDisbursed = $kegiatan->pencairanDana()->sum('persentase');
         $nominalDisbursed = $kegiatan->pencairanDana()->sum('nominal');
-        $maxPencairan = 70; // maks 70% untuk uang muka
+
+        $status = strtolower($kegiatan->status);
+        $hasSubmittedLpj = in_array($status, ['lpj_submitted', 'lpj_revision', 'lpj_approved', 'lpj_verified', 'lpj_done', 'completed'], true);
+        $maxPencairan = $hasSubmittedLpj ? 100 : 70;
+
         $sisaYangBisaDicairkan = max(0, $maxPencairan - $totalDisbursed);
 
         return response()->json([

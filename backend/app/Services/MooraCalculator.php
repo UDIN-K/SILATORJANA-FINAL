@@ -299,30 +299,24 @@ class MooraCalculator
         $jumlahAlternatif = count($matriksKeputusan);
         $jumlahKriteria   = count($matriksKeputusan[0]);
 
-        // Hitung pembagi untuk setiap kolom: sqrt(Σ xij²)
-        $pembagi = array_fill(0, $jumlahKriteria, 0);
-        for ($j = 0; $j < $jumlahKriteria; $j++) {
-            $sumSquare = 0;
-            for ($i = 0; $i < $jumlahAlternatif; $i++) {
-                $sumSquare += pow($matriksKeputusan[$i][$j], 2);
-            }
-            $pembagi[$j] = sqrt($sumSquare);
-        }
+        // Karena semua nilai kriteria sudah dikonversi ke skala 0-100 melalui rubrik penalti,
+        // normalisasi dilakukan dengan membagi skor kriteria dengan batas skor maksimalnya (100).
+        // Hal ini menjaga konsistensi matematis pada evaluasi alternatif tunggal (hitungSingle)
+        // dan memastikan jumlah matriks terbobot (Y) selalu sama dengan nilai optimasi (Yi).
+        $pembagi = array_fill(0, $jumlahKriteria, 100.0);
 
         // Normalisasi
         $matriksNormalisasi = [];
         for ($i = 0; $i < $jumlahAlternatif; $i++) {
             $row = [];
             for ($j = 0; $j < $jumlahKriteria; $j++) {
-                $row[] = $pembagi[$j] > 0
-                    ? round($matriksKeputusan[$i][$j] / $pembagi[$j], 6)
-                    : 0;
+                $row[] = round($matriksKeputusan[$i][$j] / 100.0, 6);
             }
             $matriksNormalisasi[] = $row;
         }
 
         return [
-            'pembagi'   => array_map(fn($v) => round($v, 4), $pembagi),
+            'pembagi'   => $pembagi,
             'normalisasi' => $matriksNormalisasi,
         ];
     }
@@ -390,6 +384,16 @@ class MooraCalculator
         $matriksNorm    = $normResult['normalisasi'];
         $pembagi        = $normResult['pembagi'];
 
+        // Hitung matriks terbobot (Y)
+        $matriksTerbobot = [];
+        foreach ($matriksNorm as $row) {
+            $weightedRow = [];
+            foreach ($row as $j => $val) {
+                $weightedRow[] = round($val * ($bobot[$j] ?? 0.25), 6);
+            }
+            $matriksTerbobot[] = $weightedRow;
+        }
+
         // Hitung skor akhir real-time sebagai rata-rata tertimbang dari kriteria (skala 0.0 - 1.0)
         $c1 = $rubrik['c1'];
         $c2 = $rubrik['c2'];
@@ -409,6 +413,7 @@ class MooraCalculator
             'matriks_keputusan' => $matriksKeputusan,
             'pembagi'           => $pembagi,
             'matriks_normalisasi' => $matriksNorm,
+            'matriks_terbobot'  => $matriksTerbobot,
             'skor_akhir'        => round($skorAkhir, 6),
             'grade'             => $grade,
             'detail_rubrik'     => $rubrik['detail'],
@@ -451,6 +456,16 @@ class MooraCalculator
         $matriksNorm = $normResult['normalisasi'];
         $pembagi     = $normResult['pembagi'];
 
+        // Hitung matriks terbobot (Y)
+        $matriksTerbobotAll = [];
+        foreach ($matriksNorm as $row) {
+            $weightedRow = [];
+            foreach ($row as $j => $val) {
+                $weightedRow[] = round($val * ($bobot[$j] ?? 0.25), 6);
+            }
+            $matriksTerbobotAll[] = $weightedRow;
+        }
+
         // Susun hasil
         $hasil = [];
         $idx   = 0;
@@ -472,6 +487,7 @@ class MooraCalculator
                 'skor_rubrik'         => $rubrikList[$id],
                 'matriks_keputusan'   => $matriksKeputusan[$idx],
                 'normalisasi'         => $matriksNorm[$idx] ?? [0, 0, 0, 0],
+                'matriks_terbobot'    => [$matriksTerbobotAll[$idx] ?? [0, 0, 0, 0]],
                 'skor_akhir'          => round($skorAkhir, 6),
                 'grade'               => $this->tentukanGrade($skorAkhir),
                 'detail_rubrik'       => $rubrikList[$id]['detail'] ?? [],
@@ -487,6 +503,7 @@ class MooraCalculator
             'pembagi'           => $pembagi,
             'matriks_keputusan' => $matriksKeputusan,
             'matriks_normalisasi' => $matriksNorm,
+            'matriks_terbobot'  => $matriksTerbobotAll,
             'hasil'             => $hasil,
         ];
     }
