@@ -319,8 +319,8 @@ class PdfGeneratorService {
                 cellStyle: const pw.TextStyle(fontSize: 8),
                 headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#F8FAFC')),
                 cellAlignment: pw.Alignment.centerLeft,
-                headers: rabTableData[0].cast<String>(),
-                data: rabTableData.sublist(1).cast<List<String>>(),
+                headers: rabTableData[0].map((e) => e.toString()).toList(),
+                data: rabTableData.sublist(1).map((row) => row.map((e) => e.toString()).toList()).toList(),
               ),
             );
             
