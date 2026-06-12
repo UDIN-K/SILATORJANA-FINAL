@@ -47,6 +47,18 @@ class _PencairanViewState extends State<PencairanView> {
     super.dispose();
   }
 
+  double _parseToDouble(dynamic val, [double def = 0.0]) {
+    if (val == null) return def;
+    if (val is num) return val.toDouble();
+    return double.tryParse(val.toString()) ?? def;
+  }
+
+  num _parseToNum(dynamic val, [num def = 0]) {
+    if (val == null) return def;
+    if (val is num) return val;
+    return num.tryParse(val.toString()) ?? def;
+  }
+
   String _formatCurrency(dynamic amount) {
     final n = amount is num ? amount : num.tryParse(amount.toString()) ?? 0;
     final str = n.toInt().toString();
@@ -63,8 +75,8 @@ class _PencairanViewState extends State<PencairanView> {
   Future<void> _handlePencairan() async {
     final persen = double.tryParse(_persentaseCtrl.text) ?? 0;
     final data = _vm.pencairanData;
-    final maxPersen = (data?['max_persen'] as num?)?.toDouble() ?? 70.0;
-    final sisaPersen = (data?['sisa_persen'] as num?)?.toDouble() ?? 70.0;
+    final maxPersen = _parseToDouble(data?['max_persen'], 70.0);
+    final sisaPersen = _parseToDouble(data?['sisa_persen'], 70.0);
 
     if (persen <= 0 || persen > 100) {
       _showSnackBar('Persentase harus antara 1-100', isError: true);
@@ -144,8 +156,8 @@ class _PencairanViewState extends State<PencairanView> {
   }
 
   bool get _isFundsDisbursed {
-    final totalPersen = (_vm.pencairanData?['total_persen'] as num?)?.toDouble() ?? 0;
-    final maxPersen = (_vm.pencairanData?['max_persen'] as num?)?.toDouble() ?? 70;
+    final totalPersen = _parseToDouble(_vm.pencairanData?['total_persen'], 0.0);
+    final maxPersen = _parseToDouble(_vm.pencairanData?['max_persen'], 70.0);
     return totalPersen >= maxPersen || widget.kegiatan.status == 'funds_disbursed';
   }
 
@@ -154,7 +166,7 @@ class _PencairanViewState extends State<PencairanView> {
   }
 
   Widget _buildKegiatanCard() {
-    final totalAnggaran = (_vm.pencairanData?['total_anggaran'] as num?) ?? widget.kegiatan.totalAnggaran ?? 0;
+    final totalAnggaran = _parseToNum(_vm.pencairanData?['total_anggaran'], widget.kegiatan.totalAnggaran ?? 0);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -194,11 +206,11 @@ class _PencairanViewState extends State<PencairanView> {
 
   Widget _buildProgressCard() {
     final data = _vm.pencairanData;
-    final totalPersen = (data?['total_persen'] as num?)?.toDouble() ?? 0;
-    final maxPersen = (data?['max_persen'] as num?)?.toDouble() ?? 70;
-    final sisaPersen = (data?['sisa_persen'] as num?)?.toDouble() ?? maxPersen;
-    final totalNominal = (data?['total_nominal'] as num?)?.toDouble() ?? 0;
-    final totalAnggaran = (data?['total_anggaran'] as num?)?.toDouble() ?? 1;
+    final totalPersen = _parseToDouble(data?['total_percent'] ?? data?['total_persen'], 0.0);
+    final maxPersen = _parseToDouble(data?['max_persen'], 70.0);
+    final sisaPersen = _parseToDouble(data?['sisa_persen'], maxPersen);
+    final totalNominal = _parseToDouble(data?['total_nominal'], 0.0);
+    final totalAnggaran = _parseToDouble(data?['total_anggaran'], 1.0);
     final progressRatio = (totalPersen / maxPersen).clamp(0.0, 1.0);
     final isTaken = _isDanaDiambil;
 
@@ -335,8 +347,8 @@ class _PencairanViewState extends State<PencairanView> {
             child: Text('Riwayat Pencairan', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _slate800)),
           ),
           ...list.map((item) {
-            final pct = (item['persentase'] as num?)?.toDouble() ?? 0;
-            final nom = (item['nominal'] as num?)?.toDouble() ?? 0;
+            final pct = _parseToDouble(item['persentase'], 0.0);
+            final nom = _parseToDouble(item['nominal'], 0.0);
             final taken = item['is_taken'] == true || item['is_taken'] == 1;
             final tgl = item['tanggal_pencairan']?.toString();
             final catatan = item['catatan']?.toString();
@@ -417,8 +429,8 @@ class _PencairanViewState extends State<PencairanView> {
   }
 
   Widget _buildFormPencairan() {
-    final sisaPersen = (_vm.pencairanData?['sisa_persen'] as num?)?.toDouble() ?? 70;
-    final maxPersen = (_vm.pencairanData?['max_persen'] as num?)?.toDouble() ?? 70;
+    final sisaPersen = _parseToDouble(_vm.pencairanData?['sisa_persen'], 70.0);
+    final maxPersen = _parseToDouble(_vm.pencairanData?['max_persen'], 70.0);
 
     if (sisaPersen <= 0) return const SizedBox.shrink();
 

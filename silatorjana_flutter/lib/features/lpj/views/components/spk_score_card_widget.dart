@@ -339,7 +339,7 @@ class _SpkScoreCardWidgetState extends State<SpkScoreCardWidget> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '= ${(_perhitungan!['skor_akhir'] as double).toStringAsFixed(4)}',
+                      '= ${(double.tryParse(_perhitungan!['skor_akhir']?.toString() ?? '0') ?? 0.0).toStringAsFixed(4)}',
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF047857), fontFamily: 'monospace'),
                     ),
                   ],
