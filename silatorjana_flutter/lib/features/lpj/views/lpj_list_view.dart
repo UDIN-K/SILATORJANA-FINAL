@@ -246,7 +246,7 @@ class _LpjListViewState extends State<LpjListView> {
       case 'funds_disbursed': return const Color(0xFF0891B2);
       case 'lpj_submitted': return const Color(0xFF3B82F6);
       case 'lpj_revision': return const Color(0xFFF97316);
-      case 'lpj_done': case 'lpj_approved': return const Color(0xFF047857);
+      case 'lpj_done': case 'lpj_approved': case 'lpj_verified': return const Color(0xFF047857);
       default: return const Color(0xFF64748B);
     }
   }

@@ -33,7 +33,7 @@ class _KegiatanListViewState extends State<KegiatanListView> {
   }
 
   Color _getStatusColor(String status) {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'draft': return Colors.grey;
       case 'submitted': return Colors.blue;
       case 'pending_ppk': return Colors.orange;
@@ -42,6 +42,12 @@ class _KegiatanListViewState extends State<KegiatanListView> {
       case 'funds_disbursed': return Colors.teal;
       case 'rejected': return Colors.red;
       case 'revision_requested': return Colors.deepOrange;
+      case 'completed':
+      case 'lpj_done':
+      case 'lpj_approved':
+      case 'lpj_verified':
+      case 'selesai':
+        return const Color(0xFF047857);
       default: return Colors.black54;
     }
   }

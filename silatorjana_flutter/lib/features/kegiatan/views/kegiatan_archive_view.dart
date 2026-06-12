@@ -264,7 +264,7 @@ class _KegiatanArchiveViewState extends State<KegiatanArchiveView> {
     Color bgColor;
     Color textColor;
     switch (status.toLowerCase()) {
-      case 'completed': case 'lpj_done': case 'selesai':
+      case 'completed': case 'lpj_done': case 'selesai': case 'lpj_approved': case 'lpj_verified':
         bgColor = const Color(0xFFECFDF5); textColor = const Color(0xFF047857);
       case 'rejected': case 'ditolak':
         bgColor = const Color(0xFFFEE2E2); textColor = const Color(0xFFDC2626);

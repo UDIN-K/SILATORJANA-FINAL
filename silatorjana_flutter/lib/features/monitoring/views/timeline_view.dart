@@ -178,7 +178,7 @@ class _TimelineViewState extends State<TimelineView> {
       case 'approved_ppk': return const Color(0xFFF59E0B);
       case 'approved_wadir': return const Color(0xFF10B981);
       case 'funds_disbursed': return const Color(0xFF0891B2);
-      case 'lpj_done': case 'completed': return const Color(0xFF047857);
+      case 'lpj_done': case 'completed': case 'lpj_approved': case 'lpj_verified': case 'selesai': return const Color(0xFF047857);
       case 'revision_requested': return const Color(0xFFF97316);
       case 'rejected': return const Color(0xFFDC2626);
       default: return const Color(0xFF64748B);

@@ -372,6 +372,8 @@ class _MonitoringDashboardViewState extends State<MonitoringDashboardView> {
       case 'completed':
       case 'lpj_done':
       case 'selesai':
+      case 'lpj_approved':
+      case 'lpj_verified':
         bgColor = const Color(0xFFECFDF5);
         textColor = const Color(0xFF047857);
       default:

@@ -104,7 +104,7 @@ class _KegiatanHistoryViewState extends State<KegiatanHistoryView> {
   }
 
   Widget _buildHistoryCard(Kegiatan item) {
-    final isCompleted = ['completed', 'selesai', 'lpj_done'].contains(item.status.toLowerCase());
+    final isCompleted = ['completed', 'selesai', 'lpj_done', 'lpj_approved', 'lpj_verified'].contains(item.status.toLowerCase());
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

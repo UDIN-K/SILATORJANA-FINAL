@@ -328,11 +328,11 @@ class KegiatanController extends Controller
                     'verified_by' => $request->user()?->nama,
                     'status_verifikasi' => $statusVerifikasi,
                 ]);
+            }
 
-                // Automatically set kegiatan status to completed if LPJ is approved
-                if ($kegiatan->status === 'lpj_approved') {
-                    $kegiatan->update(['status' => 'completed']);
-                }
+            // Automatically set kegiatan status to completed if LPJ is approved
+            if ($kegiatan->status === 'lpj_approved') {
+                $kegiatan->update(['status' => 'completed']);
             }
         }
 
