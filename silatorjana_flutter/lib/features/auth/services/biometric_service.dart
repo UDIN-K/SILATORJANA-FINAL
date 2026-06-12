@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
-import 'package:local_auth/error_codes.dart' as auth_error;
 
 class BiometricService {
   final LocalAuthentication _auth = LocalAuthentication();
@@ -34,12 +33,16 @@ class BiometricService {
       return result ? 'success' : 'cancelled';
     } on PlatformException catch (e) {
       debugPrint('Biometric PlatformException: ${e.code} ${e.message}');
-      if (e.code == auth_error.notEnrolled) {
+      if (e.code == 'NotEnrolled' || e.code == 'notEnrolled' || e.code == 'noBiometricsEnrolled' || (e.message?.toLowerCase().contains('enroll') ?? false)) {
         return 'no_biometrics_enrolled';
       }
       return 'error:${e.message}';
     } catch (e) {
       debugPrint('Biometric error: $e');
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('nobiometricsenrolled') || errStr.contains('notenrolled') || errStr.contains('enroll')) {
+        return 'no_biometrics_enrolled';
+      }
       return 'error:$e';
     }
   }

@@ -32,10 +32,13 @@ class ProfileViewModel extends ChangeNotifier {
 
     try {
       debugPrint('BIOMETRIC: Verifying password...');
-      // Verify password via a separate login call
-      final success = await _authService.login(email, password);
-      debugPrint('BIOMETRIC: Password verify result=$success');
-      if (!success) {
+      // Verify password by hitting login endpoint directly (don't replace active token)
+      final verifyResponse = await _apiService.post('/login', body: {
+        'email': email,
+        'password': password,
+      });
+      debugPrint('BIOMETRIC: Password verify status=${verifyResponse.statusCode}');
+      if (verifyResponse.statusCode != 200) {
         isLoading = false;
         errorMessage = 'Password salah. Gagal mengaktifkan biometrik.';
         notifyListeners();
