@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
@@ -78,7 +79,11 @@ class _SubmitPpkViewState extends State<SubmitPpkView> {
 
       if (result == null) return;
       final file = result.files.single;
-      if (file.path == null && file.bytes == null) return;
+      if (kIsWeb) {
+        if (file.bytes == null) return;
+      } else {
+        if (file.path == null) return;
+      }
 
       setState(() => _isUploadingFile = true);
 

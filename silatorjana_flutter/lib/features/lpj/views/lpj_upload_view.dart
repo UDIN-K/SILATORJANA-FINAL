@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../kegiatan/models/kegiatan.dart';
@@ -163,8 +164,14 @@ class _LpjUploadViewState extends State<LpjUploadView> {
         }
 
         for (final file in result.files) {
-          if (file.path != null || file.bytes != null) {
-            _pickedFiles[rabId]!.add(file);
+          if (kIsWeb) {
+            if (file.bytes != null) {
+              _pickedFiles[rabId]!.add(file);
+            }
+          } else {
+            if (file.path != null) {
+              _pickedFiles[rabId]!.add(file);
+            }
           }
         }
       });
