@@ -106,19 +106,30 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
   Future<void> _loginWithBiometrics() async {
     if (_isSuccessTransitioning) return;
     
-    if (_authViewModel.biometricAccounts.length > 1) {
+    // Fetch latest directly to avoid stale state if user just logged out
+    final authService = AuthService();
+    final accounts = await authService.getAllAccounts();
+    
+    if (accounts.length > 1) {
       // Show bottom sheet to pick account
-      _showBiometricAccountPicker();
-    } else {
-      // Only 1 account or fallback, just use default
-      final success = await _authViewModel.loginWithBiometrics();
+      _showBiometricAccountPicker(accounts);
+    } else if (accounts.length == 1) {
+      // Only 1 account, just use default
+      final success = await _authViewModel.loginWithBiometricAccount(accounts.first);
       if (success) {
         await _handleLoginSuccess();
+      }
+    } else {
+      // No accounts
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak ada akun terdaftar untuk biometrik.')),
+        );
       }
     }
   }
 
-  void _showBiometricAccountPicker() {
+  void _showBiometricAccountPicker(List<Map<String, String>> accounts) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -138,7 +149,7 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
                 style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
               ),
               const SizedBox(height: 16),
-              ..._authViewModel.biometricAccounts.map((account) {
+              ...accounts.map((account) {
                 final initial = account['nama']?.isNotEmpty == true ? account['nama']![0].toUpperCase() : 'U';
                 final role = account['role']?.toUpperCase() ?? 'USER';
                 return ListTile(
