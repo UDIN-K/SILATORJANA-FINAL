@@ -53,7 +53,7 @@ class PdfGeneratorService {
     final pdf = pw.Document();
 
     // Load fonts and images
-    final ByteData logoData = await rootBundle.load('assets/images/app-logo.png');
+    final ByteData logoData = await rootBundle.load('assets/images/logo-pnj.png');
     final Uint8List logoBytes = logoData.buffer.asUint8List();
 
     final kak = data['kak'];
@@ -230,12 +230,12 @@ class PdfGeneratorService {
                     cellStyle: const pw.TextStyle(fontSize: 10),
                     headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#F8FAFC')),
                     headers: ['No', 'Bulan', 'Indikator Keberhasilan', 'Target (%)'],
-                    data: indicators.asMap().entries.map((e) {
+                    data: indicators.asMap().entries.map<List<String>>((e) {
                       final item = e.value;
                       return [
                         (e.key + 1).toString(),
-                        item['bulan'] ?? '-',
-                        item['indikator'] ?? '-',
+                        (item['bulan'] ?? '-').toString(),
+                        (item['indikator'] ?? '-').toString(),
                         item['target'] != null ? '${item['target']}%' : '-',
                       ];
                     }).toList(),
@@ -258,8 +258,8 @@ class PdfGeneratorService {
                 headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#F8FAFC')),
                 headers: ['No', 'Nama IKU'],
                 columnWidths: const {0: pw.FixedColumnWidth(40), 1: pw.FlexColumnWidth()},
-                data: ikuList.asMap().entries.map((e) {
-                  return [(e.key + 1).toString(), e.value['nama_iku'] ?? e.value['indikator'] ?? '-'];
+                data: ikuList.asMap().entries.map<List<String>>((e) {
+                  return [(e.key + 1).toString(), (e.value['nama_iku'] ?? e.value['indikator'] ?? '-').toString()];
                 }).toList(),
               ),
             );
@@ -320,7 +320,7 @@ class PdfGeneratorService {
                 headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#F8FAFC')),
                 cellAlignment: pw.Alignment.centerLeft,
                 headers: rabTableData[0].map((e) => e.toString()).toList(),
-                data: rabTableData.sublist(1).map((row) => row.map((e) => e.toString()).toList()).toList(),
+                data: rabTableData.sublist(1).map<List<String>>((row) => row.map((e) => e.toString()).toList()).toList(),
               ),
             );
             
