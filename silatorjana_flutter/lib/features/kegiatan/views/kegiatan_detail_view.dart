@@ -86,6 +86,7 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
     final catatanCtrl = TextEditingController();
     final kodeMakCtrl = TextEditingController();
     final isApprove = action == 'approve';
+    final isTolak = action == 'tolak';
     final role = widget.currentUser.role;
     final isVerifikator = role == 'verifikator';
 
@@ -96,13 +97,13 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(children: [
             Icon(
-              isApprove ? LucideIcons.checkCircle : LucideIcons.alertTriangle,
-              color: isApprove ? _emerald700 : Colors.red,
+              isApprove ? LucideIcons.checkCircle : (isTolak ? LucideIcons.xCircle : LucideIcons.alertTriangle),
+              color: isApprove ? _emerald700 : (isTolak ? Colors.red : Colors.orange),
               size: 22,
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(isApprove ? 'Setujui Proposal' : 'Minta Revisi',
+              child: Text(isApprove ? 'Setujui Proposal' : (isTolak ? 'Tolak Usulan' : 'Minta Revisi'),
                   style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
             ),
           ]),
@@ -112,7 +113,7 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
               Text(
                 isApprove
                     ? 'Apakah Anda yakin menyetujui proposal ini?'
-                    : 'Berikan catatan revisi untuk pengusul:',
+                    : (isTolak ? 'Berikan alasan penolakan usulan ini:' : 'Berikan catatan revisi untuk pengusul:'),
                 style: const TextStyle(fontSize: 14, color: _slate500),
               ),
               const SizedBox(height: 12),
@@ -120,7 +121,7 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
                 controller: catatanCtrl,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText: isApprove ? 'Catatan (opsional)' : 'Catatan revisi *',
+                  hintText: isApprove ? 'Catatan (opsional)' : (isTolak ? 'Alasan penolakan *' : 'Catatan revisi *'),
                   hintStyle: const TextStyle(color: _slate400),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
@@ -152,11 +153,11 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Batal', style: TextStyle(color: _slate500)),
             ),
-            ElevatedButton(
+              ElevatedButton(
               onPressed: () {
                 if (!isApprove && catatanCtrl.text.isEmpty) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(content: Text('Catatan wajib diisi'), backgroundColor: Colors.orange),
+                    SnackBar(content: Text(isTolak ? 'Alasan penolakan wajib diisi' : 'Catatan wajib diisi'), backgroundColor: Colors.orange),
                   );
                   return;
                 }
@@ -169,11 +170,11 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
                 Navigator.pop(ctx, true);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: isApprove ? _emerald700 : Colors.red,
+                backgroundColor: isApprove ? _emerald700 : (isTolak ? Colors.red : Colors.orange),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: Text(isApprove ? 'Setujui' : 'Minta Revisi',
+              child: Text(isApprove ? 'Setujui' : (isTolak ? 'Tolak' : 'Minta Revisi'),
                   style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
@@ -187,6 +188,8 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
     final String targetStatus;
     if (isApprove) {
       targetStatus = _getApproveStatus() ?? 'verified';
+    } else if (isTolak) {
+      targetStatus = 'rejected';
     } else {
       targetStatus = 'revision_requested';
     }
@@ -1155,9 +1158,9 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
               Row(children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _vm.isActionLoading ? null : () => _submitAction('reject'),
-                    icon: const Icon(LucideIcons.alertTriangle, size: 16),
-                    label: const Text('Minta Revisi', style: TextStyle(fontWeight: FontWeight.bold)),
+                    onPressed: _vm.isActionLoading ? null : () => _submitAction('tolak'),
+                    icon: const Icon(LucideIcons.x, size: 16),
+                    label: const Text('Tolak', style: TextStyle(fontWeight: FontWeight.bold)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       side: const BorderSide(color: Color(0xFFFCA5A5)),
@@ -1166,14 +1169,28 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _vm.isActionLoading ? null : () => _submitAction('revisi'),
+                    icon: const Icon(LucideIcons.alertTriangle, size: 16),
+                    label: const Text('Revisi', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: Colors.amber[600],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _vm.isActionLoading ? null : () => _submitAction('approve'),
                     icon: _vm.isActionLoading
                         ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Icon(LucideIcons.checkCircle, size: 16),
-                    label: const Text('Verifikasi', style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text('Setujui', style: TextStyle(fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: _emerald700,
@@ -1250,7 +1267,7 @@ class _KegiatanDetailViewState extends State<KegiatanDetailView> {
             if (role != 'ppk' && role != 'wadir') ...[
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _vm.isActionLoading ? null : () => _submitAction('reject'),
+                  onPressed: _vm.isActionLoading ? null : () => _submitAction('revisi'),
                   icon: const Icon(LucideIcons.alertTriangle, size: 16),
                   label: const Text('Minta Revisi', style: TextStyle(fontWeight: FontWeight.bold)),
                   style: OutlinedButton.styleFrom(
