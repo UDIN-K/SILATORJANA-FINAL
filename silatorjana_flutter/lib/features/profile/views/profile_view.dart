@@ -223,7 +223,7 @@ class _ProfileViewState extends State<ProfileView> {
                     if (passwordCtrl.text.isEmpty) return;
                     setDialogState(() => isVerifying = true);
                     
-                    final success = await viewModel.enableBiometric(widget.user.email, passwordCtrl.text);
+                    final success = await viewModel.enableBiometric(widget.user.email, passwordCtrl.text, nama: widget.user.nama, role: widget.user.role);
                     
                     if (dialogContext.mounted) {
                       Navigator.pop(dialogContext);

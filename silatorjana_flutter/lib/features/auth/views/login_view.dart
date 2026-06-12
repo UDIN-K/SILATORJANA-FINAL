@@ -105,10 +105,64 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
 
   Future<void> _loginWithBiometrics() async {
     if (_isSuccessTransitioning) return;
-    final success = await _authViewModel.loginWithBiometrics();
-    if (success) {
-      await _handleLoginSuccess();
+    
+    if (_authViewModel.biometricAccounts.length > 1) {
+      // Show bottom sheet to pick account
+      _showBiometricAccountPicker();
+    } else {
+      // Only 1 account or fallback, just use default
+      final success = await _authViewModel.loginWithBiometrics();
+      if (success) {
+        await _handleLoginSuccess();
+      }
     }
+  }
+
+  void _showBiometricAccountPicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Pilih Akun',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Pilih akun untuk masuk dengan biometrik',
+                style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 16),
+              ..._authViewModel.biometricAccounts.map((account) {
+                final initial = account['nama']?.isNotEmpty == true ? account['nama']![0].toUpperCase() : 'U';
+                final role = account['role']?.toUpperCase() ?? 'USER';
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: const Color(0xFFECFDF5),
+                    child: Text(initial, style: const TextStyle(color: Color(0xFF047857), fontWeight: FontWeight.bold)),
+                  ),
+                  title: Text(account['nama'] ?? account['email']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(role, style: const TextStyle(fontSize: 12)),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    if (_isSuccessTransitioning) return;
+                    final success = await _authViewModel.loginWithBiometricAccount(account);
+                    if (success) {
+                      await _handleLoginSuccess();
+                    }
+                  },
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override

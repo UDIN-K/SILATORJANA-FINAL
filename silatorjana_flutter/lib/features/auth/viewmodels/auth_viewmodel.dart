@@ -10,17 +10,18 @@ class AuthViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
   bool canCheckBiometrics = false;
+  List<Map<String, String>> biometricAccounts = [];
   User? currentUser;
 
   Future<void> initBiometrics() async {
     try {
       final canCheck = await _biometricService.hasBiometrics();
-      final creds = await _authService.getCredentials();
-      canCheckBiometrics = canCheck && creds != null;
+      biometricAccounts = await _authService.getAllAccounts();
+      canCheckBiometrics = canCheck && biometricAccounts.isNotEmpty;
       notifyListeners();
     } catch (e) {
-      // Biometrics not available, silently ignore
       canCheckBiometrics = false;
+      biometricAccounts = [];
       notifyListeners();
     }
   }
@@ -58,56 +59,61 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> loginWithBiometrics() async {
+  /// Login with biometrics using specific account credentials
+  Future<bool> loginWithBiometricAccount(Map<String, String> account) async {
     try {
       final authenticated = await _biometricService.authenticate();
-      if (authenticated) {
-        isLoading = true;
-        notifyListeners();
-        
-        final creds = await _authService.getCredentials();
-        if (creds == null) {
-          isLoading = false;
-          errorMessage = 'Kredensial tidak ditemukan. Silakan login manual.';
-          notifyListeners();
-          return false;
-        }
+      if (!authenticated) return false;
 
-        final success = await _authService.login(creds['email']!, creds['password']!);
-        if (!success) {
-          isLoading = false;
-          errorMessage = 'Sesi habis atau kredensial kedaluwarsa. Silakan login manual.';
-          notifyListeners();
-          return false;
-        }
+      isLoading = true;
+      notifyListeners();
 
-        currentUser = await _authService.getMe();
-        
+      final success = await _authService.login(account['email']!, account['password']!);
+      if (!success) {
         isLoading = false;
-        if (currentUser == null) {
-          errorMessage = 'Gagal mengambil data user.';
-          notifyListeners();
-          return false;
-        }
-
-        if (!currentUser!.allowBiometric) {
-          await _authService.deleteCredentials();
-          await logout();
-          errorMessage = 'Akses Biometrik dinonaktifkan oleh Admin. Silakan login menggunakan password.';
-          notifyListeners();
-          return false;
-        }
-
+        errorMessage = 'Kredensial kedaluwarsa. Silakan login manual dan daftarkan ulang biometrik.';
         notifyListeners();
-        return true;
+        return false;
       }
-      return false;
+
+      currentUser = await _authService.getMe();
+      isLoading = false;
+      if (currentUser == null) {
+        errorMessage = 'Gagal mengambil data user.';
+        notifyListeners();
+        return false;
+      }
+
+      if (!currentUser!.allowBiometric) {
+        await _authService.deleteCredentials(account['email']);
+        await logout();
+        errorMessage = 'Akses Biometrik dinonaktifkan oleh Admin.';
+        notifyListeners();
+        return false;
+      }
+
+      notifyListeners();
+      return true;
     } catch (e) {
       isLoading = false;
       errorMessage = 'Gagal autentikasi biometrik: $e';
       notifyListeners();
       return false;
     }
+  }
+
+  /// Legacy single-account biometric login (uses first account)
+  Future<bool> loginWithBiometrics() async {
+    if (biometricAccounts.isEmpty) {
+      final accounts = await _authService.getAllAccounts();
+      if (accounts.isEmpty) {
+        errorMessage = 'Tidak ada akun terdaftar untuk biometrik.';
+        notifyListeners();
+        return false;
+      }
+      return loginWithBiometricAccount(accounts.first);
+    }
+    return loginWithBiometricAccount(biometricAccounts.first);
   }
 
   Future<void> logout() async {
@@ -120,3 +126,4 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 }
+

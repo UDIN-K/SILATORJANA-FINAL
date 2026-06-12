@@ -24,7 +24,7 @@ class ProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> enableBiometric(String email, String password) async {
+  Future<bool> enableBiometric(String email, String password, {String? nama, String? role}) async {
     isLoading = true;
     errorMessage = null;
     successMessage = null;
@@ -61,7 +61,7 @@ class ProfileViewModel extends ChangeNotifier {
       debugPrint('BIOMETRIC: authenticate result=$authResult');
       
       if (authResult == 'success') {
-        await _authService.saveCredentials(email, password);
+        await _authService.saveCredentials(email, password, nama: nama, role: role);
         isBiometricEnabled = true;
         successMessage = 'Login Biometrik berhasil diaktifkan!';
         isLoading = false;

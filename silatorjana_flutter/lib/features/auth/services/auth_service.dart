@@ -59,31 +59,71 @@ class AuthService {
     }
   }
 
-  Future<void> saveCredentials(String email, String password) async {
-    if (!_useMemory) {
-      await _storage.write(key: _emailKey, value: email);
-      await _storage.write(key: _passwordKey, value: password);
-    }
+  static const _accountsKey = 'auth_biometric_accounts';
+
+  /// Save credentials for an account (add or update)
+  Future<void> saveCredentials(String email, String password, {String? nama, String? role}) async {
+    if (_useMemory) return;
+    final accounts = await getAllAccounts();
+    // Remove existing entry for this email
+    accounts.removeWhere((a) => a['email'] == email);
+    // Add updated entry
+    accounts.add({
+      'email': email,
+      'password': password,
+      if (nama != null) 'nama': nama,
+      if (role != null) 'role': role,
+    });
+    await _storage.write(key: _accountsKey, value: jsonEncode(accounts));
   }
 
-  Future<void> deleteCredentials() async {
-    if (!_useMemory) {
+  /// Delete credentials for a specific email, or all if email is null
+  Future<void> deleteCredentials([String? email]) async {
+    if (_useMemory) return;
+    if (email == null) {
+      await _storage.delete(key: _accountsKey);
+      // Also clean up legacy keys
       await _storage.delete(key: _emailKey);
       await _storage.delete(key: _passwordKey);
+    } else {
+      final accounts = await getAllAccounts();
+      accounts.removeWhere((a) => a['email'] == email);
+      if (accounts.isEmpty) {
+        await _storage.delete(key: _accountsKey);
+      } else {
+        await _storage.write(key: _accountsKey, value: jsonEncode(accounts));
+      }
     }
   }
 
+  /// Get first stored credential (backward compat)
   Future<Map<String, String>?> getCredentials() async {
-    if (_useMemory) return null;
+    final accounts = await getAllAccounts();
+    if (accounts.isEmpty) return null;
+    final a = accounts.first;
+    return {'email': a['email']!, 'password': a['password']!};
+  }
+
+  /// Get ALL stored biometric accounts
+  Future<List<Map<String, String>>> getAllAccounts() async {
+    if (_useMemory) return [];
     try {
+      final raw = await _storage.read(key: _accountsKey);
+      if (raw != null) {
+        final List<dynamic> list = jsonDecode(raw);
+        return list.map((e) => Map<String, String>.from(e as Map)).toList();
+      }
+      // Migrate legacy single-account keys
       final email = await _storage.read(key: _emailKey);
       final password = await _storage.read(key: _passwordKey);
       if (email != null && password != null) {
-        return {'email': email, 'password': password};
+        final accounts = [{'email': email, 'password': password}];
+        await _storage.write(key: _accountsKey, value: jsonEncode(accounts));
+        return accounts;
       }
-      return null;
+      return [];
     } catch (e) {
-      return null;
+      return [];
     }
   }
 
