@@ -334,7 +334,7 @@ Route::post('/chat', function (Request $request) {
             'HTTP-Referer' => config('app.url', 'http://localhost'),
             'X-Title' => 'Si-LATORJANA',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model' => 'openrouter/free',
+            'model' => config('services.openrouter.model', 'nvidia/nemotron-3-ultra-550b-a55b:free'),
             'max_tokens' => 500,
             'messages' => [
                 ['role' => 'system', 'content' => $systemPrompt],
