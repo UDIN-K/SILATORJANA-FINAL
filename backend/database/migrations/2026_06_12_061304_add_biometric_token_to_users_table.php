@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('biometric_token', 64)->nullable()->unique()->after('allow_biometric');
+            $table->text('biometric_token')->nullable()->after('allow_biometric');
         });
     }
 

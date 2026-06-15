@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 
 export function UserFormPage() {
   const { id } = useParams();
@@ -15,6 +16,7 @@ export function UserFormPage() {
   const isEdit = !!id;
   const [isLoading, setIsLoading] = useState(isEdit);
   const [isSaving, setIsSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ nama: '', email: '', password: '', role: 'pengusul', jurusan_id: '', verifikator_unit: '' });
 
   useEffect(() => {
@@ -62,7 +64,26 @@ export function UserFormPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2"><Label>Nama Lengkap</Label><Input value={form.nama} onChange={e => setForm({...form, nama: e.target.value})} required /></div>
             <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required /></div>
-            <div className="space-y-2"><Label>Password {isEdit && '(kosongkan jika tidak diubah)'}</Label><Input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required={!isEdit} /></div>
+            <div className="space-y-2">
+              <Label>Password {isEdit && '(kosongkan jika tidak diubah)'}</Label>
+              <div className="relative">
+                <Input 
+                  type={showPassword ? 'text' : 'password'} 
+                  value={form.password} 
+                  onChange={e => setForm({...form, password: e.target.value})} 
+                  required={!isEdit} 
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              <PasswordStrengthIndicator password={form.password} />
+            </div>
             <div className="space-y-2"><Label>Role</Label>
               <Select value={form.role} onValueChange={v => setForm({...form, role: v})}>
                 <SelectTrigger><SelectValue /></SelectTrigger>

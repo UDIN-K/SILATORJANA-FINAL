@@ -38,8 +38,13 @@ class UserController extends Controller
     /**
      * Get single user
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
+        $currentUser = $request->user();
+        if ($currentUser->role !== 'admin' && (string)$currentUser->id !== (string)$id) {
+            return response()->json(['message' => 'Anda tidak memiliki hak akses untuk melihat profil pengguna ini.'], 403);
+        }
+
         $user = User::with('kegiatan')->findOrFail($id);
         return response()->json($user);
     }
@@ -52,7 +57,15 @@ class UserController extends Controller
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
+            'password' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rules\Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
             'role' => 'required|string|in:admin,pengusul,verifikator,ppk,wadir1,wadir2,wadir3,wadir4,bendahara,rektorat',
             'jurusan' => 'nullable|string',
             'nip' => 'nullable|string',
@@ -80,7 +93,15 @@ class UserController extends Controller
         $validated = $request->validate([
             'nama' => 'sometimes|string|max:255',
             'email' => "sometimes|email|unique:users,email,{$id}",
-            'password' => 'sometimes|string|min:6',
+            'password' => [
+                'sometimes',
+                'string',
+                \Illuminate\Validation\Rules\Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
             'role' => 'sometimes|string|in:admin,pengusul,verifikator,ppk,wadir1,wadir2,wadir3,wadir4,bendahara,rektorat',
             'jurusan' => 'nullable|string',
             'nip' => 'nullable|string',

@@ -40,7 +40,7 @@ class DatabaseSeeder extends Seeder
         // ============================================================
         // 2. USERS — All 7 roles
         // ============================================================
-        $password = Hash::make('12345678');
+        $password = Hash::make('Silatorjana2026!');
 
         // Admin
         $admin = User::create([
@@ -702,7 +702,7 @@ class DatabaseSeeder extends Seeder
 
         $this->command->info('✅ Database seeded successfully!');
         $this->command->info('');
-        $this->command->info('📋 Login credentials (password: 12345678):');
+        $this->command->info('📋 Login credentials (password: Silatorjana2026!):');
         $this->command->info('   Admin:            admin@pnj.ac.id');
         $this->command->info('   Pengusul 1:       budi@pnj.ac.id');
         $this->command->info('   Pengusul 2:       siti@pnj.ac.id');

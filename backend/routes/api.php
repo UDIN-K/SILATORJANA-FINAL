@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public routes
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
 // Biometric login (public — no auth needed, uses biometric_token)
 Route::post('/biometric-login', function (Request $request) {
@@ -26,11 +26,10 @@ Route::post('/biometric-login', function (Request $request) {
     ]);
 
     $user = \App\Models\User::where('email', $request->email)
-        ->where('biometric_token', $request->biometric_token)
         ->where('allow_biometric', true)
         ->first();
 
-    if (!$user) {
+    if (!$user || $user->biometric_token !== $request->biometric_token) {
         return response()->json(['message' => 'Biometric token tidak valid atau akses dinonaktifkan.'], 401);
     }
 
@@ -40,7 +39,7 @@ Route::post('/biometric-login', function (Request $request) {
         'token' => $token,
         'user' => $user,
     ]);
-});
+})->middleware('throttle:5,1');
 
 Route::get('/health', function () {
     return response()->json(['status' => 'ok', 'app' => 'Si-LATORJANA Backend']);
@@ -219,7 +218,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/change-password', function (Request $request) {
         $request->validate([
             'current_password' => 'required|string',
-            'new_password' => 'required|string|min:6',
+            'new_password' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rules\Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
         ]);
 
         $user = $request->user();
@@ -229,7 +236,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         $user->update(['password' => \Illuminate\Support\Facades\Hash::make($request->new_password)]);
         return response()->json(['message' => 'Password berhasil diubah.']);
-    });
+    })->middleware('throttle:5,1');
 
     // File upload (surat pengantar, file KAK)
     Route::post('/upload', function (Request $request) {

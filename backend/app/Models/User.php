@@ -35,6 +35,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'allow_biometric' => 'boolean',
+            'biometric_token' => 'encrypted',
         ];
     }
 

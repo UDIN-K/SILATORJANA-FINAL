@@ -275,22 +275,22 @@ class MooraCalculator
 
         // Grace period 14 hari pertama: skor tetap 100
         // Setelah itu: berkurang 1 per hari, minimum 0 (mencapai 0 di hari ke-114)
-        if ($durasi <= 14) {
-            $skor = 100.0;
-        } else {
-            $skor = max(0.0, 100.0 - ($durasi - 14));
-        }
-
         $label = $sudahDisetujui
             ? "disetujui dalam {$durasi} hari"
             : "belum disetujui, estimasi {$durasi} hari sejak submit";
 
-        $ket = sprintf(
-            'LPJ %s → skor: 100 − (%d×3) = %.2f',
-            $label,
-            $durasi,
-            $skor
-        );
+        if ($durasi <= 14) {
+            $skor = 100.0;
+            $ket = sprintf('LPJ %s → skor: 100 (dalam batas wajar <= 14 hari)', $label);
+        } else {
+            $skor = max(0.0, 100.0 - ($durasi - 14));
+            $ket = sprintf(
+                'LPJ %s → skor: max(0, 100 − (%d − 14)) = %.2f',
+                $label,
+                $durasi,
+                $skor
+            );
+        }
 
         return [
             'skor'            => round($skor, 2),
