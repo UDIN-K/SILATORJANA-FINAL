@@ -76,6 +76,7 @@ export function LpjPage() {
   const [kegiatan, setKegiatan] = useState<any>(null);
   const [rabGroups, setRabGroups] = useState<Record<string, RabGroup>>({});
   const [lpj, setLpj] = useState<any>(null);
+  const [tanggalPelaksanaanReal, setTanggalPelaksanaanReal] = useState('');
 
   // IKU list from API
   const [ikuList, setIkuList] = useState<IkuItem[]>([]);
@@ -110,6 +111,7 @@ export function LpjPage() {
       setKegiatan(res.kegiatan);
       setRabGroups(res.rab || {});
       setLpj(res.lpj);
+      setTanggalPelaksanaanReal(res.lpj?.tanggal_pelaksanaan_real ? res.lpj.tanggal_pelaksanaan_real.substring(0, 10) : '');
 
       // Load IKU list
       const loadedIku: IkuItem[] = res.iku || [];
@@ -206,6 +208,11 @@ export function LpjPage() {
   async function handleSubmit() {
     if (!id || !canSubmit) return;
 
+    if (!tanggalPelaksanaanReal) {
+      alert('Harap pilih Tanggal Realisasi Pelaksanaan Kegiatan sebelum submit LPJ.');
+      return;
+    }
+
     if (totalAllFiles() === 0) {
       alert('Minimal upload 1 file bukti kuitansi.');
       return;
@@ -227,6 +234,7 @@ export function LpjPage() {
       const formData = new FormData();
       formData.append('kegiatan_id', id);
       formData.append('catatan_pengusul', catatan);
+      formData.append('tanggal_pelaksanaan_real', tanggalPelaksanaanReal);
 
       // Append realisasi as JSON
       formData.append('realisasi', JSON.stringify(realisasi));
@@ -788,6 +796,24 @@ export function LpjPage() {
                 {totalAllFiles()} file
               </span>
             </div>
+          </div>
+
+          {/* Tanggal Realisasi Pelaksanaan */}
+          <div className="mb-6">
+            <Label className="text-sm font-medium text-slate-700 block mb-2">
+              Tanggal Realisasi Pelaksanaan Kegiatan <span className="text-red-500">*</span>
+            </Label>
+            <input
+              type="date"
+              className="w-full sm:w-64 border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition-all disabled:bg-slate-100 disabled:text-slate-400"
+              value={tanggalPelaksanaanReal}
+              onChange={e => setTanggalPelaksanaanReal(e.target.value)}
+              disabled={!canSubmit}
+              required
+            />
+            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+              Pilih tanggal pelaksanaan riil kegiatan ini. Digunakan untuk menghitung kriteria <strong>C1 (Ketepatan Waktu Pelaksanaan)</strong> pada SPK MOORA.
+            </p>
           </div>
 
           {/* Catatan */}

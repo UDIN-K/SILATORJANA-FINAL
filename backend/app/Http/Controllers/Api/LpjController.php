@@ -130,6 +130,7 @@ class LpjController extends Controller
         $request->validate([
             'kegiatan_id' => 'required|integer',
             'catatan_pengusul' => 'nullable|string',
+            'tanggal_pelaksanaan_real' => 'nullable|date',
         ]);
 
         $kegiatanId = $request->input('kegiatan_id');
@@ -175,6 +176,7 @@ class LpjController extends Controller
                     'tanggal_pengajuan' => now(),
                     'status_verifikasi' => 'submitted',
                     'catatan_pengusul' => $request->input('catatan_pengusul'),
+                    'tanggal_pelaksanaan_real' => $request->input('tanggal_pelaksanaan_real'),
                 ]);
             } else {
                 $lpj = Lpj::create([
@@ -182,6 +184,7 @@ class LpjController extends Controller
                     'tanggal_pengajuan' => now(),
                     'status_verifikasi' => 'submitted',
                     'catatan_pengusul' => $request->input('catatan_pengusul'),
+                    'tanggal_pelaksanaan_real' => $request->input('tanggal_pelaksanaan_real'),
                 ]);
             }
 

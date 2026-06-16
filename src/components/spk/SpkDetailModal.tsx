@@ -216,10 +216,11 @@ export function SpkDetailModal({ result, kriteria, isOpen, onClose }: SpkDetailM
               {result.matriks_normalisasi.map((row, i) => {
                 const bobot = result.bobot;
                 const parts = row.map((val, j) => `(${bobot[j]} × ${val.toFixed(4)})`);
+                const rowYi = row.reduce((sum, val, j) => sum + (bobot[j] ?? 0.25) * val, 0);
 
                 return (
                   <div key={i} className="text-xs font-mono text-slate-600">
-                    <span className="font-bold text-slate-800">Y{i + 1}</span> = {parts.join(' + ')} = <span className="font-black text-emerald-700">{result.skor_akhir.toFixed(6)}</span>
+                    <span className="font-bold text-slate-800">Y{i + 1}</span> = {parts.join(' + ')} = <span className="font-black text-emerald-700">{rowYi.toFixed(6)}</span>
                   </div>
                 );
               })}

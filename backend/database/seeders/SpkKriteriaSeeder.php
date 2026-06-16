@@ -15,28 +15,28 @@ class SpkKriteriaSeeder extends Seeder
                 'nama'      => 'Ketepatan Waktu Pelaksanaan',
                 'tipe'      => 'benefit',
                 'bobot'     => 0.25,
-                'deskripsi' => 'Mengukur deviasi antara tanggal pelaksanaan yang direncanakan (TOR/KAK) dengan tanggal pelaksanaan riil. Tepat waktu = 100, meleset 1-3 hari = 75, meleset > 3 hari = 50.',
+                'deskripsi' => 'Mengukur deviasi antara tanggal pelaksanaan yang direncanakan (TOR/KAK) dengan tanggal pelaksanaan riil. Tepat waktu = 100. Setiap 1 hari deviasi berkurang 5. Skor 0 jika deviasi >= 20 hari. Rumus: max(0, 100 − (deviasi_hari × 5)).',
             ],
             [
                 'kode'      => 'C2',
                 'nama'      => 'Ketepatan Anggaran',
                 'tipe'      => 'benefit',
                 'bobot'     => 0.25,
-                'deskripsi' => 'Mengukur deviasi antara total anggaran yang diajukan (RAB) dengan total realisasi anggaran (LPJ). Pas = 100, selisih < 10% = 75, selisih >= 10% = 50.',
+                'deskripsi' => 'Mengukur deviasi antara total anggaran yang diajukan (RAB) dengan total realisasi anggaran (LPJ). Pas (0% deviasi) = 100. Berkurang sesuai persentase deviasi anggaran. Rumus: max(0, 100 − deviasi_persen).',
             ],
             [
                 'kode'      => 'C3',
                 'nama'      => 'Kesesuaian Output IKU',
                 'tipe'      => 'benefit',
                 'bobot'     => 0.25,
-                'deskripsi' => 'Mengukur apakah kegiatan mendukung IKU (Indikator Kinerja Utama). Nilai capaian >= 1 (mendukung) = 100, nilai capaian < 1 (tidak mendukung) = 0.',
+                'deskripsi' => 'Mengukur rata-rata rasio capaian terhadap target dari seluruh Indikator Kinerja Utama (IKU) kegiatan. Nilai capaian IKU rata-rata 100% atau lebih = 100. Rumus: min(100, rata_rasio × 100).',
             ],
             [
                 'kode'      => 'C4',
                 'nama'      => 'Waktu Approval LPJ',
                 'tipe'      => 'benefit',
                 'bobot'     => 0.25,
-                'deskripsi' => 'Mengukur kecepatan proses approval LPJ. Dihitung dari tanggal_pengajuan ke tanggal_disetujui. Grace period 14 hari pertama = skor 100. Setelah 14 hari berkurang 1 per hari. Skor 0 di hari ke-114+. Rumus: durasi ≤ 14 → 100; durasi > 14 → max(0, 100 − (durasi − 14)).',
+                'deskripsi' => 'Mengukur kecepatan proses approval LPJ. Dihitung dari tanggal_pengajuan ke tanggal_disetujui. Disetujui pada hari yang sama = skor 100. Setelah itu berkurang 3 per hari. Skor 0 di hari ke-34+. Rumus: max(0, 100 − (durasi_hari × 3)).',
             ],
         ];
 

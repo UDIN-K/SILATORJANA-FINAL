@@ -236,21 +236,20 @@ class MooraCalculator
     }
 
     /**
-     * C4: Waktu Approval LPJ  (Grace Period + Proporsional Kontinu)
+     * C4: Waktu Approval LPJ  (Proporsional Kontinu)
      * ───────────────────────────────────────────────
-     * Rumus:
-     *   durasi ≤ 14 hari  → skor = 100          (grace period)
-     *   durasi  > 14 hari  → skor = max(0, 100 − (durasi − 14))
+     * Rumus: skor = max(0, 100 − durasi_hari × 3)
      *
      * Durasi dihitung dari tanggal_pengajuan → tanggal_disetujui (statis).
      * Jika LPJ belum disetujui, gunakan tanggal hari ini sebagai estimasi.
      *
      * Contoh :
-     *    0 – 14 hari  → skor 100  (masih dalam batas wajar)
-     *   15 hari        → skor  99
-     *   64 hari        → skor  50
-     *  114 hari        → skor   0
-     *  114+ hari       → skor   0
+     *    0  hari → skor 100
+     *    5  hari → skor 85
+     *   10  hari → skor 70
+     *   20  hari → skor 40
+     *   30  hari → skor 10
+     *  34+  hari → skor 0
      */
     private function hitungC4(?Lpj $lpj): array
     {
@@ -273,24 +272,17 @@ class MooraCalculator
 
         $durasi = $submit->diffInDays($acuan);
 
-        // Grace period 14 hari pertama: skor tetap 100
-        // Setelah itu: berkurang 1 per hari, minimum 0 (mencapai 0 di hari ke-114)
         $label = $sudahDisetujui
             ? "disetujui dalam {$durasi} hari"
             : "belum disetujui, estimasi {$durasi} hari sejak submit";
 
-        if ($durasi <= 14) {
-            $skor = 100.0;
-            $ket = sprintf('LPJ %s → skor: 100 (dalam batas wajar <= 14 hari)', $label);
-        } else {
-            $skor = max(0.0, 100.0 - ($durasi - 14));
-            $ket = sprintf(
-                'LPJ %s → skor: max(0, 100 − (%d − 14)) = %.2f',
-                $label,
-                $durasi,
-                $skor
-            );
-        }
+        $skor = max(0.0, 100.0 - ($durasi * 3.0));
+        $ket = sprintf(
+            'LPJ %s → skor: max(0, 100 − (%d×3)) = %.2f',
+            $label,
+            $durasi,
+            $skor
+        );
 
         return [
             'skor'            => round($skor, 2),
@@ -409,21 +401,76 @@ class MooraCalculator
      */
     public function hitungSingle(int $kegiatanId): array
     {
-        $rubrik = $this->hitungSkorRubrik($kegiatanId);
-        $bobot  = $this->getBobot();
+        $targetKegiatan = Kegiatan::findOrFail($kegiatanId);
+        $jurusan = $targetKegiatan->nama_jurusan;
+        $bobot = $this->getBobot();
 
-        $matriksKeputusan = [[$rubrik['c1'], $rubrik['c2'], $rubrik['c3'], $rubrik['c4']]];
+        // Cari kegiatan lain dari jurusan yang sama yang memiliki LPJ
+        $kegiatanIds = Kegiatan::where('nama_jurusan', $jurusan)
+            ->whereHas('lpj')
+            ->pluck('id')
+            ->toArray();
 
-        // ── Normalisasi Single Alternatif ──────────────────────────────────────
-        // Untuk 1 al   ternatif, rumus MOORA baku (÷√(xij²) = ÷xij) selalu
-        // menghasilkan x*ij = 1.0, sehingga Yi = Σbobot = 1.0 (Grade A selalu).
-        // Untuk menghindari ini, digunakan normalisasi range ÷100 yang bermakna:
-        //   x*ij = xij / 100   →   x*ij ∈ [0, 1]
-        // Ini setara dengan mengevaluasi kualitas kegiatan secara absolut.
-        $pembagi = array_fill(0, count($matriksKeputusan[0]), 100.0);
+        // Pastikan target kegiatan ada di awal list (indeks 0)
+        $kegiatanIds = array_diff($kegiatanIds, [$kegiatanId]);
+        array_unshift($kegiatanIds, $kegiatanId);
+
+        $matriksKeputusan = [];
+        $rubrikTarget = $this->hitungSkorRubrik($kegiatanId);
+        $matriksKeputusan[] = [$rubrikTarget['c1'], $rubrikTarget['c2'], $rubrikTarget['c3'], $rubrikTarget['c4']];
+
+        // Ambil data rubrik untuk alternatif pembanding dari jurusan yang sama
+        for ($i = 1; $i < count($kegiatanIds); $i++) {
+            try {
+                $rubrik = $this->hitungSkorRubrik($kegiatanIds[$i]);
+                $matriksKeputusan[] = [$rubrik['c1'], $rubrik['c2'], $rubrik['c3'], $rubrik['c4']];
+            } catch (\Exception $e) {
+                // Lewati alternatif pembanding jika terjadi error
+            }
+        }
+
+        // Fallback: Jika tidak ada pembanding se-jurusan, ambil pembanding dari jurusan lain secara global
+        if (count($matriksKeputusan) < 2) {
+            $otherIds = Kegiatan::where('id', '!=', $kegiatanId)
+                ->whereHas('lpj')
+                ->pluck('id')
+                ->toArray();
+            foreach ($otherIds as $id) {
+                try {
+                    $rubrik = $this->hitungSkorRubrik($id);
+                    $matriksKeputusan[] = [$rubrik['c1'], $rubrik['c2'], $rubrik['c3'], $rubrik['c4']];
+                } catch (\Exception $e) {
+                    // Lewati
+                }
+            }
+        }
+
+        // Fallback terakhir: Jika database benar-benar kosong, gunakan dummy Ideal & Worst
+        if (count($matriksKeputusan) < 2) {
+            $matriksKeputusan[] = [100.0, 100.0, 100.0, 100.0]; // Ideal
+            $matriksKeputusan[] = [0.0, 0.0, 0.0, 0.0];         // Worst
+        }
+
+        // Jalankan normalisasi Rasio Akar Kuadrat MOORA
+        $jumlahAlternatif = count($matriksKeputusan);
+        $jumlahKriteria   = count($matriksKeputusan[0]);
+
+        $sumKuadrat = array_fill(0, $jumlahKriteria, 0.0);
+        for ($i = 0; $i < $jumlahAlternatif; $i++) {
+            for ($j = 0; $j < $jumlahKriteria; $j++) {
+                $sumKuadrat[$j] += pow($matriksKeputusan[$i][$j], 2);
+            }
+        }
+
+        $pembagi = array_map(fn($sq) => $sq > 0 ? sqrt($sq) : 1.0, $sumKuadrat);
+
         $matriksNorm = [];
-        foreach ($matriksKeputusan as $row) {
-            $matriksNorm[] = array_map(fn($v) => round($v / 100.0, 6), $row);
+        for ($i = 0; $i < $jumlahAlternatif; $i++) {
+            $row = [];
+            for ($j = 0; $j < $jumlahKriteria; $j++) {
+                $row[] = round($matriksKeputusan[$i][$j] / $pembagi[$j], 6);
+            }
+            $matriksNorm[] = $row;
         }
 
         // Hitung matriks terbobot: yij = wj × x*ij
@@ -436,23 +483,23 @@ class MooraCalculator
             $matriksTerbobot[] = $weightedRow;
         }
 
-        // Hitung skor akhir Yi = Σ (wj × x*ij) — MOORA preferensi
-        $skorList  = $this->hitungPreferensi($matriksNorm, $bobot);
+        // Hitung preferensi Yi dan ambil skorAkhir target (indeks 0)
+        $skorList = $this->hitungPreferensi($matriksNorm, $bobot);
         $skorAkhir = $skorList[0] ?? 0.0;
 
         $grade = $this->tentukanGrade($skorAkhir);
 
         return [
             'kegiatan_id'         => $kegiatanId,
-            'skor_rubrik'         => $rubrik,
+            'skor_rubrik'         => $rubrikTarget,
             'bobot'               => $bobot,
             'matriks_keputusan'   => $matriksKeputusan,
-            'pembagi'             => $pembagi,
+            'pembagi'             => array_map(fn($v) => round($v, 6), $pembagi),
             'matriks_normalisasi' => $matriksNorm,
             'matriks_terbobot'    => $matriksTerbobot,
             'skor_akhir'          => round($skorAkhir, 6),
             'grade'               => $grade,
-            'detail_rubrik'       => $rubrik['detail'],
+            'detail_rubrik'       => $rubrikTarget['detail'],
         ];
     }
 
