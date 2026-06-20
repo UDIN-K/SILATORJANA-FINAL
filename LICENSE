@@ -1,21 +1,46 @@
-MIT License
-
+Si-LATORJANA Source-Available License (Non-Commercial)
 Copyright (c) 2026 SILATORJANA Team
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This is a source-available license, not an open-source license under the
+OSI definition. Read the terms below carefully.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. PERMITTED USE
+   You are free to:
+   - View, read, and study the source code
+   - Fork or clone the repository for personal learning and evaluation
+   - Use the Software for non-commercial, educational, or academic purposes
+   - Submit contributions back to this repository
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. PROHIBITED USE — WRITTEN PERMISSION REQUIRED
+   You may NOT, without prior written permission from the copyright
+   holder(s):
+   - Use the Software (in whole or in part) for any commercial purpose
+   - Deploy, install, or operate the Software (or a derivative of it) in
+     production for any institution, organization, agency, or government
+     body — including but not limited to educational institutions
+   - Sell, sublicense, rent, or otherwise monetize the Software
+   - Rebrand or redistribute the Software (or a derivative) as your own
+     work without attribution to the original author(s)
+
+3. ATTRIBUTION
+   Any permitted copy, fork, or derivative must retain this license file
+   and a visible credit to the original author(s)/repository.
+
+4. ENFORCEMENT
+   Use of the Software outside the scope of Section 1 constitutes
+   copyright infringement. The copyright holder(s) reserve the right to
+   pursue takedown requests, legal remedies, and damages against any
+   unauthorized commercial or institutional use.
+
+5. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+   CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THE
+   SOFTWARE.
+
+6. REQUESTING PERMISSION
+   To request a commercial or institutional license, contact the
+   copyright holder(s) via the repository listed at
+   https://github.com/UDIN-COY/SILATORJANA
